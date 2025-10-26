@@ -10,6 +10,7 @@
 │   │   ├── .previewinfo
 │   │   ├── .rscinfo
 │   │   ├── .tsbuildinfo
+│   │   ├── chrome-devtools-workspace-uuid
 │   │   ├── next-devtools-config.json
 │   │   ├── swc
 │   │   └── webpack
@@ -50,13 +51,9 @@
 │   │   └── [id]
 │   ├── globals.css
 │   ├── layout.tsx
-│   ├── login
-│   │   └── page.tsx
 │   ├── page.tsx
 │   ├── projects
 │   │   └── [id]
-│   ├── signup
-│   │   └── page.tsx
 │   └── teams
 │       ├── [id]
 │       └── page.tsx
