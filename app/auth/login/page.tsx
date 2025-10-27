@@ -72,6 +72,9 @@ export default function LoginPage() {
       localStorage.setItem("token", data.access_token)
       document.cookie = `token=${data.access_token}; path=/; secure; samesite=strict`
       
+      // Dispatch auth state change event
+      window.dispatchEvent(new Event('auth-state-changed'))
+      
       // Redirect to main page
       router.push("/teams")
     } catch (error) {
@@ -150,6 +153,17 @@ export default function LoginPage() {
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
+
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">Don't have an account? </span>
+            <Button
+              variant="link"
+              className="p-0 font-semibold text-primary hover:text-primary/80"
+              onClick={() => router.push('/auth/register')}
+            >
+              Register here
+            </Button>
+          </div>
         </form>
       </div>
     </div>

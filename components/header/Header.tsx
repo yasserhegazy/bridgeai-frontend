@@ -29,6 +29,26 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check for authentication token
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      setIsAuthenticated(!!token);
+    };
+
+    // Initial check
+    checkAuth();
+
+    // Listen for auth state changes
+    window.addEventListener('auth-state-changed', checkAuth);
+
+    // Cleanup listener
+    return () => {
+      window.removeEventListener('auth-state-changed', checkAuth);
+    };
+  }, []);
 
   // Local state for current team
   const [currentTeamId, setCurrentTeamId] = useState(initialTeamId || pathname.split("/")[2] || "");
@@ -73,7 +93,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
           </span>
         </Link>
 
-        {pathname !== "/teams" && (
+        {pathname !== "/teams" && isAuthenticated && (
           <div className="relative">
             <button
               onClick={() => setOpen(!open)}
@@ -147,36 +167,83 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
       </div>
 
       <div className="flex items-center gap-3">
-        <HeaderButton icon={Bell} label="Notifications" badge="12" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              className="rounded-full w-7 h-7 flex items-center justify-center p-0" 
-              style={{ backgroundColor: COLORS.primary, color: COLORS.textLight }}
-            >
-              <span className="font-semibold text-sm">KJ</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="text-sm">
-              Profile Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-sm text-destructive focus:text-destructive flex items-center gap-2"
-              onClick={() => {
-                // Clear token from localStorage and cookie
-                localStorage.removeItem("token");
-                document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-                // Redirect to login page
-                router.push("/auth/login");
-              }}
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isAuthenticated ? (
+          <>
+            <HeaderButton icon={Bell} label="Notifications" badge="12" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  className="rounded-full w-7 h-7 flex items-center justify-center p-0" 
+                  style={{ backgroundColor: COLORS.primary, color: COLORS.textLight }}
+                >
+                  <span className="font-semibold text-sm">KJ</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="text-sm">
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-sm text-destructive focus:text-destructive flex items-center gap-2"
+                  onClick={() => {
+                    // Clear token from localStorage and cookie
+                    localStorage.removeItem("token");
+                    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+                    // Update authentication state
+                    setIsAuthenticated(false);
+                    // Redirect to login page
+                    router.push("/auth/login");
+                  }}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            {pathname === "/auth/register" ? (
+              <Button 
+                variant="primary"
+                size="sm" 
+                onClick={() => router.push("/auth/login")}
+                className="flex items-center gap-2"
+              >
+                Login
+              </Button>
+            ) : pathname === "/auth/login" ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => router.push("/auth/register")}
+                className="flex items-center gap-2"
+              >
+                Register
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  variant="outline"
+                  size="sm" 
+                  onClick={() => router.push("/auth/login")}
+                  className="flex items-center gap-2"
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => router.push("/auth/register")}
+                  className="flex items-center gap-2"
+                >
+                  Register
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
