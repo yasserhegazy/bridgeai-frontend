@@ -30,7 +30,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = loading state
 
   useEffect(() => {
     // Check for authentication token in cookies
@@ -168,7 +168,10 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
       </div>
 
       <div className="flex items-center gap-3">
-        {isAuthenticated ? (
+        {isAuthenticated === null ? (
+          // Loading state - show nothing or a skeleton to prevent flash
+          <div className="w-20 h-8" /> // Empty space while loading
+        ) : isAuthenticated ? (
           <>
             <HeaderButton icon={Bell} label="Notifications" badge="12" />
             <DropdownMenu>
