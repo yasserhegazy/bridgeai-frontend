@@ -1,16 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-
   reactStrictMode: true,
-  // Disable Fast Refresh temporarily
+  
+  // Explicitly acknowledge both bundlers exist
+  turbopack: {}, // This silences the warning
+  
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.optimization.runtimeChunk = false;
     }
     return config;
   }
-
 };
 
 export default nextConfig;
