@@ -28,7 +28,7 @@ export function CardGrid<
 
   const handleCardClick = (id: number) => {
     if (type === "team") {
-      router.push(`/teams/${id}`);
+      router.push(`/teams/${id}/dashboard`);
     } else {
       router.push(`/projects/${id}`);
     }
