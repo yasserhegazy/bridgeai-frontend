@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { CardGrid } from "@/components/shared/CardGrid";
 import { CreateTeamModal } from "@/components/teams/CreateTeamModal";
+import { TeamsFilters } from "@/components/teams/TeamsFilters";
 
 interface Team {
   id: number;
@@ -20,9 +21,12 @@ interface Team {
 
 export default function TeamsList() {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const fetchTeams = async () => {
     try {
@@ -75,6 +79,7 @@ export default function TeamsList() {
         status: team.status.charAt(0).toUpperCase() + team.status.slice(1),
         lastUpdate: team.created_at ? new Date(team.created_at).toLocaleDateString() : "N/A",
         members: new Array(team.member_count || 0).fill(null).map((_, i) => `Member ${i + 1}`),
+        created_at: team.created_at, // Keep original date for sorting
       }));
 
       setTeams(formattedTeams);
@@ -89,6 +94,42 @@ export default function TeamsList() {
     fetchTeams();
   }, []);
 
+  useEffect(() => {
+    // Filter teams based on search query and selected statuses
+    let filtered = teams;
+
+    // Filter by search query (name or description)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (team) =>
+          team.name.toLowerCase().includes(query) ||
+          team.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by selected statuses
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter((team) =>
+        selectedStatuses.map(s => s.toLowerCase()).includes(team.status.toLowerCase())
+      );
+    }
+
+    // Sort by last update (newest first)
+    filtered.sort((a, b) => {
+      const dateA = Date.parse(a.created_at ?? "") || 0;
+      const dateB = Date.parse(b.created_at ?? "") || 0;
+      return dateB - dateA;
+    });
+    
+    setFilteredTeams(filtered);
+  }, [teams, searchQuery, selectedStatuses]);
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedStatuses([]);
+  };
+
   return (
     <div className="max-w-6xl mx-auto mt-14 px-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5">
@@ -100,15 +141,31 @@ export default function TeamsList() {
 
       <div className="flex items-center bg-[#fafafb] p-4 justify-between mb-7 w-full max-w-7xl mx-auto gap-3 rounded">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <SearchBar placeholder="Search teams by name" />
-          <Button variant="primary" size="sm">Filters</Button>
+          <SearchBar 
+            placeholder="Search teams by name" 
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
+          <TeamsFilters 
+            selectedStatuses={selectedStatuses}
+            onStatusChange={setSelectedStatuses}
+            onReset={handleResetFilters}
+          />
         </div>
         <Button variant="primary" className="hover:cursor-pointer" onClick={() => setIsModalOpen(true)}>Add Team</Button>
       </div>
 
       {loading && <p className="text-center text-muted-foreground">Loading teams...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
-      {!loading && !error && <CardGrid items={teams} type="team" onItemsChange={fetchTeams} />}
+      {!loading && !error && (
+        <>
+          {filteredTeams.length === 0 ? (
+            <p className="text-center text-muted-foreground">No teams found matching your filters.</p>
+          ) : (
+            <CardGrid items={filteredTeams} type="team" onItemsChange={fetchTeams} />
+          )}
+        </>
+      )}
 
       <CreateTeamModal 
         open={isModalOpen} 
