@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Plus, MessageCircle, Users, Clock } from "lucide-react";
+import { apiCall } from "@/lib/api";
 
 interface ProjectPageGridProps {
+  projectId: number;
   projectName: string;
   projectDescription?: string;
   userRole: "BA" | "Client";
@@ -50,12 +52,13 @@ interface ButtonProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-function Button({ children, variant = "default", size = "md", className = "", onClick }: ButtonProps) {
+function Button({ children, variant = "default", size = "md", className = "", onClick, disabled = false }: ButtonProps) {
   const variants: Record<ButtonProps["variant"] & string, string> = {
-    primary: "bg-[#341bab] text-white hover:bg-[#2a1589]",
-    default: "bg-gray-200 text-black hover:bg-gray-300",
+    primary: "bg-[#341bab] text-white hover:bg-[#2a1589] disabled:bg-gray-400 disabled:cursor-not-allowed",
+    default: "bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed",
   };
   
   const sizes: Record<ButtonProps["size"] & string, string> = {
@@ -67,6 +70,7 @@ function Button({ children, variant = "default", size = "md", className = "", on
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
@@ -74,7 +78,7 @@ function Button({ children, variant = "default", size = "md", className = "", on
   );
 }
 
-export function ProjectPageGrid({ projectName, projectDescription = "", userRole }: ProjectPageGridProps) {
+export function ProjectPageGrid({ projectId, projectName, projectDescription = "", userRole }: ProjectPageGridProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "chats" | "settings">("dashboard");
 
   return (
@@ -100,7 +104,11 @@ export function ProjectPageGrid({ projectName, projectDescription = "", userRole
       {activeTab === "dashboard" && <DashboardTab userRole={userRole} />}
       {activeTab === "chats" && <ChatsTab chats={mockChats} />}
       {activeTab === "settings" && (
-        <SettingsTab projectName={projectName} projectDescription={projectDescription} />
+        <SettingsTab 
+          projectId={projectId}
+          projectName={projectName} 
+          projectDescription={projectDescription} 
+        />
       )}
     </div>
   );
@@ -215,19 +223,89 @@ function ChatsTab({ chats }: { chats: typeof mockChats }) {
 }
 
 // Settings Tab Content
-function SettingsTab({ projectName, projectDescription }: { projectName: string; projectDescription: string }) {
+function SettingsTab({ 
+  projectId,
+  projectName, 
+  projectDescription 
+}: { 
+  projectId: number;
+  projectName: string; 
+  projectDescription: string;
+}) {
   const [name, setName] = useState(projectName);
   const [description, setDescription] = useState(projectDescription);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleSaveChanges = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      // Check if anything changed
+      if (name === projectName && description === projectDescription) {
+        setError("No changes to save");
+        return;
+      }
+
+      // Prepare update payload with only changed fields
+      const updateData: { name?: string; description?: string } = {};
+      if (name !== projectName) updateData.name = name;
+      if (description !== projectDescription) updateData.description = description;
+
+      await apiCall(`/api/projects/${projectId}`, {
+        method: "PUT",
+        body: JSON.stringify(updateData),
+      });
+
+      setSuccessMessage("Project updated successfully!");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Error updating project:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to update project"
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 bg-gray-50 p-6 min-h-screen">
       <section className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Project Info</h2>
-          <Button variant="primary" size="sm" className="flex items-center gap-2">
-            Save Changes
+          <Button 
+            variant="primary" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={handleSaveChanges}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
+        
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {successMessage}
+          </div>
+        )}
+        
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
         <div className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -236,6 +314,7 @@ function SettingsTab({ projectName, projectDescription }: { projectName: string;
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab]"
+              disabled={isSaving}
             />
           </div>
           <div>
@@ -244,6 +323,7 @@ function SettingsTab({ projectName, projectDescription }: { projectName: string;
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab] min-h-[100px]"
+              disabled={isSaving}
             />
           </div>
         </div>
@@ -303,6 +383,7 @@ export default function App() {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">My Project</h1>
       <ProjectPageGrid 
+        projectId={1}
         projectName="E-Commerce Platform" 
         projectDescription="Building a modern e-commerce solution"
         userRole="BA"

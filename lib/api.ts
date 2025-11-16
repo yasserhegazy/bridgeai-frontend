@@ -64,8 +64,20 @@ export async function apiCall<T = any>(
       throw new Error("Unauthorized. Please log in again.");
     }
 
-    const errorMessage = response.statusText || `HTTP ${response.status}`;
-    throw new Error(`API request failed: ${errorMessage}`);
+    // Try to parse error details from response body
+    let errorMessage = response.statusText || `HTTP ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch {
+      // If JSON parsing fails, use the statusText
+    }
+
+    throw new Error(errorMessage);
   }
 
   const data: T = await response.json();
