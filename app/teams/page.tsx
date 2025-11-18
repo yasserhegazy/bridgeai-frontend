@@ -135,7 +135,9 @@ export default function TeamsList() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5">
         <div className="mb-4 sm:mb-0">
           <h1 className="text-3xl font-semibold tracking-tight">Teams</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage all teams for your organization in one place.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage all teams for your organization in one place.
+          </p>
         </div>
       </div>
 
@@ -173,5 +175,5 @@ export default function TeamsList() {
         onTeamCreated={fetchTeams}
       />
     </div>
-  );
+  )
 }

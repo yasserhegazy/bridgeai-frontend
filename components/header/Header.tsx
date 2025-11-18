@@ -15,6 +15,7 @@ import { geistSans } from "@/fonts";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiCall } from "@/lib/api";
+import { getCookie } from "@/lib/utils";
 
 interface Team {
   id: string;
@@ -30,15 +31,15 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = loading state
   const [teams, setTeams] = useState<Team[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Check for authentication token
+    // Check for authentication token in cookies
     const checkAuth = () => {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       setIsAuthenticated(!!token);
     };
 
@@ -216,7 +217,10 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
       </div>
 
       <div className="flex items-center gap-3">
-        {isAuthenticated ? (
+        {isAuthenticated === null ? (
+          // Loading state - show nothing or a skeleton to prevent flash
+          <div className="w-20 h-8" /> // Empty space while loading
+        ) : isAuthenticated ? (
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -239,9 +243,9 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <DropdownMenuItem 
                   className="text-sm text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
                   onClick={() => {
-                    // Clear token from localStorage and cookie
-                    localStorage.removeItem("token");
+                    // Clear token and role from cookies
                     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+                    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
                     // Update authentication state
                     setIsAuthenticated(false);
                     // Dispatch auth state change event

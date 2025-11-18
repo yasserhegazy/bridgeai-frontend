@@ -4,61 +4,29 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-
-interface LoginError {
-  username?: string;
-  password?: string;
-  general?: string;
-}
+import { cn, getRoleBasedRedirectPath } from "@/lib/utils"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [errors, setErrors] = useState<LoginError>({})
+  const [errors, setErrors] = useState<{username?: string; password?: string; general?: string}>({})
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const validateForm = (): boolean => {
-    const newErrors: LoginError = {}
-
-    if (!username.trim()) {
-      newErrors.username = "Email is required"
-    } else if (!username.includes('@')) {
-      newErrors.username = "Please enter a valid email address"
-    }
-
-    if (!password.trim()) {
-      newErrors.password = "Password is required"
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
 
     setIsLoading(true)
     setErrors({})
 
     try {
-      // Convert data to URLSearchParams for OAuth2 form data
-      const formData = new URLSearchParams();
-      formData.append('username', username);
-      formData.append('password', password);
+      const formData = new URLSearchParams()
+      formData.append("username", username)
+      formData.append("password", password)
 
       const response = await fetch("http://localhost:8000/auth/token", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData,
       })
 
@@ -68,18 +36,30 @@ export default function LoginPage() {
         throw new Error(data.detail || "Login failed")
       }
 
-      // Store the token in both localStorage and cookie
-      localStorage.setItem("access_token", data.access_token);
-      document.cookie = `token=${data.access_token}; path=/; secure; samesite=strict`
+      // ✅ Validate response has required fields
+      if (!data.access_token) {
+        throw new Error("Invalid response: missing access token")
+      }
       
-      // Dispatch auth state change event
-      window.dispatchEvent(new Event('auth-state-changed'))
+      if (!data.role) {
+        throw new Error("Invalid response: missing user role")
+      }
+
+      // ✅ Save token and role in cookies (without secure flag for localhost)
+      document.cookie = `token=${data.access_token}; path=/; max-age=86400`
+      document.cookie = `role=${data.role}; path=/; max-age=86400`
+
+      console.log("✅ Token stored in cookie, role:", data.role)
       
-      // Redirect to main page
-      router.push("/teams")
+      // ✅ Dispatch auth state change event
+      window.dispatchEvent(new Event('auth-state-changed'));
+      
+      // ✅ Redirect based on role
+      router.push(getRoleBasedRedirectPath(data.role))
+
     } catch (error) {
       setErrors({
-        general: error instanceof Error ? error.message : "An error occurred during login"
+        general: error instanceof Error ? error.message : "An error occurred during login",
       })
     } finally {
       setIsLoading(false)
@@ -91,66 +71,43 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-lg border border-border bg-card p-8 shadow-lg">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to your account
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleLogin} className="mt-8 space-y-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-foreground">
-                Email
-              </label>
+              <label htmlFor="username" className="block text-sm font-medium text-foreground">Email</label>
               <Input
                 id="username"
-                name="username"
                 type="email"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={cn("mt-1", errors.username && "border-destructive")}
+                className="mt-1"
                 placeholder="Enter your username"
-                aria-invalid={!!errors.username}
               />
-              {errors.username && (
-                <p className="mt-1 text-sm text-destructive">{errors.username}</p>
-              )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-foreground">Password</label>
               <Input
                 id="password"
-                name="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={cn("mt-1", errors.password && "border-destructive")}
+                className="mt-1"
                 placeholder="Enter your password"
-                aria-invalid={!!errors.password}
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-destructive">{errors.password}</p>
-              )}
             </div>
           </div>
 
           {errors.general && (
-            <div className="text-sm text-destructive mt-2">
-              {errors.general}
-            </div>
+            <div className="text-sm text-destructive">{errors.general}</div>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            variant="primary"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
 

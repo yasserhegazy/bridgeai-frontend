@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   // Explicitly acknowledge both bundlers exist
   turbopack: {}, // This silences the warning
   
+  // Disable Fast Refresh temporarily
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.optimization.runtimeChunk = false;
