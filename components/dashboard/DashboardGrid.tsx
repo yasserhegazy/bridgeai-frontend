@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
+import { InviteMemberModal } from "@/components/teams/InviteMemberModal";
 import { Clock, File, MessageCircle, Plus, Users } from "lucide-react";
 import { apiCall } from "@/lib/api";
 
@@ -34,7 +35,6 @@ export function DashboardGrid() {
   const teamId = params.id as string;
   const [isAddProjectOpen, setAddProjectOpen] = useState(false);
   const [isStartChatOpen, setStartChatOpen] = useState(false);
-  const [isAddMemberOpen, setAddMemberOpen] = useState(false);
   const [projectStats, setProjectStats] = useState<ProjectStats>({
     total: 0,
     pending: 0,
@@ -44,14 +44,8 @@ export function DashboardGrid() {
     rejected: 0,
     archived: 0,
   });
+  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Example projects list for dropdown
-  const projects = [
-    { id: 1, name: "Website Redesign" },
-    { id: 2, name: "Mobile App Development" },
-    { id: 3, name: "Database Migration" },
-  ];
 
   const fetchProjectStats = async () => {
     try {
@@ -70,8 +64,16 @@ export function DashboardGrid() {
       };
       
       setProjectStats(stats);
+      
+      // Get recent projects (last 3)
+      const recent = data
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3);
+      setRecentProjects(recent);
     } catch (error) {
       console.error("Error fetching project stats:", error);
+      // Set empty state on error
+      setRecentProjects([]);
     } finally {
       setIsLoading(false);
     }
@@ -129,14 +131,20 @@ export function DashboardGrid() {
           {/* Recent Projects */}
           <section className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-4">Recent Projects</h2>
-            <ul className="space-y-3">
-              {projects.map((p) => (
-                <li key={p.id} className="flex justify-between items-center">
-                  <p className="font-medium">{p.name}</p>
-                  <StatusBadge status="active" />
-                </li>
-              ))}
-            </ul>
+            {isLoading ? (
+              <p className="text-sm text-gray-500">Loading projects...</p>
+            ) : recentProjects.length === 0 ? (
+              <p className="text-sm text-gray-500">No projects yet</p>
+            ) : (
+              <ul className="space-y-3">
+                {recentProjects.map((p) => (
+                  <li key={p.id} className="flex justify-between items-center">
+                    <p className="font-medium">{p.name}</p>
+                    <StatusBadge status={p.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* Recent Chats */}
@@ -178,14 +186,14 @@ export function DashboardGrid() {
                 <MessageCircle className="w-4 h-4" /> Start Chat
               </Button>
 
-              <Button
-                variant="primary"
-                size="lg"
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => setAddMemberOpen(true)}
-              >
-                <Users className="w-4 h-4" /> Add Team Member
-              </Button>
+              <InviteMemberModal 
+                teamId={teamId} 
+                onInviteSent={handleProjectCreated}
+                triggerLabel="Add Team Member"
+                triggerSize="lg"
+                triggerVariant="primary"
+                triggerClassName="w-full"
+              />
             </div>
           </section>
         </div>
@@ -203,11 +211,15 @@ export function DashboardGrid() {
       {isStartChatOpen && (
         <Modal onClose={() => setStartChatOpen(false)} title="Start Chat">
           <select className="w-full p-2 border rounded mb-2">
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+            {recentProjects.length === 0 ? (
+              <option>No projects available</option>
+            ) : (
+              recentProjects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))
+            )}
           </select>
           <input
             type="text"
@@ -220,22 +232,6 @@ export function DashboardGrid() {
           >
             Start
           </Button>
-        </Modal>
-      )}
-
-      {isAddMemberOpen && (
-        <Modal onClose={() => setAddMemberOpen(false)} title="Add Team Member">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-2 border rounded mb-2"
-          />
-          <Button 
-            className="cursor-pointer"
-            onClick={() => setAddMemberOpen(false)}
-            >
-              Send Invite
-            </Button>
         </Modal>
       )}
     </div>

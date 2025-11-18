@@ -1,28 +1,74 @@
-import { TeamSettingsGrid } from "@/components/TeamSettingsGrid";
+"use client";
 
-// Example: replace with your actual fetch from API or database
-async function getTeamById(id: string) {
-  // This is just a mock. Replace it with real API call.
-  const teams = [
-    { id: "1", name: "Team Alpha", description: "This is the team description" },
-    { id: "2", name: "Team Beta", description: "Handles marketing campaigns" },
-    { id: "3", name: "Team Gamma", description: "This is the team description" },
-    { id: "4", name: "Team Delta", description: "Handles marketing campaigns" },
-    { id: "5", name: "Team Omega", description: "This is the team description" },
-  ];
-  return teams.find(team => team.id === id) || null;
+import { useState, useEffect } from "react";
+import { use } from "react";
+import { TeamSettingsGrid } from "@/components/TeamSettingsGrid";
+import { apiCall } from "@/lib/api";
+
+interface Team {
+  id: string;
+  name: string;
+  description: string;
 }
 
 interface TeamSettingsPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default async function TeamSettingsPage({ params }: TeamSettingsPageProps) {
-  const teamId = params.id;
-  const team = await getTeamById(teamId);
+export default function TeamSettingsPage({ params }: TeamSettingsPageProps) {
+  const resolvedParams = use(params);
+  const [team, setTeam] = useState<Team | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Fetch real team data from backend
+        const data = await apiCall<Team>(`/api/teams/${resolvedParams.id}`);
+        setTeam(data);
+      } catch (err) {
+        console.error('Error fetching team:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load team');
+        setTeam(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeam();
+  }, [resolvedParams.id]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#341BAB]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-500 max-w-md">
+          <h2 className="font-semibold mb-2">Error Loading Team</h2>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!team) {
-    return <div className="text-center text-red-500">Team not found</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-4 text-yellow-500 max-w-md">
+          <h2 className="font-semibold mb-2">Team Not Found</h2>
+          <p>The team you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -41,6 +87,7 @@ export default async function TeamSettingsPage({ params }: TeamSettingsPageProps
         {/* Main content */}
         <main className="flex-1 mt-8 mb-14 overflow-auto">
           <TeamSettingsGrid
+            teamId={resolvedParams.id}
             teamName={team.name}
             teamDescription={team.description}
           />

@@ -14,6 +14,7 @@ import { COLORS } from "@/constants";
 import { geistSans } from "@/fonts";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiCall } from "@/lib/api";
 
 interface Team {
   id: string;
@@ -30,6 +31,9 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Check for authentication token
@@ -50,17 +54,32 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
     };
   }, []);
 
+  // Fetch teams when authenticated
+  useEffect(() => {
+    const fetchTeams = async () => {
+      if (!isAuthenticated) {
+        setTeams([]);
+        setLoadingTeams(false);
+        return;
+      }
+
+      try {
+        setLoadingTeams(true);
+        const data = await apiCall<Team[]>('/api/teams');
+        setTeams(data);
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+        setTeams([]);
+      } finally {
+        setLoadingTeams(false);
+      }
+    };
+
+    fetchTeams();
+  }, [isAuthenticated]);
+
   // Local state for current team
   const [currentTeamId, setCurrentTeamId] = useState(initialTeamId || pathname.split("/")[2] || "");
-
-  // Example teams
-  const teams: Team[] = [
-    { id: "1", name: "Team Alpha" },
-    { id: "2", name: "Team Beta" },
-    { id: "3", name: "Team Gamma" },
-    { id: "4", name: "Team Delta" },
-    { id: "5", name: "Team Omega" },
-  ];
 
   // Current team name for display
   const currentTeam = teams.find(t => t.id === currentTeamId)?.name || "Select Team";
@@ -81,8 +100,13 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
     setOpen(false);
   };
 
-  const recentlyVisited = teams.slice(0, 2);
-  const moreTeams = teams.slice(2, 7);
+  // Filter teams based on search query
+  const filteredTeams = teams.filter(team => 
+    team.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const recentlyVisited = filteredTeams.slice(0, 2);
+  const moreTeams = filteredTeams.slice(2);
 
   return (
     <header className="fixed top-0 left-0 w-full h-12 px-4 sm:px-3 bg-white border-b z-50 flex items-center justify-between">
@@ -115,41 +139,66 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                     <input
                       type="text"
                       placeholder="Search teams"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-8 pr-3 py-1.5 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-1 focus:ring-[#341BAB]"
                     />
                   </div>
-                  <Button size="sm" className="flex items-center gap-1 bg-[#341BAB] text-white hover:bg-[#271080]">
+                  <Button 
+                    size="sm" 
+                    className="flex items-center gap-1 bg-[#341BAB] text-white hover:bg-[#271080]"
+                    onClick={() => router.push('/teams')}
+                  >
                     <Plus className="w-4 h-4" /> Create Team
                   </Button>
                 </div>
 
-                {/* Recently Visited */}
-                <Section title="Recently Visited">
-                  <ul className="flex flex-col gap-1 flex-1 max-h-60 overflow-y-auto pr-1">
-                    {recentlyVisited.map(team => (
-                      <TeamItem
-                        key={team.id}
-                        name={team.name}
-                        isActive={team.id === currentTeamId}
-                        onClick={() => handleTeamSelect(team)}
-                      />
-                    ))}
-                  </ul>
-                </Section>
+                {loadingTeams ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#341BAB]"></div>
+                  </div>
+                ) : filteredTeams.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                    <Users className="w-12 h-12 mb-2 opacity-30" />
+                    <p className="text-sm">
+                      {searchQuery ? 'No teams found' : 'No teams yet'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Recently Visited */}
+                    {recentlyVisited.length > 0 && (
+                      <Section title="Recently Visited">
+                        <ul className="flex flex-col gap-1 flex-1 max-h-60 overflow-y-auto pr-1">
+                          {recentlyVisited.map(team => (
+                            <TeamItem
+                              key={team.id}
+                              name={team.name}
+                              isActive={team.id === currentTeamId}
+                              onClick={() => handleTeamSelect(team)}
+                            />
+                          ))}
+                        </ul>
+                      </Section>
+                    )}
 
-                {/* More Teams */}
-                <Section title="More Teams">
-                  <ul className="flex flex-col gap-1 flex-1 max-h-60 overflow-y-auto pr-1">
-                    {moreTeams.map(team => (
-                      <TeamItem
-                        key={team.id}
-                        name={team.name}
-                        isActive={team.id === currentTeamId}
-                        onClick={() => handleTeamSelect(team)}
-                      />
-                    ))}
-                  </ul>
-                </Section>
+                    {/* More Teams */}
+                    {moreTeams.length > 0 && (
+                      <Section title={recentlyVisited.length > 0 ? "More Teams" : "All Teams"}>
+                        <ul className="flex flex-col gap-1 flex-1 max-h-60 overflow-y-auto pr-1">
+                          {moreTeams.map(team => (
+                            <TeamItem
+                              key={team.id}
+                              name={team.name}
+                              isActive={team.id === currentTeamId}
+                              onClick={() => handleTeamSelect(team)}
+                            />
+                          ))}
+                        </ul>
+                      </Section>
+                    )}
+                  </>
+                )}
 
                 <div className="border-t pt-3 mt-3">
                   <Link 
@@ -174,7 +223,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <Button 
                   className="rounded-full w-8 h-8 flex items-center justify-center p-0 cursor-pointer hover:opacity-80 transition-opacity" 
                   style={{ backgroundColor: COLORS.primary, color: COLORS.textLight }}
-                  onClick={() => router.push("/auth/me")}
+                  onClick={() => router.push("/profile")}
                 >
                   <span className="font-semibold text-sm">KJ</span>
                 </Button>
@@ -182,7 +231,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem 
                   className="text-sm cursor-pointer"
-                  onClick={() => router.push("/auth/me")}
+                  onClick={() => router.push("/profile")}
                 >
                   Profile Settings
                 </DropdownMenuItem>
@@ -198,7 +247,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                     // Dispatch auth state change event
                     window.dispatchEvent(new Event('auth-state-changed'));
                     // Redirect to login page
-                    router.push("/auth/login");
+                    router.push("/login");
                   }}
                 >
                   <LogOut className="w-4 h-4" />
@@ -209,20 +258,20 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
           </>
         ) : (
           <div className="flex items-center gap-2">
-            {pathname === "/auth/register" ? (
+            {pathname === "/register" ? (
               <Button 
                 variant="primary"
                 size="sm" 
-                onClick={() => router.push("/auth/login")}
+                onClick={() => router.push("/login")}
                 className="flex items-center gap-2"
               >
                 Login
               </Button>
-            ) : pathname === "/auth/login" ? (
+            ) : pathname === "/login" ? (
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => router.push("/auth/register")}
+                onClick={() => router.push("/register")}
                 className="flex items-center gap-2"
               >
                 Register
@@ -232,7 +281,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <Button 
                   variant="outline"
                   size="sm" 
-                  onClick={() => router.push("/auth/login")}
+                  onClick={() => router.push("/login")}
                   className="flex items-center gap-2"
                 >
                   Login
@@ -240,7 +289,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => router.push("/auth/register")}
+                  onClick={() => router.push("/register")}
                   className="flex items-center gap-2"
                 >
                   Register
@@ -274,9 +323,9 @@ function TeamItem({ name, isActive, onClick }: { name: string; isActive?: boolea
         }`}
       >
         <div className="flex items-center gap-2 text-sm sm:text-[15px] font-medium text-gray-700 hover:text-[#341BAB]">
-          <Users className="w-4 h-4 text-gray-500 flex-shrink-0" /> {name}
+          <Users className="w-4 h-4 text-gray-500 shrink-0" /> {name}
         </div>
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <button className="p-1 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center" title="Team Settings">
             <Settings className="w-4 h-4 text-gray-500 cursor-pointer" />
           </button>

@@ -69,7 +69,7 @@ export default function LoginPage() {
       }
 
       // Store the token in both localStorage and cookie
-      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("token", data.access_token);
       document.cookie = `token=${data.access_token}; path=/; secure; samesite=strict`
       
       // Dispatch auth state change event
