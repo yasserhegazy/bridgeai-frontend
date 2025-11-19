@@ -16,6 +16,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiCall } from "@/lib/api";
 import { getCookie } from "@/lib/utils";
+import { NotificationBell } from "./NotificationBell";
 
 interface Team {
   id: string;
@@ -222,6 +223,9 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
           <div className="w-20 h-8" /> // Empty space while loading
         ) : isAuthenticated ? (
           <>
+            {/* Notification Bell */}
+            <NotificationBell />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
