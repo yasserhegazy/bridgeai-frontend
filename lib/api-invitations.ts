@@ -42,9 +42,20 @@ export interface InvitationAcceptResponse {
   role: string;
 }
 
-// Get auth token from localStorage
+// Get auth token from cookies
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
+  
+  // Get token from cookies
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'token') {
+      return value;
+    }
+  }
+  
+  // Fallback to localStorage for backward compatibility
   return localStorage.getItem('token');
 };
 

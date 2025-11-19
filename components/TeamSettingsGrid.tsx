@@ -53,6 +53,8 @@ export function TeamSettingsGrid({
   const [updatingDescription, setUpdatingDescription] = useState(teamDescription);
   const [isSaving, setIsSaving] = useState(false);
   const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
+  const [changingRoleMemberId, setChangingRoleMemberId] = useState<number | null>(null);
+  const [newRole, setNewRole] = useState<string>('');
 
   useEffect(() => {
     fetchPendingInvites();
@@ -159,6 +161,61 @@ export function TeamSettingsGrid({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleChangeRole = async (memberId: number, currentRole: string) => {
+    setChangingRoleMemberId(memberId);
+    setNewRole(currentRole);
+  };
+
+  const handleConfirmRoleChange = async () => {
+    if (!changingRoleMemberId || !newRole) return;
+
+    try {
+      await apiCall(`/api/teams/${teamId}/members/${changingRoleMemberId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      
+      setFlashMessage({ type: 'success', message: 'Member role updated successfully!' });
+      setTimeout(() => setFlashMessage(null), 3000);
+      
+      fetchTeamMembers();
+      setChangingRoleMemberId(null);
+      setNewRole('');
+    } catch (error) {
+      console.error('Error changing role:', error);
+      setFlashMessage({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to change member role' 
+      });
+      setTimeout(() => setFlashMessage(null), 5000);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number, memberName: string) => {
+    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) {
+      return;
+    }
+
+    try {
+      await apiCall(`/api/teams/${teamId}/members/${memberId}`, {
+        method: 'DELETE'
+      });
+      
+      setFlashMessage({ type: 'success', message: 'Member removed successfully!' });
+      setTimeout(() => setFlashMessage(null), 3000);
+      
+      fetchTeamMembers();
+    } catch (error) {
+      console.error('Error removing member:', error);
+      setFlashMessage({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Failed to remove member' 
+      });
+      setTimeout(() => setFlashMessage(null), 5000);
+    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -293,8 +350,13 @@ export function TeamSettingsGrid({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Change Role</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem onClick={() => handleChangeRole(member.id, member.role)}>
+                            Change Role
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleRemoveMember(member.id, displayName)}
+                          >
                             <UserX className="w-4 h-4 mr-2" />
                             Remove Member
                           </DropdownMenuItem>
@@ -375,6 +437,49 @@ export function TeamSettingsGrid({
           )}
         </div>
       </section>
+
+      {/* Role Change Dialog */}
+      {changingRoleMemberId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Change Member Role</h3>
+            <div className="space-y-2 mb-4">
+              {['owner', 'admin', 'member', 'viewer'].map((role) => (
+                <label key={role} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role}
+                    checked={newRole === role}
+                    onChange={(e) => setNewRole(e.target.value)}
+                    className="w-4 h-4 text-[#341BAB]"
+                  />
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(role)}`}>
+                    {role}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setChangingRoleMemberId(null);
+                  setNewRole('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmRoleChange}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

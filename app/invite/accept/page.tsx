@@ -21,9 +21,19 @@ export default function AcceptInvitePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check authentication status
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    // Check authentication status from cookies
+    const checkAuth = () => {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'token' && value) {
+          return true;
+        }
+      }
+      // Fallback to localStorage
+      return !!localStorage.getItem('token');
+    };
+    setIsAuthenticated(checkAuth());
   }, []);
 
   useEffect(() => {
@@ -224,18 +234,37 @@ export default function AcceptInvitePage() {
                     {accepting ? "Joining Team..." : "Accept Invitation"}
                   </Button>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600 text-center">
-                      You need to log in to accept this invitation
-                    </p>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm font-medium text-yellow-900 mb-2">
+                        Authentication Required
+                      </p>
+                      <p className="text-sm text-yellow-800">
+                        This invitation is for <strong>{invitation.email}</strong>.
+                        Please log in or create an account with this email to accept.
+                      </p>
+                    </div>
+                    
                     <Link href={`/login?redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
                       <Button className="w-full bg-[#341BAB] hover:bg-[#271080]">
-                        Log In to Accept
+                        <Mail className="w-4 h-4 mr-2" />
+                        Log In with {invitation.email}
                       </Button>
                     </Link>
-                    <Link href={`/register?redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Or</span>
+                      </div>
+                    </div>
+                    
+                    <Link href={`/register?email=${encodeURIComponent(invitation.email)}&redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
                       <Button variant="outline" className="w-full">
-                        Create Account
+                        <Users className="w-4 h-4 mr-2" />
+                        Create Account with {invitation.email}
                       </Button>
                     </Link>
                   </div>
