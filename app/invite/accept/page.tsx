@@ -82,7 +82,7 @@ export default function AcceptInvitePage() {
       if (err instanceof Error && err.message === 'Authentication required') {
         // Redirect to login with return URL
         const returnUrl = encodeURIComponent(`/invite/accept?token=${token}`);
-        router.push(`/login?redirect=${returnUrl}`);
+        router.push(`/auth/login?redirect=${returnUrl}`);
       } else {
         setError(err instanceof Error ? err.message : 'Failed to accept invitation');
       }
@@ -245,7 +245,7 @@ export default function AcceptInvitePage() {
                       </p>
                     </div>
                     
-                    <Link href={`/login?redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
+                    <Link href={`/auth/login?redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
                       <Button className="w-full bg-[#341BAB] hover:bg-[#271080]">
                         <Mail className="w-4 h-4 mr-2" />
                         Log In with {invitation.email}
@@ -261,7 +261,7 @@ export default function AcceptInvitePage() {
                       </div>
                     </div>
                     
-                    <Link href={`/register?email=${encodeURIComponent(invitation.email)}&redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
+                    <Link href={`/auth/register?email=${encodeURIComponent(invitation.email)}&redirect=${encodeURIComponent(`/invite/accept?token=${token}`)}`}>
                       <Button variant="outline" className="w-full">
                         <Users className="w-4 h-4 mr-2" />
                         Create Account with {invitation.email}

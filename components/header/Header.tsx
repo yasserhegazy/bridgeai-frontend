@@ -258,7 +258,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                     // Dispatch auth state change event
                     window.dispatchEvent(new Event('auth-state-changed'));
                     // Redirect to login page
-                    router.push("/login");
+                    router.push("/auth/login");
                   }}
                 >
                   <LogOut className="w-4 h-4" />
@@ -269,20 +269,20 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
           </>
         ) : (
           <div className="flex items-center gap-2">
-            {pathname === "/register" ? (
+            {pathname === "/auth/register" ? (
               <Button 
                 variant="primary"
                 size="sm" 
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/auth/login")}
                 className="flex items-center gap-2"
               >
                 Login
               </Button>
-            ) : pathname === "/login" ? (
+            ) : pathname === "/auth/login" ? (
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => router.push("/register")}
+                onClick={() => router.push("/auth/register")}
                 className="flex items-center gap-2"
               >
                 Register
@@ -292,7 +292,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <Button 
                   variant="outline"
                   size="sm" 
-                  onClick={() => router.push("/login")}
+                  onClick={() => router.push("/auth/login")}
                   className="flex items-center gap-2"
                 >
                   Login
@@ -300,7 +300,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => router.push("/register")}
+                  onClick={() => router.push("/auth/register")}
                   className="flex items-center gap-2"
                 >
                   Register
