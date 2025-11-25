@@ -126,7 +126,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
           <div className="relative">
             <button
               onClick={() => setOpen(!open)}
-              className="flex items-center justify-between h-12 px-4 w-50 hover:bg-gray-100 cursor-pointer transition-colors"
+              className="flex items-center justify-between h-12 px-4 w-70 hover:bg-gray-100 cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-gray-500" />
