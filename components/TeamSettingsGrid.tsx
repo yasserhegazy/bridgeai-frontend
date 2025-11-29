@@ -49,8 +49,8 @@ export function TeamSettingsGrid({
   const [loadingInvites, setLoadingInvites] = useState(true);
   const [members, setMembers] = useState<Member[]>(initialMembers || []);
   const [loadingMembers, setLoadingMembers] = useState(true);
-  const [updatingName, setUpdatingName] = useState(teamName);
-  const [updatingDescription, setUpdatingDescription] = useState(teamDescription);
+  const [updatingName, setUpdatingName] = useState(teamName || '');
+  const [updatingDescription, setUpdatingDescription] = useState(teamDescription || '');
   const [isSaving, setIsSaving] = useState(false);
   const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
   const [changingRoleMemberId, setChangingRoleMemberId] = useState<number | null>(null);
@@ -62,8 +62,8 @@ export function TeamSettingsGrid({
   }, [teamId]);
 
   useEffect(() => {
-    setUpdatingName(teamName);
-    setUpdatingDescription(teamDescription);
+    setUpdatingName(teamName || '');
+    setUpdatingDescription(teamDescription || '');
   }, [teamName, teamDescription]);
 
   const fetchPendingInvites = async () => {
