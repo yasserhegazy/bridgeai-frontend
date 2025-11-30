@@ -50,7 +50,7 @@ export function TeamSettingsGrid({
   const [members, setMembers] = useState<Member[]>(initialMembers || []);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [updatingName, setUpdatingName] = useState(teamName);
-  const [updatingDescription, setUpdatingDescription] = useState(teamDescription);
+  const [updatingDescription, setUpdatingDescription] = useState(teamDescription || '');
   const [isSaving, setIsSaving] = useState(false);
   const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
   const [changingRoleMemberId, setChangingRoleMemberId] = useState<number | null>(null);
