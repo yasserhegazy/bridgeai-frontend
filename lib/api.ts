@@ -67,43 +67,35 @@ export async function apiCall<T = any>(
     "Authorization": `Bearer ${token}`,
   };
 
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        clearAccessToken();
-        throw new Error("Unauthorized. Please log in again.");
-      }
-
-      // Try to parse error details from response body
-      let errorMessage = response.statusText || `HTTP ${response.status}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) {
-          errorMessage = errorData.detail;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        }
-      } catch {
-        // If JSON parsing fails, use the statusText
-      }
-
-      throw new Error(errorMessage);
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearAccessToken();
+      throw new Error("Unauthorized. Please log in again.");
     }
 
-    const data: T = await response.json();
-    return data;
-  } catch (error) {
-    // Add more context to network errors
-    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error(`Cannot connect to backend at ${API_BASE_URL}. Please ensure the server is running and CORS is configured.`);
+    // Try to parse error details from response body
+    let errorMessage = response.statusText || `HTTP ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch {
+      // If JSON parsing fails, use the statusText
     }
-    throw error;
+
+    throw new Error(errorMessage);
   }
+
+  const data: T = await response.json();
+  return data;
 }
 
 /**

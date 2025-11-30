@@ -26,13 +26,8 @@ export function NotificationBell() {
       setNotifications(data.notifications || []);
       setUnreadCount(data.unread_count || 0);
     } catch (error) {
-      // Only log once with the error message
-      if (error instanceof Error) {
-        console.error('Failed to fetch notifications:', error.message);
-      } else {
-        console.error('Failed to fetch notifications:', error);
-      }
-      
+      console.error('Failed to fetch notifications:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       // Set empty state on error
       setNotifications([]);
       setUnreadCount(0);
