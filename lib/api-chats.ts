@@ -3,79 +3,83 @@
  */
 import { apiCall } from "./api";
 
+export type SessionStatus = "active" | "completed";
+
+export interface ChatMessage {
+  id: number;
+  session_id: number;
+  sender_id: number | null;
+  sender_type: "client" | "ai" | "ba";
+  content: string;
+  timestamp: string;
+}
+
 export interface ChatSummary {
-  id: string;
+  id: number;
+  project_id: number;
+  user_id: number;
   name: string;
-  lastMessage?: string;
-  date?: string;
-  project_id?: number;
+  status: SessionStatus;
+  started_at: string;
+  ended_at: string | null;
+  message_count: number;
 }
 
 export interface ChatDetail {
-  id: string;
+  id: number;
+  project_id: number;
+  user_id: number;
   name: string;
-  participants: string[];
-  messages?: Array<{ sender: string; text: string; time: string }>;
+  status: SessionStatus;
+  started_at: string;
+  ended_at: string | null;
+  messages: ChatMessage[];
+  message_count?: number;
 }
 
-const MOCK_CHATS: ChatSummary[] = [
-  { id: "1", name: "Client Meeting", lastMessage: "Reviewed designs", date: "2025-09-16" },
-  { id: "2", name: "Dev Discussion", lastMessage: "Merged feature branch", date: "2025-09-15" },
-  { id: "3", name: "Team Standup", lastMessage: "Blocked tasks discussed", date: "2025-09-14" },
-];
-
-const MOCK_CHAT_DETAIL: ChatDetail = {
-  id: "1",
-  name: "Client Meeting",
-  participants: ["You", "Project BA"],
-  messages: [
-    { sender: "Project BA", text: "Please review the CRS draft.", time: "10:00 AM" },
-    { sender: "You", text: "Will do, thanks.", time: "10:02 AM" },
-  ],
-};
-
 /**
- * Fetch chats for a given project. Falls back to mock data if the backend call fails.
+ * Fetch chats for a given project.
  */
 export async function fetchProjectChats(projectId: number): Promise<ChatSummary[]> {
-  try {
-    const data = await apiCall<ChatSummary[]>(`/api/projects/${projectId}/chats`);
-    return data;
-  } catch (err) {
-    // Backend might not be available yet — return mock data so UI can be built.
-    console.warn("fetchProjectChats failed, returning mock data:", err);
-    return MOCK_CHATS.map((c) => ({ ...c, project_id: projectId }));
-  }
+  return apiCall<ChatSummary[]>(`/api/projects/${projectId}/chats`);
 }
 
 /**
- * Fetch a single chat detail (project-scoped). Falls back to mock.
+ * Fetch a single chat detail (project-scoped).
  */
-export async function fetchProjectChat(projectId: number, chatId: string): Promise<ChatDetail | null> {
-  try {
-    const data = await apiCall<ChatDetail>(`/api/projects/${projectId}/chats/${chatId}`);
-    return data;
-  } catch (err) {
-    console.warn("fetchProjectChat failed, returning mock chat:", err);
-    // If chatId matches mock, return the mock detail, otherwise return a generated detail
-    if (chatId === MOCK_CHAT_DETAIL.id) return MOCK_CHAT_DETAIL;
-    return {
-      id: chatId,
-      name: `Chat ${chatId}`,
-      participants: ["You", "Member A"],
-      messages: [],
-    };
-  }
+export async function fetchProjectChat(projectId: number, chatId: number): Promise<ChatDetail | null> {
+  return apiCall<ChatDetail>(`/api/projects/${projectId}/chats/${chatId}`);
 }
 
 /**
- * Optionally fetch all chats for the current client across projects.
+ * Create a chat session for a project.
  */
-export async function fetchAllClientChats(): Promise<ChatSummary[]> {
-  try {
-    return await apiCall<ChatSummary[]>(`/api/chats`);
-  } catch (err) {
-    console.warn("fetchAllClientChats failed, returning mock data:", err);
-    return MOCK_CHATS;
-  }
+export async function createProjectChat(projectId: number, payload: { name: string }): Promise<ChatDetail> {
+  return apiCall<ChatDetail>(`/api/projects/${projectId}/chats`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Update a chat session (status or name).
+ */
+export async function updateProjectChat(
+  projectId: number,
+  chatId: number,
+  payload: { name?: string; status?: SessionStatus }
+): Promise<ChatDetail> {
+  return apiCall<ChatDetail>(`/api/projects/${projectId}/chats/${chatId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Delete a chat session.
+ */
+export async function deleteProjectChat(projectId: number, chatId: number): Promise<void> {
+  await apiCall(`/api/projects/${projectId}/chats/${chatId}`, {
+    method: "DELETE",
+  });
 }

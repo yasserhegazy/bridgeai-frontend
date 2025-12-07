@@ -94,8 +94,18 @@ export async function apiCall<T = any>(
     throw new Error(errorMessage);
   }
 
-  const data: T = await response.json();
-  return data;
+  // Handle empty or non-JSON responses (e.g., 204 No Content)
+  const responseText = await response.text();
+  if (!responseText) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    // Fallback: return raw text if parsing fails
+    return responseText as unknown as T;
+  }
 }
 
 /**
