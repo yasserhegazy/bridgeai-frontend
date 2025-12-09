@@ -101,24 +101,26 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
     <div className="flex flex-col gap-6">
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
-        {(["dashboard", "chats", "settings"] as const).map((tab) => (
-          <button
-            key={tab}
-            className={`px-4 py-2 font-semibold ${
-              activeTab === tab
-                ? "border-b-2 border-[#341bab] text-black"
-                : "text-gray-500 hover:text-black hover:cursor-pointer"
-            }`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === "dashboard" ? "Dashboard" : tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+        {(["dashboard", "chats", "settings"] as const)
+          .filter((tab) => tab !== "chats" || userRole === "Client")
+          .map((tab) => (
+            <button
+              key={tab}
+              className={`px-4 py-2 font-semibold ${
+                activeTab === tab
+                  ? "border-b-2 border-[#341bab] text-black"
+                  : "text-gray-500 hover:text-black hover:cursor-pointer"
+              }`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab === "dashboard" ? "Dashboard" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
       </div>
 
       {/* Tab Content */}
       {activeTab === "dashboard" && <DashboardTab userRole={userRole} onStartChat={handleStartChat} />}
-      {activeTab === "chats" && <ChatsTab projectId={projectId} createChatTrigger={createChatTrigger} />}
+      {activeTab === "chats" && userRole === "Client" && <ChatsTab projectId={projectId} createChatTrigger={createChatTrigger} />}
       {activeTab === "settings" && (
         <SettingsTab 
           projectId={projectId}
@@ -165,9 +167,11 @@ function DashboardTab({ userRole, onStartChat }: { userRole: "BA" | "Client"; on
           <Button variant="primary" size="lg" className="flex items-center gap-2">
             <Plus className="w-4 h-4" /> Add Project
           </Button>
-          <Button variant="primary" size="lg" className="flex items-center gap-2" onClick={onStartChat}>
-            <MessageCircle className="w-4 h-4" /> Start Chat
-          </Button>
+          {userRole === "Client" && (
+            <Button variant="primary" size="lg" className="flex items-center gap-2" onClick={onStartChat}>
+              <MessageCircle className="w-4 h-4" /> Start Chat
+            </Button>
+          )}
           <Button variant="primary" size="lg" className="flex items-center gap-2">
             <Users className="w-4 h-4" /> Add Team Member
           </Button>
@@ -180,10 +184,10 @@ function DashboardTab({ userRole, onStartChat }: { userRole: "BA" | "Client"; on
           {/* Recent Chats / Requests */}
           <section className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-4">
-              {userRole === "BA" ? "Recent Chats" : "Recent Requests"}
+              {userRole === "Client" ? "Recent Chats" : "Recent Requests"}
             </h2>
             <ul className="space-y-3">
-              {(userRole === "BA" ? mockChats : mockRequests).map((item) => (
+              {(userRole === "Client" ? mockChats : mockRequests).map((item) => (
                 <li key={item.id} className="flex justify-between items-center">
                   <p className="text-black font-medium">{'name' in item ? item.name : item.title}</p>
                   {'status' in item && <StatusBadge status={item.status} />}

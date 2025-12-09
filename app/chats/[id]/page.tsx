@@ -57,6 +57,12 @@ export default function ChatPage({ params }: ChatPageProps) {
           getCurrentUser<CurrentUser>(),
         ]);
 
+        // Restrict access: only clients can view chats
+        if (userData.role === "ba") {
+          setError("Access denied. Only clients can view chats.");
+          return;
+        }
+
         setChat(chatData);
         setCurrentUser(userData);
       } catch (err) {
