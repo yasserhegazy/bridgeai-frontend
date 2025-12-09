@@ -1,12 +1,19 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatUI } from "@/components/chats/ChatUI";
 import { ChatDetail, fetchProjectChat } from "@/lib/api-chats";
+import { getCurrentUser } from "@/lib/api";
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
+}
+
+interface CurrentUser {
+  id: number;
+  role: "ba" | "client" | string;
+  full_name?: string;
 }
 
 export default function ChatPage({ params }: ChatPageProps) {
@@ -15,6 +22,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   const searchParams = useSearchParams();
   const [chat, setChat] = useState<ChatDetail | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -44,8 +52,13 @@ export default function ChatPage({ params }: ChatPageProps) {
           return;
         }
 
-        const data = await fetchProjectChat(projectId, Number(id));
-        setChat(data);
+        const [chatData, userData] = await Promise.all([
+          fetchProjectChat(projectId, Number(id)),
+          getCurrentUser<CurrentUser>(),
+        ]);
+
+        setChat(chatData);
+        setCurrentUser(userData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load chat");
       } finally {
@@ -56,27 +69,18 @@ export default function ChatPage({ params }: ChatPageProps) {
     loadChat();
   }, [id, projectIdFromQuery]);
 
-  const chatForUI = useMemo(() => {
-    if (!chat) return null;
-    return {
-      id: chat.id.toString(),
-      name: chat.name,
-      participants: ["You", "Project team"],
-    };
-  }, [chat]);
-
   if (loading) {
     return <p className="text-center mt-20">Loading chat...</p>;
   }
 
-  if (error || !chatForUI) {
+  if (error || !chat || !currentUser) {
     return <p className="text-center mt-20 text-red-600">{error || "Chat not found"}</p>;
   }
 
   return (
     <div className="flex justify-center mt-14 px-6 sm:px-8">
       <div className="w-full max-w-4xl bg-white shadow rounded-2xl flex flex-col h-[80vh]">
-        <ChatUI chat={chatForUI} />
+        <ChatUI chat={chat} currentUser={currentUser} />
       </div>
     </div>
   );
