@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, WifiOff } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { ChatDetail, ChatMessage } from "@/lib/api-chats";
+import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
+import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
 import { getAccessToken } from "@/lib/api";
 
 interface ChatUIProps {
@@ -19,7 +21,7 @@ interface ChatUIProps {
 }
 
 type ConnectionState = "connecting" | "open" | "closed" | "error";
-type LocalChatMessage = ChatMessage & { _localId?: string; pending?: boolean; failed?: boolean };
+type LocalChatMessage = ChatMessageData & { _localId?: string; pending?: boolean; failed?: boolean };
 
 export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [messages, setMessages] = useState<LocalChatMessage[]>(chat.messages || []);
@@ -27,6 +29,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [connectionState, setConnectionState] = useState<ConnectionState>("connecting");
   const [wsError, setWsError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isAiTyping, setIsAiTyping] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -129,6 +132,11 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         };
         console.log("[ChatUI] Incoming message processed:", incoming);
 
+        // Hide typing indicator when AI responds
+        if (incoming.sender_type === "ai") {
+          setIsAiTyping(false);
+        }
+
         setMessages((prev) => {
           // Avoid duplicates when history + websocket echo overlap
           const exactIdx = prev.findIndex((m) => m.id === incoming.id);
@@ -210,6 +218,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
     try {
       setIsSending(true);
+      setIsAiTyping(true); // Show typing indicator while waiting for AI
       console.log("[ChatUI] Sending message via WebSocket:", payload);
       socketRef.current.send(JSON.stringify(payload));
       console.log("[ChatUI] Message sent successfully");
@@ -224,14 +233,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     }
   };
 
-  const renderSenderLabel = (msg: ChatMessage) => {
-    if (msg.sender_type === "ai") return "Bridge AI";
-    if (msg.sender_id === currentUser.id) return "You";
-    if (msg.sender_type === "ba") return "Business Analyst";
-    return "Client";
-  };
-
-  const isOwnMessage = (msg: ChatMessage) =>
+  const isOwnMessage = (msg: LocalChatMessage) =>
     msg.sender_id === currentUser.id && msg.sender_type !== "ai";
 
   // CRS modals (still placeholder)
@@ -322,27 +324,17 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             {wsError}
           </div>
         )}
-        {sortedMessages.map((msg) => (
-          <div key={msg.id} className={`flex ${isOwnMessage(msg) ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`rounded-2xl px-4 py-2 max-w-xl shadow border ${
-                msg.sender_type === "ai"
-                  ? "bg-indigo-50 border-indigo-100 text-gray-900"
-                  : isOwnMessage(msg)
-                  ? "bg-[#341bab] border-[#341bab] text-white"
-                  : "bg-white border-gray-200 text-gray-800"
-              }`}
-            >
-              <div className="text-xs font-semibold mb-1 opacity-80">{renderSenderLabel(msg)}</div>
-              <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              <div className="flex items-center gap-2 text-xs opacity-70 mt-1">
-                <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                {msg.pending && <span className="text-[10px] uppercase tracking-wide">sending…</span>}
-                {msg.failed && <span className="text-[10px] uppercase tracking-wide text-red-300">failed</span>}
-              </div>
-            </div>
-          </div>
-        ))}
+        <AnimatePresence mode="popLayout">
+          {sortedMessages.map((msg) => (
+            <ChatMessage
+              key={msg.id}
+              message={msg}
+              isOwn={isOwnMessage(msg)}
+              currentUserName={currentUser.full_name}
+            />
+          ))}
+          {isAiTyping && <TypingIndicator key="typing-indicator" />}
+        </AnimatePresence>
         <div ref={bottomRef} />
       </div>
 
