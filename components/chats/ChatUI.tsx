@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
 import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
 import { getAccessToken } from "@/lib/api";
+import { CRSOut, fetchLatestCRS, createCRS, updateCRSStatus } from "@/lib/api-crs";
+import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 
 interface ChatUIProps {
   chat: ChatDetail;
@@ -236,25 +238,93 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const isOwnMessage = (msg: LocalChatMessage) =>
     msg.sender_id === currentUser.id && msg.sender_type !== "ai";
 
-  // CRS modals (still placeholder)
+  // CRS state
   const [openDraft, setOpenDraft] = useState(false);
   const [openGenerate, setOpenGenerate] = useState(false);
-  const [draftText, setDraftText] = useState<string>(
-    "This is a mock CRS draft generated from the chat. Replace with backend document when available."
-  );
+  const [latestCRS, setLatestCRS] = useState<CRSOut | null>(null);
+  const [crsLoading, setCrsLoading] = useState(false);
+  const [crsError, setCrsError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Load CRS when opening the draft dialog
+  useEffect(() => {
+    if (openDraft && chat.project_id) {
+      loadCRS();
+    }
+  }, [openDraft, chat.project_id]);
+
+  const loadCRS = async () => {
+    if (!chat.project_id) return;
+    
+    try {
+      setCrsLoading(true);
+      setCrsError(null);
+      const crs = await fetchLatestCRS(chat.project_id);
+      setLatestCRS(crs);
+    } catch (err) {
+      setCrsError(err instanceof Error ? err.message : "Failed to load CRS");
+      setLatestCRS(null);
+    } finally {
+      setCrsLoading(false);
+    }
+  };
+
   const handleGenerateCRS = async () => {
-    setIsGenerating(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setIsGenerating(false);
-    setOpenGenerate(false);
-    setOpenDraft(true);
+    if (!chat.project_id) {
+      alert("Project ID not found");
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      setCrsError(null);
+      
+      // Compile chat conversation into content
+      const conversationText = messages
+        .filter(msg => msg.sender_type !== "system")
+        .map(msg => `${msg.sender_type === "client" ? "Client" : "AI"}: ${msg.content}`)
+        .join("\n\n");
+
+      // Extract key points from conversation (simple extraction)
+      const summaryPoints = messages
+        .filter(msg => msg.sender_type === "client")
+        .map(msg => msg.content)
+        .filter(content => content.length > 20)
+        .slice(0, 5); // Take first 5 meaningful client messages
+
+      // Create CRS document
+      const newCRS = await createCRS({
+        project_id: chat.project_id,
+        content: conversationText,
+        summary_points: summaryPoints,
+      });
+
+      setLatestCRS(newCRS);
+      setOpenGenerate(false);
+      setOpenDraft(true);
+    } catch (err) {
+      setCrsError(err instanceof Error ? err.message : "Failed to generate CRS");
+      alert("Failed to generate CRS. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSendToBA = async () => {
-    setOpenDraft(false);
-    alert("CRS draft saved and ready to send to BA (mock)");
+    if (!latestCRS) {
+      alert("No CRS to submit");
+      return;
+    }
+
+    try {
+      // Update status from draft to under_review
+      const updatedCRS = await updateCRSStatus(latestCRS.id, "under_review");
+      setLatestCRS(updatedCRS);
+      setOpenDraft(false);
+      alert("CRS submitted for BA review successfully!");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to submit CRS");
+    }
   };
 
   return (
@@ -359,15 +429,19 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           <DialogHeader>
             <DialogTitle>Generate CRS Document</DialogTitle>
             <DialogDescription>
-              This will generate a CRS document draft based on the chat conversation. You can review it before sending to BA.
+              This will create a CRS document from your chat conversation. You can review and submit it to the BA for approval.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <p className="text-sm text-gray-600">A draft will be generated and stored in the database (mock).</p>
+            <p className="text-sm text-gray-600">
+              The system will compile your conversation into a structured CRS document that captures the requirements discussed.
+            </p>
           </div>
           <DialogFooter className="mt-6 flex gap-2">
             <Button onClick={() => setOpenGenerate(false)} variant="outline">Cancel</Button>
-            <Button onClick={handleGenerateCRS} variant="primary">{isGenerating ? "Generating..." : "Generate"}</Button>
+            <Button onClick={handleGenerateCRS} variant="primary" disabled={isGenerating}>
+              {isGenerating ? "Generating..." : "Generate CRS"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -376,37 +450,71 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       <Dialog open={openDraft} onOpenChange={setOpenDraft}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>CRS Draft & Statistics</DialogTitle>
+            <DialogTitle>CRS Document</DialogTitle>
             <DialogDescription>
-              Review the latest CRS draft and some basic statistics. This is a mock preview while backend is not ready.
+              Review the latest CRS document and its details.
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 space-y-4">
-            <div className="flex gap-4">
-              <div className="p-3 bg-gray-100 rounded-lg w-1/3">
-                <p className="text-sm font-semibold">Sections</p>
-                <p className="text-2xl font-bold">5</p>
+            {crsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <span className="ml-2 text-sm text-gray-500">Loading CRS...</span>
               </div>
-              <div className="p-3 bg-gray-100 rounded-lg w-1/3">
-                <p className="text-sm font-semibold">Completion</p>
-                <p className="text-2xl font-bold">72%</p>
+            ) : crsError || !latestCRS ? (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  {crsError || "No CRS document found for this project."}
+                </p>
               </div>
-              <div className="p-3 bg-gray-100 rounded-lg w-1/3">
-                <p className="text-sm font-semibold">Last Updated</p>
-                <p className="text-2xl font-bold">2m ago</p>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex gap-4">
+                  <div className="p-3 bg-gray-100 rounded-lg flex-1">
+                    <p className="text-sm font-semibold text-gray-600">Version</p>
+                    <p className="text-2xl font-bold text-black">{latestCRS.version}</p>
+                  </div>
+                  <div className="p-3 bg-gray-100 rounded-lg flex-1">
+                    <p className="text-sm font-semibold text-gray-600">Status</p>
+                    <div className="mt-2">
+                      <CRSStatusBadge status={latestCRS.status} />
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-100 rounded-lg flex-1">
+                    <p className="text-sm font-semibold text-gray-600">Created</p>
+                    <p className="text-sm font-medium text-black mt-1">
+                      {new Date(latestCRS.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Draft Preview</label>
-              <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} className="w-full min-h-[200px] rounded-md border p-3 text-black" />
-            </div>
+                {latestCRS.summary_points && latestCRS.summary_points.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Summary Points</label>
+                    <ul className="list-disc list-inside space-y-1 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      {latestCRS.summary_points.map((point, idx) => (
+                        <li key={idx} className="text-sm text-gray-700">{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Document Content</label>
+                  <div className="w-full min-h-[200px] max-h-[400px] overflow-y-auto rounded-md border p-3 text-black bg-gray-50">
+                    <pre className="whitespace-pre-wrap text-sm">{latestCRS.content}</pre>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter className="mt-6 flex gap-2">
             <Button onClick={() => setOpenDraft(false)} variant="outline">Close</Button>
-            <Button onClick={handleSendToBA} variant="primary">Save & Send to BA</Button>
+            {latestCRS && latestCRS.status === "draft" && (
+              <Button onClick={handleSendToBA} variant="primary">Submit for Review</Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

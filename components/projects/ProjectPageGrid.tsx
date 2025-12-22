@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, MessageCircle, Users, Clock, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, MessageCircle, Users, Clock, Pencil, Trash2, Loader2, FileText } from "lucide-react";
 import { ChatDetail, ChatSummary, createProjectChat, deleteProjectChat, fetchProjectChats, updateProjectChat } from "@/lib/api-chats";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +9,8 @@ import { apiCall } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { CRSOut, fetchLatestCRS } from "@/lib/api-crs";
+import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 
 interface ProjectPageGridProps {
   projectId: number;
@@ -119,7 +121,7 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
       </div>
 
       {/* Tab Content */}
-      {activeTab === "dashboard" && <DashboardTab userRole={userRole} onStartChat={handleStartChat} />}
+      {activeTab === "dashboard" && <DashboardTab userRole={userRole} onStartChat={handleStartChat} projectId={projectId} />}
       {activeTab === "chats" && userRole === "Client" && <ChatsTab projectId={projectId} createChatTrigger={createChatTrigger} />}
       {activeTab === "settings" && (
         <SettingsTab 
@@ -133,7 +135,29 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
 }
 
 // Dashboard Tab Content
-function DashboardTab({ userRole, onStartChat }: { userRole: "BA" | "Client"; onStartChat: () => void }) {
+function DashboardTab({ userRole, onStartChat, projectId }: { userRole: "BA" | "Client"; onStartChat: () => void; projectId: number }) {
+  const [latestCRS, setLatestCRS] = useState<CRSOut | null>(null);
+  const [crsLoading, setCrsLoading] = useState(false);
+  const [crsError, setCrsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCRS = async () => {
+      try {
+        setCrsLoading(true);
+        setCrsError(null);
+        const crs = await fetchLatestCRS(projectId);
+        setLatestCRS(crs);
+      } catch (err) {
+        // It's ok if there's no CRS yet
+        setCrsError(err instanceof Error ? err.message : "No CRS available");
+      } finally {
+        setCrsLoading(false);
+      }
+    };
+
+    loadCRS();
+  }, [projectId]);
+
   return (
     <div className="flex flex-col gap-6 bg-gray-50 p-6 min-h-screen">
       {/* Top Row: Two Stat Cards + Quick Actions */}
@@ -204,6 +228,31 @@ function DashboardTab({ userRole, onStartChat }: { userRole: "BA" | "Client"; on
                 <li key={doc.id} className="text-black">{doc.title}</li>
               ))}
             </ul>
+          </section>
+
+          {/* CRS Status Section */}
+          <section className="bg-white border border-gray-200 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-5 h-5 text-[#341bab]" />
+              <h2 className="text-lg font-semibold">CRS Document</h2>
+            </div>
+            {crsLoading ? (
+              <p className="text-sm text-gray-500">Loading CRS status...</p>
+            ) : crsError || !latestCRS ? (
+              <p className="text-sm text-gray-500">No CRS document available yet</p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Version {latestCRS.version}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Created: {new Date(latestCRS.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <CRSStatusBadge status={latestCRS.status} />
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </div>
