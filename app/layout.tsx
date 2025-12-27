@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const idIndex = parts.indexOf("teams") + 1;
   const currentTeamId = idIndex > 0 && idIndex < parts.length ? parts[idIndex] : "";
 
-  const hideSidebar = pathname === "/teams";
+  const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth");
 
   return (
     <html lang="en">
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           {/* Content area with sidebar + main */}
           <div className="flex flex-1 overflow-hidden">
-            {!hideSidebar && currentTeamId && (
+            {!hideSidebar && (
               <Sidebar currentTeamId={currentTeamId} />
             )}
 

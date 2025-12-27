@@ -40,7 +40,7 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
   // Don't render sidebar items until role is loaded
   if (userRole === null) {
     return (
-      <aside className="fixed top-12 left-0 h-[calc(100vh-3rem)] w-13 flex flex-col items-center py-5 space-y-4 text-white" style={{ backgroundColor: "#341BAB" }}>
+      <aside className="fixed top-12 left-0 h-[calc(100vh-3rem)] w-16 flex flex-col items-center py-5 space-y-4 text-white" style={{ backgroundColor: "#341BAB" }}>
         {/* Empty sidebar while loading */}
       </aside>
     );
@@ -64,7 +64,7 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
   navItems.push({ href: `/teams/${currentTeamId}/settings`, label: "Team Settings", icon: Settings });
 
   return (
-    <aside className="fixed top-12 left-0 h-[calc(100vh-3rem)] w-13 flex flex-col items-center py-5 space-y-4 text-white" style={{ backgroundColor: "#341BAB" }}>
+    <aside className="fixed top-12 left-0 h-[calc(100vh-3rem)] w-16 flex flex-col items-center py-5 space-y-4 text-white" style={{ backgroundColor: "#341BAB" }}>
       {navItems.map(item => (
         <NavItem key={item.href} {...item} isActive={pathname.startsWith(item.href)} />
       ))}

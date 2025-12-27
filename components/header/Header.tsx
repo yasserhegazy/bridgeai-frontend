@@ -83,6 +83,21 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   // Local state for current team
   const [currentTeamId, setCurrentTeamId] = useState(initialTeamId || pathname.split("/")[2] || "");
 
+  // Persist team selection in localStorage
+  useEffect(() => {
+    if (currentTeamId) {
+      localStorage.setItem('selectedTeamId', currentTeamId);
+    }
+  }, [currentTeamId]);
+
+  // Load team from localStorage on mount
+  useEffect(() => {
+    const savedTeamId = localStorage.getItem('selectedTeamId');
+    if (savedTeamId && !initialTeamId && !pathname.includes('/teams/')) {
+      setCurrentTeamId(savedTeamId);
+    }
+  }, []);
+
   // Current team name for display
   // Convert currentTeamId to number for comparison since API returns numeric IDs
   const currentTeam = loadingTeams && currentTeamId 
@@ -95,8 +110,10 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   }, [initialTeamId]);
 
   const handleTeamSelect = (team: Team) => {
-    setCurrentTeamId(String(team.id));
-    if (setParentTeamId) setParentTeamId(String(team.id));
+    const teamIdStr = String(team.id);
+    setCurrentTeamId(teamIdStr);
+    if (setParentTeamId) setParentTeamId(teamIdStr);
+    localStorage.setItem('selectedTeamId', teamIdStr);
     router.push(`/teams/${team.id}/dashboard`);
     setOpen(false);
   };

@@ -208,7 +208,7 @@ export function NotificationBell() {
               className="text-xs"
             >
               <Check className="h-3 w-3 mr-1" />
-              Mark all read
+              Mark as read
             </Button>
           )}
         </div>
@@ -250,13 +250,18 @@ export function NotificationBell() {
                       <p className="font-medium text-sm text-gray-900">
                         {notification.title}
                       </p>
-                      <button
-                        onClick={(e) => handleDelete(notification.id, e)}
-                        className="shrink-0 text-gray-400 hover:text-red-500 transition-colors"
-                        aria-label="Delete notification"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {!notification.is_read && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsRead(notification.id);
+                          }}
+                          className="shrink-0 text-gray-400 hover:text-blue-500 transition-colors"
+                          aria-label="Mark as read"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                     
                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">

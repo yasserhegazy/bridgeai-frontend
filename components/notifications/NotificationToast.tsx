@@ -81,7 +81,7 @@ export function NotificationToastContainer() {
   };
 
   return (
-    <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-md">
+    <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md">
       {toasts.map(toast => (
         <NotificationToast key={toast.id} notification={toast} onClose={removeToast} />
       ))}

@@ -28,39 +28,12 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [filter]);
 
-  const handleMarkAsRead = async (id: number) => {
-    try {
-      await notificationAPI.markAsRead(id);
-      await fetchNotifications();
-    } catch (error) {
-      console.error('Failed to mark as read:', error);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await notificationAPI.deleteNotification(id);
-      await fetchNotifications();
-    } catch (error) {
-      console.error('Failed to delete:', error);
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationAPI.markAllAsRead();
-      await fetchNotifications();
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="p-6 mt-15">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <div className="flex gap-2">
@@ -78,12 +51,6 @@ export default function NotificationsPage() {
           >
             Unread
           </Button>
-          {notifications.some(n => !n.is_read) && (
-            <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
-              <Check className="h-4 w-4 mr-1" />
-              Mark all read
-            </Button>
-          )}
         </div>
       </div>
 
@@ -125,24 +92,6 @@ export default function NotificationsPage() {
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-2">{formatDate(notification.created_at)}</p>
-                </div>
-                <div className="flex gap-2">
-                  {!notification.is_read && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMarkAsRead(notification.id)}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(notification.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
                 </div>
               </div>
             </div>
