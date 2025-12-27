@@ -27,7 +27,7 @@ export default function TeamCRSDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<CRSStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<CRSStatus | "all">("under_review");
 
   // Fetch user and verify BA role
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function TeamCRSDashboardPage() {
           router.push("/");
           return;
         }
-        // User is BA, continue to fetch CRS documents
-        await fetchCRSDocuments();
+        // User is BA, continue to fetch CRS documents (only submitted ones by default)
+        await fetchCRSDocuments("under_review");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to verify user");
         setIsLoading(false);

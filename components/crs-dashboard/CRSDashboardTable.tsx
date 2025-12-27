@@ -19,7 +19,6 @@ export function CRSDashboardTable({
 }: CRSDashboardTableProps) {
   const statusOptions: Array<{ value: CRSStatus | "all"; label: string }> = [
     { value: "all", label: "All Status" },
-    { value: "draft", label: "Draft" },
     { value: "under_review", label: "Under Review" },
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
