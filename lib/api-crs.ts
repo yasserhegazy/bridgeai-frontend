@@ -43,6 +43,20 @@ export async function fetchCRSVersions(projectId: number): Promise<CRSOut[]> {
 }
 
 /**
+ * Fetch all CRS documents for BA review (optionally filtered by team and status)
+ */
+export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Promise<CRSOut[]> {
+  const params = new URLSearchParams();
+  if (teamId) params.append("team_id", teamId.toString());
+  if (status) params.append("status", status);
+  
+  const url = params.toString() 
+    ? `/api/crs/review?${params.toString()}`
+    : `/api/crs/review`;
+  return apiCall<CRSOut[]>(url);
+}
+
+/**
  * Create a new CRS document
  */
 export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
