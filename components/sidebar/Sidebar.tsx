@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, FolderGit2Icon, Settings, ClipboardList } from "lucide-react";
+import { Home, FolderGit2Icon, Settings, ClipboardList, FileCheck } from "lucide-react";
 import { NavItem } from "./NavItem";
 import { COLORS } from "@/constants";
 import { useState, useEffect } from "react";
@@ -51,12 +51,17 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
     { href: `/teams/${currentTeamId}/projects`, label: "Projects", icon: FolderGit2Icon },
   ];
 
-  // Only add "Project Requests" link for confirmed BAs (don't show while loading)
+  // Only add "Project Requests" and "CRS Dashboard" links for confirmed BAs
   if (userRole === "ba") {
     navItems.push({
       href: `/teams/${currentTeamId}/pending-requests`,
       label: "Project Requests",
       icon: ClipboardList,
+    });
+    navItems.push({
+      href: `/teams/${currentTeamId}/crs-dashboard`,
+      label: "CRS Dashboard",
+      icon: FileCheck,
     });
   }
 
