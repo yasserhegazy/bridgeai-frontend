@@ -255,6 +255,21 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [crsError, setCrsError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Determine available actions based on CRS status
+  const canGenerateCRS = !latestCRS || latestCRS.status === 'draft' || latestCRS.status === 'rejected';
+  const canSubmitCRS = latestCRS?.status === 'draft';
+  const canChatFreely = !latestCRS || latestCRS.status === 'draft' || latestCRS.status === 'rejected';
+  const isUnderReview = latestCRS?.status === 'under_review';
+  const isApproved = latestCRS?.status === 'approved';
+  const isRejected = latestCRS?.status === 'rejected';
+
+  // Load CRS on mount to determine current status
+  useEffect(() => {
+    if (chat.project_id) {
+      loadCRS();
+    }
+  }, [chat.project_id]);
+
   // Load CRS when opening the draft dialog
   useEffect(() => {
     if (openDraft && chat.project_id) {
@@ -395,11 +410,13 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             content={generateChatTranscript()}
             filename={`chat-${chat.id}-${chat.name.replace(/\s+/g, "-").toLowerCase()}`}
           />
-          <Button onClick={() => setOpenGenerate(true)} variant="primary">
-            Generate CRS document
-          </Button>
+          {canGenerateCRS && (
+            <Button onClick={() => setOpenGenerate(true)} variant="primary">
+              {latestCRS?.status === 'rejected' ? 'Regenerate CRS' : 'Generate CRS document'}
+            </Button>
+          )}
           <Button onClick={() => setOpenDraft(true)} variant="secondary">
-            View CRS draft
+            View CRS {latestCRS?.status === 'approved' && '(Approved)'}
           </Button>
         </div>
       </div>
@@ -426,18 +443,47 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-4 border-t border-gray-200 bg-white flex gap-3">
-        <Input
-          placeholder="Type your message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          className="flex-1"
-          disabled={connectionState !== "open"}
-        />
-        <Button onClick={handleSend} variant="primary" disabled={isSending || connectionState !== "open"}>
-          {isSending ? "Sending..." : "Send"}
-        </Button>
+      <div className="px-6 py-4 border-t border-gray-200 bg-white">
+        {/* Status Messages */}
+        {isUnderReview && (
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+            ⏳ Your CRS is currently under review by the Business Analyst. Chat is disabled until review is complete.
+          </div>
+        )}
+        {isApproved && (
+          <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+            ✅ Congratulations! Your CRS has been approved. This is your final requirements document.
+          </div>
+        )}
+        {isRejected && latestCRS?.rejection_reason && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+            <div className="font-semibold mb-1">❌ Your CRS was rejected</div>
+            <div className="text-xs">Feedback: {latestCRS.rejection_reason}</div>
+            <div className="text-xs mt-2">Please review the feedback and regenerate an improved version.</div>
+          </div>
+        )}
+        
+        <div className="flex gap-3">
+          <Input
+            placeholder={
+              !canChatFreely 
+                ? (isUnderReview ? "Chat disabled while CRS is under review" : "CRS approved - chat completed")
+                : "Type your message..."
+            }
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && canChatFreely && handleSend()}
+            className="flex-1"
+            disabled={connectionState !== "open" || !canChatFreely}
+          />
+          <Button 
+            onClick={handleSend} 
+            variant="primary" 
+            disabled={isSending || connectionState !== "open" || !canChatFreely}
+          >
+            {isSending ? "Sending..." : "Send"}
+          </Button>
+        </div>
       </div>
 
       {/* Generate CRS Dialog */}
@@ -535,6 +581,24 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             )}
             {latestCRS && latestCRS.status === "draft" && (
               <Button onClick={handleSendToBA} variant="primary">Submit for Review</Button>
+            )}
+            {latestCRS && latestCRS.status === "rejected" && (
+              <Button onClick={() => {
+                setOpenDraft(false);
+                setOpenGenerate(true);
+              }} variant="primary" className="bg-orange-600 hover:bg-orange-700">
+                Regenerate CRS
+              </Button>
+            )}
+            {latestCRS && latestCRS.status === "approved" && (
+              <span className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-md border border-green-200">
+                ✅ Final Approved Version
+              </span>
+            )}
+            {latestCRS && latestCRS.status === "under_review" && (
+              <span className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-md border border-blue-200">
+                ⏳ Pending BA Review
+              </span>
             )}
           </DialogFooter>
         </DialogContent>

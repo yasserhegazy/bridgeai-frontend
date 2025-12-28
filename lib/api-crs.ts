@@ -15,6 +15,8 @@ export interface CRSOut {
   summary_points: string[];
   created_by: number | null;
   approved_by: number | null;
+  rejection_reason: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
@@ -26,6 +28,7 @@ export interface CRSCreate {
 
 export interface CRSStatusUpdate {
   status: CRSStatus;
+  rejection_reason?: string;
 }
 
 /**
@@ -69,10 +72,14 @@ export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
 /**
  * Update CRS status (approval workflow)
  */
-export async function updateCRSStatus(crsId: number, status: CRSStatus): Promise<CRSOut> {
+export async function updateCRSStatus(
+  crsId: number, 
+  status: CRSStatus, 
+  rejectionReason?: string
+): Promise<CRSOut> {
   return apiCall<CRSOut>(`/api/crs/${crsId}/status`, {
     method: "PUT",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, rejection_reason: rejectionReason }),
   });
 }
 

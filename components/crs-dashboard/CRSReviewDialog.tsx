@@ -4,8 +4,10 @@ import { useState } from "react";
 import { CRSOut, CRSStatus, updateCRSStatus } from "@/lib/api-crs";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 
@@ -19,6 +21,8 @@ interface CRSReviewDialogProps {
 export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSReviewDialogProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const handleApprove = async () => {
     try {
@@ -34,12 +38,22 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
     }
   };
 
-  const handleReject = async () => {
+  const handleRejectClick = () => {
+    setShowRejectDialog(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectionReason.trim()) {
+      setError("Please provide a reason for rejection");
+      return;
+    }
+
     try {
       setIsUpdating(true);
       setError(null);
-      await updateCRSStatus(crs.id, "rejected");
+      await updateCRSStatus(crs.id, "rejected", rejectionReason);
       onStatusUpdate();
+      setShowRejectDialog(false);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reject CRS");
@@ -52,6 +66,7 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
   const canReject = crs.status === "under_review" || crs.status === "draft";
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -120,22 +135,13 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
             
             {canReject && (
               <Button
-                onClick={handleReject}
+                onClick={handleRejectClick}
                 variant="destructive"
                 disabled={isUpdating}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Rejecting...
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
-                  </>
-                )}
+                <XCircle className="w-4 h-4 mr-2" />
+                Reject
               </Button>
             )}
             
@@ -163,5 +169,70 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Rejection Reason Dialog */}
+    <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Reject CRS Document</DialogTitle>
+          <DialogDescription>
+            Please provide a detailed reason for rejecting this CRS. This feedback will help the client improve their requirements.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 mt-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+              {error}
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="rejection-reason">Reason for Rejection *</Label>
+            <Textarea
+              id="rejection-reason"
+              value={rejectionReason}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRejectionReason(e.target.value)}
+              placeholder="Explain what needs to be improved, what's missing, or what's incorrect..."
+              rows={6}
+              className="resize-none"
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 mt-4">
+          <Button 
+            onClick={() => {
+              setShowRejectDialog(false);
+              setRejectionReason("");
+              setError(null);
+            }} 
+            variant="outline"
+            disabled={isUpdating}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRejectConfirm}
+            variant="destructive"
+            disabled={isUpdating || !rejectionReason.trim()}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Rejecting...
+              </>
+            ) : (
+              <>
+                <XCircle className="w-4 h-4 mr-2" />
+                Confirm Rejection
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
