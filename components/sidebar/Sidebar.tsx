@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Home, FolderGit2Icon, Settings, ClipboardList, Bell } from "lucide-react";
+import { Home, FolderGit2Icon, Settings, ClipboardList } from "lucide-react";
 import { NavItem } from "./NavItem";
 import { COLORS } from "@/constants";
 import { useState, useEffect } from "react";
@@ -49,7 +49,6 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
   const navItems = [
     { href: `/teams/${currentTeamId}/dashboard`, label: "Dashboard", icon: Home },
     { href: `/teams/${currentTeamId}/projects`, label: "Projects", icon: FolderGit2Icon },
-    { href: `/notifications`, label: "Notifications", icon: Bell },
   ];
 
   // Only add "Project Requests" link for confirmed BAs (don't show while loading)

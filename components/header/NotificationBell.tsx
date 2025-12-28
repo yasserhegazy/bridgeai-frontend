@@ -198,7 +198,15 @@ export function NotificationBell() {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-          <h3 className="font-semibold text-lg">Notifications</h3>
+          <h3 
+            className="font-semibold text-lg cursor-pointer hover:text-[#341BAB] transition-colors"
+            onClick={() => {
+              router.push('/notifications');
+              setIsOpen(false);
+            }}
+          >
+            Notifications
+          </h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
