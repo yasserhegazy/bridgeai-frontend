@@ -133,13 +133,13 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
   return (
     <header className="fixed top-0 left-0 w-full h-12 px-4 sm:px-3 bg-white border-b z-50 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="flex items-center h-full">
+        <Link href="/teams" className="flex items-center h-full">
           <span className={`font-bold ${geistSans.variable} text-lg sm:text-xl`} style={{ color: COLORS.primary, lineHeight: 1 }}>
             BridgeAI
           </span>
         </Link>
 
-        {pathname !== "/teams" && isAuthenticated && (
+        {pathname !== "/teams" && pathname !== "/notifications" && isAuthenticated && (
           <div className="relative">
             <button
               onClick={() => setOpen(!open)}

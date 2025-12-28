@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const idIndex = parts.indexOf("teams") + 1;
   const currentTeamId = idIndex > 0 && idIndex < parts.length ? parts[idIndex] : "";
 
-  const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth");
+  const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications";
 
   return (
     <html lang="en">
