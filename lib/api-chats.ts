@@ -18,6 +18,7 @@ export interface ChatSummary {
   id: number;
   project_id: number;
   user_id: number;
+  crs_document_id: number | null;
   name: string;
   status: SessionStatus;
   started_at: string;
@@ -29,6 +30,7 @@ export interface ChatDetail {
   id: number;
   project_id: number;
   user_id: number;
+  crs_document_id: number | null;
   name: string;
   status: SessionStatus;
   started_at: string;
@@ -54,7 +56,7 @@ export async function fetchProjectChat(projectId: number, chatId: number): Promi
 /**
  * Create a chat session for a project.
  */
-export async function createProjectChat(projectId: number, payload: { name: string }): Promise<ChatDetail> {
+export async function createProjectChat(projectId: number, payload: { name: string; crs_document_id?: number }): Promise<ChatDetail> {
   return apiCall<ChatDetail>(`/api/projects/${projectId}/chats`, {
     method: "POST",
     body: JSON.stringify(payload),
