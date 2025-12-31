@@ -49,7 +49,7 @@ export default function CRSDashboardPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await fetchCRSForReview(status);
+      const data = await fetchCRSForReview(undefined, status);
       setCrsDocuments(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load CRS documents");
