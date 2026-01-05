@@ -51,8 +51,9 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
     { href: `/teams/${currentTeamId}/projects`, label: "Projects", icon: FolderGit2Icon },
   ];
 
-  // Only add "Project Requests" and "CRS Dashboard" links for confirmed BAs
+  // Role-specific navigation items
   if (userRole === "ba") {
+    // BA-only links
     navItems.push({
       href: `/teams/${currentTeamId}/pending-requests`,
       label: "Project Requests",
@@ -61,6 +62,13 @@ export function Sidebar({ currentTeamId }: SidebarProps) {
     navItems.push({
       href: `/teams/${currentTeamId}/crs-dashboard`,
       label: "CRS Dashboard",
+      icon: FileCheck,
+    });
+  } else if (userRole === "client") {
+    // Client-only links
+    navItems.push({
+      href: `/teams/${currentTeamId}/my-crs-requests`,
+      label: "My CRS Requests",
       icon: FileCheck,
     });
   }

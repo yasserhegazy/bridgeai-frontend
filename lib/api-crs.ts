@@ -72,6 +72,22 @@ export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Pr
 }
 
 /**
+ * Fetch all CRS documents created by the current user (client view)
+ * Optionally filter by team, project, and status
+ */
+export async function fetchMyCRSRequests(teamId?: number, projectId?: number, status?: CRSStatus): Promise<CRSOut[]> {
+  const params = new URLSearchParams();
+  if (teamId) params.append("team_id", teamId.toString());
+  if (projectId) params.append("project_id", projectId.toString());
+  if (status) params.append("status", status);
+  
+  const url = params.toString() 
+    ? `/api/crs/my-requests?${params.toString()}`
+    : `/api/crs/my-requests`;
+  return apiCall<CRSOut[]>(url);
+}
+
+/**
  * Create a new CRS document
  */
 export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
