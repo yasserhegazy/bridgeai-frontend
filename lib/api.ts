@@ -2,7 +2,7 @@
  * API utilities for making authenticated requests to the backend
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export interface ApiErrorResponse {
   error: string;
@@ -14,7 +14,7 @@ export interface ApiErrorResponse {
  */
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  
+
   // Get token from cookies
   const cookies = document.cookie.split(';');
   for (let cookie of cookies) {
@@ -23,7 +23,7 @@ export function getAccessToken(): string | null {
       return value;
     }
   }
-  
+
   // Fallback to localStorage for backward compatibility
   return localStorage.getItem("token");
 }
@@ -67,44 +67,49 @@ export async function apiCall<T = any>(
     "Authorization": `Bearer ${token}`,
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      clearAccessToken();
-      throw new Error("Unauthorized. Please log in again.");
-    }
-
-    // Try to parse error details from response body
-    let errorMessage = response.statusText || `HTTP ${response.status}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.detail) {
-        errorMessage = errorData.detail;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      }
-    } catch {
-      // If JSON parsing fails, use the statusText
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  // Handle empty or non-JSON responses (e.g., 204 No Content)
-  const responseText = await response.text();
-  if (!responseText) {
-    return undefined as T;
-  }
-
   try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        clearAccessToken();
+        throw new Error("Unauthorized. Please log in again.");
+      }
+
+      // Try to parse error details from response body
+      let errorMessage = response.statusText || `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // If JSON parsing fails, use the statusText
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    // Handle empty or non-JSON responses (e.g., 204 No Content)
+    const responseText = await response.text();
+    if (!responseText) {
+      return undefined as T;
+    }
+
     return JSON.parse(responseText) as T;
-  } catch {
-    // Fallback: return raw text if parsing fails
-    return responseText as unknown as T;
+  } catch (error) {
+    console.error("Fetch error:", {
+      url,
+      options,
+      headers,
+      error,
+    });
+    throw error;
   }
 }
 

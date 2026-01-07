@@ -158,7 +158,7 @@ export function NotificationBell() {
        notification.type === 'crs_review_assigned') && 
       notification.metadata?.project_id
     ) {
-      router.push(`/teams/${notification.metadata.project_id}/projects`);
+      router.push(`/projects/${notification.metadata.project_id}`);
     }
 
     setIsOpen(false);
