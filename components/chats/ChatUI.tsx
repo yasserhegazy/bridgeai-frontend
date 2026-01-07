@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, WifiOff } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
 import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
@@ -38,6 +38,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [isAiTyping, setIsAiTyping] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
   const [returnTo, setReturnTo] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -217,7 +218,11 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     };
 
     setMessages((prev) => [...prev, pendingLocal]);
-    setInput("");
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       setWsError("Not connected. Please wait for the chat to reconnect.");
@@ -242,6 +247,23 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       );
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -443,40 +465,38 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="px-6 py-4 border-t border-gray-200 bg-white">
-        {/* Status Messages */}
+      {/* Input Area */}
+      <div className="p-4 border-t border-gray-200 bg-white">
         {isUnderReview && (
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
-            ⏳ Your CRS is currently under review by the Business Analyst. You can continue chatting to discuss additional details.
-          </div>
-        )}
-        {isApproved && (
-          <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
-            ✅ Your CRS has been approved! You can continue chatting for follow-up questions or new features.
+            <div className="font-semibold mb-1">CRS Under Review</div>
+            <div className="text-xs">Your CRS is currently being reviewed by the BA. You can continue chatting while waiting for follow-up questions or new features.</div>
           </div>
         )}
         {isRejected && latestCRS?.rejection_reason && (
           <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
-            <div className="font-semibold mb-1">❌ Your CRS was rejected</div>
+            <div className="font-semibold mb-1">Your CRS was rejected</div>
             <div className="text-xs">Feedback: {latestCRS.rejection_reason}</div>
             <div className="text-xs mt-2">Please review the feedback and regenerate an improved version.</div>
           </div>
         )}
 
-        <div className="flex gap-3">
-          <Input
-            placeholder="Type your message..."
+        <div className="flex gap-3 items-end">
+          <Textarea
+            ref={textareaRef}
+            placeholder="Type your message... (Shift+Enter for new line)"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1"
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyDown}
+            className="flex-1 min-h-[44px] max-h-[200px] resize-none overflow-y-auto"
             disabled={connectionState !== "open"}
+            rows={1}
           />
           <Button
             onClick={handleSend}
             variant="primary"
             disabled={isSending || connectionState !== "open"}
+            className="h-[44px]"
           >
             {isSending ? "Sending..." : "Send"}
           </Button>
