@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { CRSOut, fetchLatestCRS } from "@/lib/api-crs";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
+import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
+
 
 interface ProjectPageGridProps {
   projectId: number;
@@ -70,7 +72,7 @@ function Button({ children, variant = "default", size = "md", className = "", on
     primary: "bg-[#341bab] text-white hover:bg-[#2a1589] disabled:bg-gray-400 disabled:cursor-not-allowed",
     default: "bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed",
   };
-  
+
   const sizes: Record<ButtonProps["size"] & string, string> = {
     sm: "px-3 py-1.5 text-sm",
     md: "px-4 py-2",
@@ -109,11 +111,10 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
           .map((tab) => (
             <button
               key={tab}
-              className={`px-4 py-2 font-semibold ${
-                activeTab === tab
-                  ? "border-b-2 border-[#341bab] text-black"
-                  : "text-gray-500 hover:text-black hover:cursor-pointer"
-              }`}
+              className={`px-4 py-2 font-semibold ${activeTab === tab
+                ? "border-b-2 border-[#341bab] text-black"
+                : "text-gray-500 hover:text-black hover:cursor-pointer"
+                }`}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "dashboard" ? "Dashboard" : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -125,10 +126,10 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
       {activeTab === "dashboard" && <DashboardTab userRole={userRole} onStartChat={handleStartChat} projectId={projectId} />}
       {activeTab === "chats" && userRole === "Client" && <ChatsTab projectId={projectId} createChatTrigger={createChatTrigger} />}
       {activeTab === "settings" && (
-        <SettingsTab 
+        <SettingsTab
           projectId={projectId}
-          projectName={projectName} 
-          projectDescription={projectDescription} 
+          projectName={projectName}
+          projectDescription={projectDescription}
         />
       )}
     </div>
@@ -253,6 +254,7 @@ function DashboardTab({ userRole, onStartChat, projectId }: { userRole: "BA" | "
                   <div className="flex items-center gap-2">
                     <CRSStatusBadge status={latestCRS.status} />
                     <CRSExportButton crsId={latestCRS.id} version={latestCRS.version} />
+                    <CRSAuditButton crsId={latestCRS.id} />
                   </div>
                 </div>
               </div>
@@ -302,7 +304,7 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
         fetchLatestCRS(projectId).catch(() => null) // CRS might not exist yet
       ]);
       setLatestCRS(crsData);
-      
+
       // Show all chats for the project - don't filter by CRS ID
       // Users should see all their chats regardless of CRS status
       setItems(chatsData.map(normalizeChat));
@@ -352,9 +354,9 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
 
       if (modalMode === "create") {
         // Don't link to CRS on creation - each chat will get its own CRS when the AI generates it
-        const created = await createProjectChat(projectId, { 
+        const created = await createProjectChat(projectId, {
           name: trimmed,
-          crs_document_id: null
+          crs_document_id: undefined
         });
         setItems((prev) => [normalizeChat(created), ...prev]);
         setSuccessMessage("Chat created successfully");
@@ -544,13 +546,13 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
 }
 
 // Settings Tab Content
-function SettingsTab({ 
+function SettingsTab({
   projectId,
-  projectName, 
-  projectDescription 
-}: { 
+  projectName,
+  projectDescription
+}: {
   projectId: number;
-  projectName: string; 
+  projectName: string;
   projectDescription: string;
 }) {
   const [name, setName] = useState(projectName);
@@ -582,7 +584,7 @@ function SettingsTab({
       });
 
       setSuccessMessage("Project updated successfully!");
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
@@ -602,9 +604,9 @@ function SettingsTab({
       <section className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Project Info</h2>
-          <Button 
-            variant="primary" 
-            size="sm" 
+          <Button
+            variant="primary"
+            size="sm"
             className="flex items-center gap-2"
             onClick={handleSaveChanges}
             disabled={isSaving}
@@ -612,21 +614,21 @@ function SettingsTab({
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
-        
+
         {/* Success Message */}
         {successMessage && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
             {successMessage}
           </div>
         )}
-        
+
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
           </div>
         )}
-        
+
         <div className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -684,9 +686,8 @@ export function StatCard({ title, value, statusCounts, icon }: StatCardProps) {
             <div key={status} className="flex justify-between items-center text-sm">
               <span className="text-black">{status}</span>
               <span
-                className={`px-2 py-1 rounded-full font-semibold text-xs ${
-                  statusColors[status] || "bg-gray-300 text-black"
-                }`}
+                className={`px-2 py-1 rounded-full font-semibold text-xs ${statusColors[status] || "bg-gray-300 text-black"
+                  }`}
               >
                 {count}
               </span>
@@ -703,9 +704,9 @@ export default function App() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">My Project</h1>
-      <ProjectPageGrid 
+      <ProjectPageGrid
         projectId={1}
-        projectName="E-Commerce Platform" 
+        projectName="E-Commerce Platform"
         projectDescription="Building a modern e-commerce solution"
         userRole="BA"
       />
