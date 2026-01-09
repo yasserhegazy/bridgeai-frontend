@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
+import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 
 interface CRSDetailsDialogProps {
   crs: CRSOut;
@@ -17,12 +18,12 @@ interface CRSDetailsDialogProps {
   onStatusUpdate: () => void;
 }
 
-export function CRSDetailsDialog({ 
-  crs, 
-  projectName, 
-  open, 
-  onClose, 
-  onStatusUpdate 
+export function CRSDetailsDialog({
+  crs,
+  projectName,
+  open,
+  onClose,
+  onStatusUpdate
 }: CRSDetailsDialogProps) {
   const [isResubmitting, setIsResubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -189,13 +190,14 @@ export function CRSDetailsDialog({
         <div className="mt-4 flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
           <div className="flex gap-2">
             <CRSExportButton crsId={crs.id} version={crs.version} />
+            <CRSAuditButton crsId={crs.id} />
           </div>
-          
+
           <div className="flex gap-2">
             <Button onClick={onClose} variant="outline" disabled={isResubmitting}>
               Close
             </Button>
-            
+
             {canResubmit && (
               <Button
                 onClick={handleResubmit}

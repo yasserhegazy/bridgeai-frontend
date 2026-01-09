@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
+import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 
 interface CRSReviewDialogProps {
@@ -144,6 +145,7 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
           <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
             <div className="flex gap-2">
               <CRSExportButton crsId={crs.id} version={crs.version} />
+              <CRSAuditButton crsId={crs.id} />
             </div>
 
             <div className="flex gap-2">

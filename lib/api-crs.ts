@@ -64,8 +64,8 @@ export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Pr
   const params = new URLSearchParams();
   if (teamId) params.append("team_id", teamId.toString());
   if (status) params.append("status", status);
-  
-  const url = params.toString() 
+
+  const url = params.toString()
     ? `/api/crs/review?${params.toString()}`
     : `/api/crs/review`;
   return apiCall<CRSOut[]>(url);
@@ -80,8 +80,8 @@ export async function fetchMyCRSRequests(teamId?: number, projectId?: number, st
   if (teamId) params.append("team_id", teamId.toString());
   if (projectId) params.append("project_id", projectId.toString());
   if (status) params.append("status", status);
-  
-  const url = params.toString() 
+
+  const url = params.toString()
     ? `/api/crs/my-requests?${params.toString()}`
     : `/api/crs/my-requests`;
   return apiCall<CRSOut[]>(url);
@@ -101,8 +101,8 @@ export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
  * Update CRS status (approval workflow)
  */
 export async function updateCRSStatus(
-  crsId: number, 
-  status: CRSStatus, 
+  crsId: number,
+  status: CRSStatus,
   rejectionReason?: string
 ): Promise<CRSOut> {
   return apiCall<CRSOut>(`/api/crs/${crsId}/status`, {
@@ -137,4 +137,26 @@ export async function exportCRS(crsId: number, format: "pdf" | "markdown" = "pdf
     throw new Error(error.detail || "Export failed");
   }
 
-  return response.blob();}
+  return response.blob();
+}
+
+export interface CRSAuditLog {
+  id: number;
+  crs_id: number;
+  action: string;
+  changed_by: number;         // was performed_by
+  changed_at: string;         // was performed_at
+  old_status?: string;
+  new_status?: string;
+  old_content?: string;
+  new_content?: string;
+  summary?: string;
+  // details field is removed as it's not in the response, we can add a computed property or just use the fields directly if we want
+}
+
+/**
+ * Fetch audit logs for a specific CRS
+ */
+export async function fetchCRSAudit(crsId: number): Promise<CRSAuditLog[]> {
+  return apiCall<CRSAuditLog[]>(`/api/crs/${crsId}/audit`);
+}
