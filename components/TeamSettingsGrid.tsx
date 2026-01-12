@@ -135,22 +135,19 @@ export function TeamSettingsGrid({
   };
 
   const handleCancelInvite = async (invitationId: string) => {
-    try {
-      await invitationAPI.cancelInvitation(invitationId);
-      fetchPendingInvites();
-    } catch (error) {
-      console.log('Cancel invitation feature not available yet');
-      alert('Cancel invitation feature is not available yet. Please contact support.');
+    if (!confirm('Are you sure you want to cancel this invitation?')) {
+      return;
     }
-  };
-
-  const handleResendInvite = async (invitationId: string) => {
+    
     try {
-      await invitationAPI.resendInvitation(invitationId);
-      alert('Invitation resent successfully!');
+      await invitationAPI.cancelInvitation(teamId, invitationId);
+      fetchPendingInvites();
+      setFlashMessage({ type: 'success', message: 'Invitation canceled successfully' });
+      setTimeout(() => setFlashMessage(null), 3000);
     } catch (error) {
-      console.log('Resend invitation feature not available yet');
-      alert('Resend invitation feature is not available yet. Please contact support.');
+      const message = error instanceof Error ? error.message : 'Failed to cancel invitation';
+      setFlashMessage({ type: 'error', message });
+      setTimeout(() => setFlashMessage(null), 5000);
     }
   };
 
@@ -417,10 +414,6 @@ export function TeamSettingsGrid({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleResendInvite(invite.id)}>
-                          <Mail className="w-4 h-4 mr-2" />
-                          Resend Invitation
-                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-red-600"
                           onClick={() => handleCancelInvite(invite.id)}

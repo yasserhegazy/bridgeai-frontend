@@ -24,6 +24,7 @@ export interface InvitationPublicDetails {
   role: string;
   team_id: number;
   team_name: string;
+  team_description?: string;
   invited_by_name: string;
   invited_by_email: string;
   created_at: string;
@@ -141,6 +142,23 @@ export const invitationAPI = {
   },
 
   /**
+   * Reject invitation (requires authentication)
+   */
+  async rejectInvitation(token: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/invitation/${token}/reject`, {
+      method: 'POST',
+      headers: createAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to reject invitation');
+    }
+
+    return response.json();
+  },
+
+  /**
    * Get team invitations (for admins/owners)
    * Note: This endpoint might need to be implemented in the backend
    */
@@ -160,33 +178,16 @@ export const invitationAPI = {
 
   /**
    * Cancel invitation (for admins/owners)
-   * Note: This endpoint might need to be implemented in the backend
    */
-  async cancelInvitation(invitationId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/invitations/${invitationId}/cancel`, {
-      method: 'POST',
+  async cancelInvitation(teamId: string, invitationId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}/invitations/${invitationId}`, {
+      method: 'DELETE',
       headers: createAuthHeaders(),
     });
 
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.detail || 'Failed to cancel invitation');
-    }
-  },
-
-  /**
-   * Resend invitation (for admins/owners)
-   * Note: This endpoint might need to be implemented in the backend
-   */
-  async resendInvitation(invitationId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/invitations/${invitationId}/resend`, {
-      method: 'POST',
-      headers: createAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to resend invitation');
     }
   },
 };
