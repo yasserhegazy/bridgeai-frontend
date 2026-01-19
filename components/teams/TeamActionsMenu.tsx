@@ -104,7 +104,7 @@ export function TeamActionsMenu({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/${teamId}/`,
         {
           method: "PUT",
           headers: {
@@ -151,7 +151,7 @@ export function TeamActionsMenu({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/${teamId}/`,
         {
           method: "PUT",
           headers: {
@@ -190,7 +190,7 @@ export function TeamActionsMenu({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/${teamId}/`,
         {
           method: "PUT",
           headers: {
@@ -229,7 +229,7 @@ export function TeamActionsMenu({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/${teamId}/`,
         {
           method: "PUT",
           headers: {
@@ -268,7 +268,7 @@ export function TeamActionsMenu({
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/${teamId}/`,
         {
           method: "DELETE",
           headers: {
