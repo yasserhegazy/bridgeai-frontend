@@ -219,7 +219,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
     setMessages((prev) => [...prev, pendingLocal]);
     setInput("");
-    
+
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -253,7 +253,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    
+
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -433,6 +433,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             projectId={chat.project_id}
             content={generateChatTranscript()}
             filename={`chat-${chat.id}-${chat.name.replace(/\s+/g, "-").toLowerCase()}`}
+            crsId={latestCRS?.id}
           />
           {canGenerateCRS && (
             <Button onClick={() => setOpenGenerate(true)} variant="primary">
