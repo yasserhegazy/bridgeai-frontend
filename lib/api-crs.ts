@@ -132,7 +132,6 @@ export async function exportCRS(
       headers: {
         "Authorization": `Bearer ${token}`,
       },
-      credentials: "include",
     }
   );
 
