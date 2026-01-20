@@ -3,7 +3,7 @@
  */
 import { getAccessToken } from "./api";
 
-export type ExportFormat = "markdown" | "pdf";
+export type ExportFormat = "markdown" | "pdf" | "csv";
 
 export interface ExportRequest {
   filename?: string;

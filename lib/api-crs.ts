@@ -114,7 +114,11 @@ export async function updateCRSStatus(
 /**
  * Export CRS document as PDF or Markdown
  */
-export async function exportCRS(crsId: number, format: "pdf" | "markdown" = "pdf"): Promise<Blob> {
+export async function exportCRS(
+  crsId: number,
+  format: "pdf" | "markdown" | "csv" = "pdf",
+  requirementsOnly: boolean = false
+): Promise<Blob> {
   const token = getAccessToken();
 
   if (!token) {
@@ -128,7 +132,6 @@ export async function exportCRS(crsId: number, format: "pdf" | "markdown" = "pdf
       headers: {
         "Authorization": `Bearer ${token}`,
       },
-      credentials: "include",
     }
   );
 
