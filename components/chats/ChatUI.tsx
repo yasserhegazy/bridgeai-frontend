@@ -10,12 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
 import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
 import { getAccessToken } from "@/lib/api";
-import { CRSOut, fetchCRSForSession, updateCRSStatus } from "@/lib/api-crs";
+import { CRSOut, fetchCRSForSession, updateCRSStatus, createCRS, getPreviewCRS, CRSPreviewOut } from "@/lib/api-crs";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { PreviewCRSButton } from "@/components/chats/PreviewCRSButton";
+import { PartialCRSConfirmModal } from "@/components/chats/PartialCRSConfirmModal";
 
 interface ChatUIProps {
   chat: ChatDetail;
@@ -279,6 +281,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [crsError, setCrsError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [crsPattern, setCrsPattern] = useState<"iso_iec_ieee_29148" | "ieee_830" | "babok">("babok");
+  const [openPartialConfirm, setOpenPartialConfirm] = useState(false);
+  const [previewData, setPreviewData] = useState<CRSPreviewOut | null>(null);
 
   // Determine available actions based on CRS status
   const canGenerateCRS = !latestCRS || latestCRS.status === 'draft' || latestCRS.status === 'rejected';
@@ -322,6 +326,36 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   };
 
   const handleGenerateCRS = async () => {
+    if (!chat.project_id || !chat.id) {
+      alert("Project ID or Session ID not found");
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      setCrsError(null);
+      
+      // Fetch preview data to check completeness
+      const preview = await getPreviewCRS(chat.id);
+      setPreviewData(preview);
+
+      // If incomplete (<100%), show confirmation modal
+      if (preview.completeness_percentage < 100) {
+        setOpenGenerate(false);
+        setOpenPartialConfirm(true);
+        setIsGenerating(false); // Reset loading state
+      } else {
+        // If complete, generate directly
+        await confirmGenerateCRS(preview);
+      }
+    } catch (err) {
+      setCrsError(err instanceof Error ? err.message : "Failed to fetch CRS preview");
+      alert("Failed to check CRS status. Please try again.");
+      setIsGenerating(false);
+    }
+  };
+
+  const confirmGenerateCRS = async (preview: CRSPreviewOut) => {
     if (!chat.project_id) {
       alert("Project ID not found");
       return;
@@ -330,60 +364,38 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     try {
       setIsGenerating(true);
       setCrsError(null);
+      const isPartial = preview.completeness_percentage < 100;
       
-      // Send a message to trigger CRS generation with the selected pattern
-      const patternName = 
-        crsPattern === "iso_iec_ieee_29148" ? "ISO/IEC/IEEE 29148" :
-        crsPattern === "ieee_830" ? "IEEE 830" :
-        "BABOK";
-        
-      const triggerMessage = `Please generate a CRS document based on our conversation using the ${patternName} standard.`;
-      
-      const payload = {
-        content: triggerMessage,
-        sender_type: (currentUser.role === "ba" ? "ba" : "client") as "ba" | "client",
-        crs_pattern: crsPattern,  // Include selected pattern
-      };
-
-      const pendingLocal: LocalChatMessage = {
-        _localId: `local-${Date.now()}`,
-        id: Date.now() * -1,
+      const crs = await createCRS({
+        project_id: chat.project_id,
+        content: preview.content,
+        summary_points: preview.summary_points,
+        allow_partial: isPartial,
+        completeness_percentage: preview.completeness_percentage,
         session_id: chat.id,
-        sender_type: payload.sender_type,
-        sender_id: currentUser.id,
-        content: payload.content,
-        timestamp: new Date().toISOString(),
-        pending: true,
-      };
+        pattern: crsPattern,  // Include selected pattern
+      });
 
-      setMessages((prev) => [...prev, pendingLocal]);
+      setLatestCRS(crs);
+      setOpenPartialConfirm(false);
       setOpenGenerate(false);
+      setOpenDraft(true);
       
-      if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-        setCrsError("Not connected to chat. Please wait for the connection to be established.");
-        setMessages((prev) =>
-          prev.map((m) => (m._localId === pendingLocal._localId ? { ...m, pending: false, failed: true } : m))
-        );
-        setIsGenerating(false);
-        return;
-      }
-
-      try {
-        console.log("[ChatUI] Sending CRS generation request with pattern:", crsPattern);
-        socketRef.current.send(JSON.stringify(payload));
-        console.log("[ChatUI] CRS generation request sent successfully");
-      } catch (err) {
-        console.error("Failed to send CRS generation request", err);
-        setCrsError("Failed to send CRS generation request. Please try again.");
-        setMessages((prev) =>
-          prev.map((m) => (m._localId === pendingLocal._localId ? { ...m, pending: false, failed: true } : m))
-        );
-      }
+      alert(isPartial 
+        ? "✅ Draft CRS created successfully! You can continue clarification or edit the document."
+        : "✅ CRS created successfully! You can review and submit it for approval."
+      );
     } catch (err) {
-      setCrsError(err instanceof Error ? err.message : "Failed to trigger CRS generation");
+      setCrsError(err instanceof Error ? err.message : "Failed to generate CRS");
+      alert(err instanceof Error ? err.message : "Failed to generate CRS. Please try again.");
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleContinueClarification = () => {
+    setOpenPartialConfirm(false);
+    setPreviewData(null);
   };
 
   const handleSendToBA = async () => {
@@ -476,6 +488,12 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             content={generateChatTranscript()}
             filename={`chat-${chat.id}-${chat.name.replace(/\s+/g, "-").toLowerCase()}`}
             crsId={latestCRS?.id}
+          />
+          <PreviewCRSButton
+            sessionId={chat.id}
+            sessionStatus={chat.status}
+            variant="outline"
+            size="default"
           />
           {canGenerateCRS && (
             <Button onClick={() => setOpenGenerate(true)} variant="primary">
@@ -715,6 +733,20 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Partial CRS Confirmation Modal */}
+      {previewData && (
+        <PartialCRSConfirmModal
+          open={openPartialConfirm}
+          onOpenChange={setOpenPartialConfirm}
+          completenessPercentage={previewData.completeness_percentage}
+          missingRequiredFields={previewData.missing_required_fields}
+          weakFields={previewData.weak_fields}
+          onConfirmGenerate={() => confirmGenerateCRS(previewData)}
+          onContinueClarification={handleContinueClarification}
+          isGenerating={isGenerating}
+        />
+      )}
     </div>
   );
 }
