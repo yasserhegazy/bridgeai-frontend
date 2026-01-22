@@ -11,8 +11,10 @@ export interface CRSOut {
   project_id: number;
   status: CRSStatus;
   version: number;
+  edit_version: number;
   content: string;
   summary_points: string[];
+  field_sources?: Record<string, string>;
   created_by: number | null;
   approved_by: number | null;
   rejection_reason: string | null;
@@ -29,6 +31,8 @@ export interface CRSPreviewOut {
   missing_required_fields: string[];
   missing_optional_fields: string[];
   filled_optional_count: number;
+  weak_fields: string[];
+  field_sources: Record<string, string>;
   project_id: number;
   session_id: number;
 }
@@ -37,6 +41,8 @@ export interface CRSCreate {
   project_id: number;
   content: string;
   summary_points?: string[];
+  allow_partial?: boolean;
+  completeness_percentage?: number;
 }
 
 export interface CRSStatusUpdate {
@@ -108,6 +114,13 @@ export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+/**
+ * Get preview of CRS from current session conversation
+ */
+export async function getPreviewCRS(sessionId: number): Promise<CRSPreviewOut> {
+  return apiCall<CRSPreviewOut>(`/api/crs/sessions/${sessionId}/preview`);
 }
 
 /**
