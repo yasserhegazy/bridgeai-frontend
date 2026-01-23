@@ -9,14 +9,16 @@ interface NavItemProps {
   label: string;
   icon: LucideIcon;
   isActive: boolean;
+  isCollapsed: boolean;
 }
 
-export function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
+export function NavItem({ href, label, icon: Icon, isActive, isCollapsed }: NavItemProps) {
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
   const iconRef = useRef<HTMLAnchorElement>(null);
 
   const handleMouseEnter = () => {
-    if (iconRef.current) {
+    // Only show tooltip when collapsed
+    if (isCollapsed && iconRef.current) {
       const rect = iconRef.current.getBoundingClientRect();
       setTooltipPos({
         top: rect.top + rect.height / 2,
@@ -44,22 +46,27 @@ export function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
   ) : null;
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <a
         href={href}
         ref={iconRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${
-          isActive ? "text-white" : "hover:text-white"
-        }`}
+        className={`flex items-center rounded-lg px-3 py-2 transition-colors ${
+          isActive 
+            ? "text-white" 
+            : "text-white/80 hover:text-white hover:bg-white/10"
+        } ${isCollapsed ? 'justify-center' : 'gap-3'}`}
         style={{ backgroundColor: isActive ? "#6C63FF" : "transparent" }}
         aria-label={label}
       >
-        <Icon className="w-5 h-5" />
+        <Icon className="w-5 h-5 flex-shrink-0" />
+        {!isCollapsed && (
+          <span className="text-sm font-medium truncate">{label}</span>
+        )}
       </a>
 
-      {tooltip && createPortal(tooltip, document.body)}
+      {isCollapsed && tooltip && createPortal(tooltip, document.body)}
     </div>
   );
 }
