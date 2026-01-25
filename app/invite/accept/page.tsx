@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { AlertCircle, CheckCircle, Clock, Mail, Shield, Users } from "lucide-rea
 import { invitationAPI, InvitationPublicDetails } from "@/lib/api-invitations";
 import Link from "next/link";
 
-export default function AcceptInvitePage() {
+function AcceptInviteClientPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -281,5 +281,25 @@ export default function AcceptInvitePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#341BAB]"></div>
+              <span className="ml-2 text-gray-600">Loading invitation...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <AcceptInviteClientPage />
+    </Suspense>
   );
 }

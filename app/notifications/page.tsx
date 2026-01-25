@@ -5,12 +5,16 @@ import { notificationAPI, Notification } from '@/lib/api-notifications';
 import { Bell, Check, Trash2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { TeamInvitationModal } from '@/components/notifications/TeamInvitationModal';
 
 export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [loading, setLoading] = useState(true);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [activeInviteToken, setActiveInviteToken] = useState<string | null>(null);
+  const [activeInviteNotificationId, setActiveInviteNotificationId] = useState<number | undefined>(undefined);
 
   const fetchNotifications = async () => {
     try {
@@ -41,8 +45,31 @@ export default function NotificationsPage() {
     return new Date(dateString).toLocaleString();
   };
 
+  const openInvitationModal = (notification: Notification) => {
+    const token = notification.metadata?.invitation_token as string | undefined;
+    if (!token) return;
+
+    setActiveInviteToken(token);
+    setActiveInviteNotificationId(notification.id);
+    setInviteModalOpen(true);
+  };
+
   return (
     <div className="p-6 mt-15">
+      <TeamInvitationModal
+        open={inviteModalOpen}
+        onOpenChange={(open) => {
+          setInviteModalOpen(open);
+          if (!open) {
+            setActiveInviteToken(null);
+            setActiveInviteNotificationId(undefined);
+          }
+        }}
+        invitationToken={activeInviteToken}
+        notificationId={activeInviteNotificationId}
+        onResolved={fetchNotifications}
+      />
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <div className="flex gap-2">
@@ -80,6 +107,11 @@ export default function NotificationsPage() {
               className={`p-4 border rounded-lg ${
                 !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
               }`}
+              onClick={() => {
+                if (notification.metadata?.action_type === 'invitation_received' && notification.metadata?.invitation_token) {
+                  openInvitationModal(notification);
+                }
+              }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">

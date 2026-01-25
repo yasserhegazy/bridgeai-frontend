@@ -10,17 +10,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportProject, downloadBlob, type ExportFormat } from "@/lib/api-exports";
+import { exportCRS } from "@/lib/api-crs";
 
 interface ExportButtonProps {
   projectId: number;
   content: string;
   filename?: string;
+  crsId?: number;
 }
 
 export function ExportButton({
   projectId,
   content,
   filename = "export",
+  crsId,
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,14 +33,21 @@ export function ExportButton({
     setError(null);
 
     try {
-      const extension = format === "pdf" ? "pdf" : "md";
+      let extension = "md";
+      if (format === "pdf") extension = "pdf";
+      if (format === "csv") extension = "csv";
       const finalFilename = `${filename}.${extension}`;
 
-      const blob = await exportProject(projectId, {
-        filename: finalFilename,
-        format,
-        content,
-      });
+      let blob: Blob;
+      if (crsId) {
+        blob = await exportCRS(crsId, format);
+      } else {
+        blob = await exportProject(projectId, {
+          filename: finalFilename,
+          format,
+          content,
+        });
+      }
 
       downloadBlob(blob, finalFilename);
     } catch (err) {
@@ -79,6 +89,12 @@ export function ExportButton({
             disabled={isExporting}
           >
             PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleExport("csv")}
+            disabled={isExporting}
+          >
+            CSV
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

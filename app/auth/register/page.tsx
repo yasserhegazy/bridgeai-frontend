@@ -71,7 +71,7 @@ export default function RegisterPage() {
     setErrors({})
 
     try {
-      const response = await fetch("http://localhost:8000/auth/register", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +87,19 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.detail || "Registration failed")
+        // Handle validation errors (422)
+        if (response.status === 422 && data.detail && Array.isArray(data.detail)) {
+          // Extract validation error messages
+          const validationErrors = data.detail
+            .map((err: any) => {
+              const field = err.loc?.[err.loc.length - 1] || "field"
+              return `${field}: ${err.msg}`
+            })
+            .join(", ")
+          throw new Error(validationErrors)
+        }
+        // Handle other errors (400, etc.)
+        throw new Error(typeof data.detail === "string" ? data.detail : "Registration failed")
       }
 
       // After successful registration, redirect to login page

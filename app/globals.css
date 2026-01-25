@@ -135,9 +135,18 @@
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Remove scrollbars */
-  height: 100%;
   width: 100%;
+}
+
+/* Smooth scroll for anchor links on landing page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Only hide overflow for app pages (with .app-layout class) */
+body.app-layout {
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Hide scrollbar for Chrome, Safari and Edge */
@@ -148,4 +157,26 @@ html, body {
 /* Hide scrollbar for Firefox */
 * {
   scrollbar-width: none;
+}
+
+/* Fade-in animations for landing page */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-section.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth hover transitions */
+@layer utilities {
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
 }

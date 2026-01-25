@@ -51,7 +51,7 @@ export function CreateTeamModal({
         return;
       }
 
-      const response = await fetch("http://127.0.0.1:8000/api/teams/", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/teams/`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,

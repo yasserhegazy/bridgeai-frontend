@@ -5,14 +5,18 @@
 import { apiCall, getAccessToken } from "./api";
 
 export type CRSStatus = "draft" | "under_review" | "approved" | "rejected";
+export type CRSPattern = "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";
 
 export interface CRSOut {
   id: number;
   project_id: number;
   status: CRSStatus;
+  pattern: CRSPattern;
   version: number;
+  edit_version: number;
   content: string;
   summary_points: string[];
+  field_sources?: Record<string, string>;
   created_by: number | null;
   approved_by: number | null;
   rejection_reason: string | null;
@@ -20,10 +24,29 @@ export interface CRSOut {
   created_at: string;
 }
 
+export interface CRSPreviewOut {
+  content: string;
+  summary_points: string[];
+  overall_summary: string;
+  is_complete: boolean;
+  completeness_percentage: number;
+  missing_required_fields: string[];
+  missing_optional_fields: string[];
+  filled_optional_count: number;
+  weak_fields: string[];
+  field_sources: Record<string, string>;
+  project_id: number;
+  session_id: number;
+}
+
 export interface CRSCreate {
   project_id: number;
   content: string;
   summary_points?: string[];
+  pattern?: CRSPattern;
+  allow_partial?: boolean;
+  completeness_percentage?: number;
+  session_id?: number;
 }
 
 export interface CRSStatusUpdate {
@@ -98,6 +121,13 @@ export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
 }
 
 /**
+ * Get preview of CRS from current session conversation
+ */
+export async function getPreviewCRS(sessionId: number): Promise<CRSPreviewOut> {
+  return apiCall<CRSPreviewOut>(`/api/crs/sessions/${sessionId}/preview`);
+}
+
+/**
  * Update CRS status (approval workflow)
  */
 export async function updateCRSStatus(
@@ -114,7 +144,11 @@ export async function updateCRSStatus(
 /**
  * Export CRS document as PDF or Markdown
  */
-export async function exportCRS(crsId: number, format: "pdf" | "markdown" = "pdf"): Promise<Blob> {
+export async function exportCRS(
+  crsId: number,
+  format: "pdf" | "markdown" | "csv" = "pdf",
+  requirementsOnly: boolean = false
+): Promise<Blob> {
   const token = getAccessToken();
 
   if (!token) {
@@ -128,7 +162,6 @@ export async function exportCRS(crsId: number, format: "pdf" | "markdown" = "pdf
       headers: {
         "Authorization": `Bearer ${token}`,
       },
-      credentials: "include",
     }
   );
 
@@ -159,4 +192,22 @@ export interface CRSAuditLog {
  */
 export async function fetchCRSAudit(crsId: number): Promise<CRSAuditLog[]> {
   return apiCall<CRSAuditLog[]>(`/api/crs/${crsId}/audit`);
+}
+
+/**
+ * Fetch a preview of the CRS for a session without persisting it
+ * Shows partial progress even when CRS is incomplete
+ */
+export async function fetchCRSPreview(sessionId: number): Promise<CRSPreviewOut> {
+  return apiCall<CRSPreviewOut>(`/api/crs/sessions/${sessionId}/preview`);
+}
+
+/**
+ * Generate and persist a draft CRS from current conversation, even if incomplete
+ * Creates a draft status CRS document that can be refined later
+ */
+export async function generateDraftCRS(sessionId: number): Promise<CRSOut> {
+  return apiCall<CRSOut>(`/api/crs/sessions/${sessionId}/generate-draft`, {
+    method: "POST",
+  });
 }

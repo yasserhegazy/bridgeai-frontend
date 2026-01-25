@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CRSOut, updateCRSStatus } from "@/lib/api-crs";
+import { CRSOut, updateCRSStatus, CRSPattern } from "@/lib/api-crs";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -12,6 +12,20 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+
+const PATTERN_LABELS: Record<CRSPattern, string> = {
+  iso_iec_ieee_29148: "ISO/IEC/IEEE 29148",
+  ieee_830: "IEEE 830",
+  babok: "BABOK",
+  agile_user_stories: "Agile User Stories",
+};
+
+const PATTERN_COLORS: Record<CRSPattern, { bg: string; text: string }> = {
+  iso_iec_ieee_29148: { bg: "bg-blue-50", text: "text-blue-900" },
+  ieee_830: { bg: "bg-purple-50", text: "text-purple-900" },
+  babok: { bg: "bg-green-50", text: "text-green-900" },
+  agile_user_stories: { bg: "bg-orange-50", text: "text-orange-900" },
+};
 
 interface CRSReviewDialogProps {
   crs: CRSOut;
@@ -93,10 +107,16 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
               )}
 
               {/* Metadata */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Version</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">v{crs.version}</p>
+                </div>
+                <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pattern</p>
+                  <p className={`text-sm font-semibold mt-2 px-2 py-1 rounded inline-block ${PATTERN_COLORS[crs.pattern].bg} ${PATTERN_COLORS[crs.pattern].text}`}>
+                    {PATTERN_LABELS[crs.pattern]}
+                  </p>
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</p>

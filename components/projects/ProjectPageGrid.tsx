@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Plus, MessageCircle, Users, Clock, Pencil, Trash2, Loader2, FileText } from "lucide-react";
-import { ChatDetail, ChatSummary, createProjectChat, deleteProjectChat, fetchProjectChats, updateProjectChat } from "@/lib/api-chats";
+import { ChatDetail, ChatSummary, createProjectChat, deleteProjectChat, fetchProjectChats, updateProjectChat, CRSPattern } from "@/lib/api-chats";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiCall } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CRSOut, fetchLatestCRS } from "@/lib/api-crs";
@@ -276,6 +277,8 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [chatName, setChatName] = useState("");
+  const [crsPattern, setCrsPattern] = useState<CRSPattern>("babok");
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "rename">("create");
   const [selectedChat, setSelectedChat] = useState<ChatSummary | null>(null);
@@ -328,6 +331,7 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
   const openCreateModal = () => {
     setModalMode("create");
     setChatName("");
+    setCrsPattern("babok");
     setSelectedChat(null);
     setActionError(null);
     setModalOpen(true);
@@ -356,7 +360,8 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
         // Don't link to CRS on creation - each chat will get its own CRS when the AI generates it
         const created = await createProjectChat(projectId, {
           name: trimmed,
-          crs_document_id: undefined
+          crs_document_id: undefined,
+          crs_pattern: crsPattern
         });
         setItems((prev) => [normalizeChat(created), ...prev]);
         setSuccessMessage("Chat created successfully");
@@ -497,10 +502,14 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{modalMode === "create" ? "Create chat" : "Rename chat"}</DialogTitle>
-            <DialogDescription>Give this chat a clear, descriptive name.</DialogDescription>
+            <DialogDescription>
+              {modalMode === "create"
+                ? "Give this chat a name to start collaborating."
+                : "Give this chat a clear, descriptive name."}
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700">
               Chat name
               <Input
@@ -510,6 +519,24 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
                 placeholder="e.g. Client kickoff discussion"
               />
             </label>
+
+            {modalMode === "create" && (
+              <label className="block text-sm font-medium text-gray-700">
+                Requirement Standard
+                <Select value={crsPattern} onValueChange={(v) => setCrsPattern(v as CRSPattern)}>
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Select a standard" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="babok">BABOK (Business Analysis Body of Knowledge)</SelectItem>
+                    <SelectItem value="iso_iec_ieee_29148">ISO/IEC/IEEE 29148 (Systems & Software Engineering)</SelectItem>
+                    <SelectItem value="ieee_830">IEEE 830 (Software Requirements Specifications)</SelectItem>
+                    <SelectItem value="agile_user_stories">Agile User Stories</SelectItem>
+                  </SelectContent>
+                </Select>
+              </label>
+            )}
+
             {actionError && <p className="text-sm text-red-600">{actionError}</p>}
           </div>
 

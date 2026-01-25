@@ -275,7 +275,7 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                     // Dispatch auth state change event
                     window.dispatchEvent(new Event('auth-state-changed'));
                     // Redirect to login page
-                    router.push("/auth/login");
+                    router.push("/");
                   }}
                 >
                   <LogOut className="w-4 h-4" />

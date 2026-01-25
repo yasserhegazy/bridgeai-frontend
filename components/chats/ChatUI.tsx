@@ -10,12 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
 import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
 import { getAccessToken } from "@/lib/api";
-import { CRSOut, fetchCRSForSession, updateCRSStatus } from "@/lib/api-crs";
+import { CRSOut, fetchCRSForSession, updateCRSStatus, createCRS, getPreviewCRS, CRSPreviewOut } from "@/lib/api-crs";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { PreviewCRSButton } from "@/components/chats/PreviewCRSButton";
+import { PartialCRSConfirmModal } from "@/components/chats/PartialCRSConfirmModal";
 
 interface ChatUIProps {
   chat: ChatDetail;
@@ -50,7 +52,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     // Only reset messages when switching to a different chat
     // We don't want to sync on chat.messages changes because we have local real-time state
     setMessages(chat.messages || []);
-  }, [chat.id]);
+    if (chat.crs_pattern) {
+      setCrsPattern(chat.crs_pattern);
+    }
+  }, [chat.id, chat.crs_pattern]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -204,6 +209,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     const payload = {
       content: input.trim(),
       sender_type: (currentUser.role === "ba" ? "ba" : "client") as "ba" | "client",
+      crs_pattern: crsPattern, // Send current pattern selection
     };
 
     const pendingLocal: LocalChatMessage = {
@@ -218,7 +224,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     };
 
     setMessages((prev) => [...prev, pendingLocal]);
-    
+    setInput("");
+
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -252,7 +259,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    
+
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -277,6 +284,9 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [crsLoading, setCrsLoading] = useState(false);
   const [crsError, setCrsError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [crsPattern, setCrsPattern] = useState<"iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories">(chat.crs_pattern || "babok");
+  const [openPartialConfirm, setOpenPartialConfirm] = useState(false);
+  const [previewData, setPreviewData] = useState<CRSPreviewOut | null>(null);
 
   // Determine available actions based on CRS status
   const canGenerateCRS = !latestCRS || latestCRS.status === 'draft' || latestCRS.status === 'rejected';
@@ -320,6 +330,36 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   };
 
   const handleGenerateCRS = async () => {
+    if (!chat.project_id || !chat.id) {
+      alert("Project ID or Session ID not found");
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      setCrsError(null);
+
+      // Fetch preview data to check completeness
+      const preview = await getPreviewCRS(chat.id);
+      setPreviewData(preview);
+
+      // If incomplete (<100%), show confirmation modal
+      if (preview.completeness_percentage < 100) {
+        setOpenGenerate(false);
+        setOpenPartialConfirm(true);
+        setIsGenerating(false); // Reset loading state
+      } else {
+        // If complete, generate directly
+        await confirmGenerateCRS(preview);
+      }
+    } catch (err) {
+      setCrsError(err instanceof Error ? err.message : "Failed to fetch CRS preview");
+      alert("Failed to check CRS status. Please try again.");
+      setIsGenerating(false);
+    }
+  };
+
+  const confirmGenerateCRS = async (preview: CRSPreviewOut) => {
     if (!chat.project_id) {
       alert("Project ID not found");
       return;
@@ -328,19 +368,38 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     try {
       setIsGenerating(true);
       setCrsError(null);
-      const crs = await loadCRS();
-      if (crs) {
-        setOpenGenerate(false);
-        setOpenDraft(true);
-      } else {
-        alert("No CRS document is available yet. Please let the agent finish generating it.");
-      }
+      const isPartial = preview.completeness_percentage < 100;
+
+      const crs = await createCRS({
+        project_id: chat.project_id,
+        content: preview.content,
+        summary_points: preview.summary_points,
+        allow_partial: isPartial,
+        completeness_percentage: preview.completeness_percentage,
+        session_id: chat.id,
+        pattern: crsPattern,  // Include selected pattern
+      });
+
+      setLatestCRS(crs);
+      setOpenPartialConfirm(false);
+      setOpenGenerate(false);
+      setOpenDraft(true);
+
+      alert(isPartial
+        ? "✅ Draft CRS created successfully! You can continue clarification or edit the document."
+        : "✅ CRS created successfully! You can review and submit it for approval."
+      );
     } catch (err) {
       setCrsError(err instanceof Error ? err.message : "Failed to generate CRS");
-      alert("Failed to generate CRS. Please try again.");
+      alert(err instanceof Error ? err.message : "Failed to generate CRS. Please try again.");
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleContinueClarification = () => {
+    setOpenPartialConfirm(false);
+    setPreviewData(null);
   };
 
   const handleSendToBA = async () => {
@@ -410,6 +469,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+
           <div
             className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${connectionState === "open"
               ? "bg-green-50 text-green-700"
@@ -432,6 +492,13 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             projectId={chat.project_id}
             content={generateChatTranscript()}
             filename={`chat-${chat.id}-${chat.name.replace(/\s+/g, "-").toLowerCase()}`}
+            crsId={latestCRS?.id}
+          />
+          <PreviewCRSButton
+            sessionId={chat.id}
+            sessionStatus={chat.status}
+            variant="outline"
+            size="default"
           />
           {canGenerateCRS && (
             <Button onClick={() => setOpenGenerate(true)} variant="primary">
@@ -482,21 +549,40 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         )}
 
         <div className="flex gap-3 items-end">
-          <Textarea
-            ref={textareaRef}
-            placeholder="Type your message... (Shift+Enter for new line)"
-            value={input}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            className="flex-1 min-h-[44px] max-h-[200px] resize-none overflow-y-auto"
-            disabled={connectionState !== "open"}
-            rows={1}
-          />
+          <div className="flex-1 flex flex-col gap-2">
+            <Textarea
+              ref={textareaRef}
+              placeholder="Type your message... (Shift+Enter for new line)"
+              value={input}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto"
+              disabled={connectionState !== "open"}
+              rows={1}
+            />
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Pattern:</span>
+                <select
+                  value={crsPattern}
+                  onChange={(e) => setCrsPattern(e.target.value as "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories")}
+                  className="bg-transparent text-xs font-medium text-gray-700 focus:outline-none cursor-pointer hover:text-gray-900 transition-colors"
+                  title="Select the requirements pattern for AI interpretation"
+                >
+                  <option value="babok">BABOK</option>
+                  <option value="ieee_830">IEEE 830</option>
+                  <option value="iso_iec_ieee_29148">ISO 29148</option>
+                  <option value="agile_user_stories">Agile Stories</option>
+                </select>
+              </div>
+              <span className="text-xs text-gray-400">Shift+Enter for new line</span>
+            </div>
+          </div>
           <Button
             onClick={handleSend}
             variant="primary"
             disabled={isSending || connectionState !== "open"}
-            className="h-[44px]"
+            className="h-[44px] mb-6"
           >
             {isSending ? "Sending..." : "Send"}
           </Button>
@@ -509,18 +595,25 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           <DialogHeader>
             <DialogTitle>Generate CRS Document</DialogTitle>
             <DialogDescription>
-              This will create a CRS document from your chat conversation. You can review and submit it to the BA for approval.
+              The system will generate your CRS document based on the conversation history and your selected pattern.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">
-              The system will compile your conversation into a structured CRS document that captures the requirements discussed.
-            </p>
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-3">
+                The system will compile your conversation into a structured CRS document.
+              </p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-900">
+                <strong>How it works:</strong> After you select a standard and submit, the system will ask clarifying questions if needed. Once clarification is complete, your CRS document will be automatically generated using your selected standard.
+              </p>
+            </div>
           </div>
           <DialogFooter className="mt-6 flex gap-2">
             <Button onClick={() => setOpenGenerate(false)} variant="outline">Cancel</Button>
             <Button onClick={handleGenerateCRS} variant="primary" disabled={isGenerating}>
-              {isGenerating ? "Generating..." : "Generate CRS"}
+              {isGenerating ? "Submitting..." : "Submit & Generate"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -556,10 +649,19 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
               ) : (
                 <>
                   {/* Header Info */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Version</p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">v{latestCRS.version}</p>
+                    </div>
+                    <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pattern</p>
+                      <p className="text-sm font-medium text-gray-900 mt-2">
+                        {latestCRS.pattern === "iso_iec_ieee_29148" ? "ISO/IEC/IEEE 29148" :
+                          latestCRS.pattern === "ieee_830" ? "IEEE 830" :
+                            latestCRS.pattern === "agile_user_stories" ? "Agile User Stories" :
+                              "BABOK"}
+                      </p>
                     </div>
                     <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</p>
@@ -639,6 +741,20 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Partial CRS Confirmation Modal */}
+      {previewData && (
+        <PartialCRSConfirmModal
+          open={openPartialConfirm}
+          onOpenChange={setOpenPartialConfirm}
+          completenessPercentage={previewData.completeness_percentage}
+          missingRequiredFields={previewData.missing_required_fields}
+          weakFields={previewData.weak_fields}
+          onConfirmGenerate={() => confirmGenerateCRS(previewData)}
+          onContinueClarification={handleContinueClarification}
+          isGenerating={isGenerating}
+        />
+      )}
     </div>
   );
 }

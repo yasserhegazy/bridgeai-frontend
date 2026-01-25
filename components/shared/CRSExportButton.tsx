@@ -20,12 +20,14 @@ export function CRSExportButton({ crsId, version }: CRSExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleExport = async (format: "pdf" | "markdown") => {
+  const handleExport = async (format: "pdf" | "markdown" | "csv") => {
     setIsExporting(true);
     setError(null);
 
     try {
-      const extension = format === "pdf" ? "pdf" : "md";
+      let extension = "md";
+      if (format === "pdf") extension = "pdf";
+      if (format === "csv") extension = "csv";
       const filename = `crs-v${version}.${extension}`;
 
       const blob = await exportCRS(crsId, format);
@@ -78,6 +80,12 @@ export function CRSExportButton({ crsId, version }: CRSExportButtonProps) {
             disabled={isExporting}
           >
             PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleExport("csv")}
+            disabled={isExporting}
+          >
+            CSV
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

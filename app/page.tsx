@@ -1,11 +1,31 @@
-// app/page.tsx
-import { redirect } from 'next/navigation';
+import {
+  LandingHeader,
+  Hero,
+  ValueProposition,
+  Workflow,
+  CTASection,
+  RoleFeatures,
+  Pricing,
+  FAQ,
+  TechStack,
+  Footer,
+} from "@/components/landing";
 
 export default function HomePage() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-  if (!token) redirect('/auth/login');
-  else redirect('/dashboard');
-
-  return null;
+  return (
+    <div className="min-h-screen">
+      <LandingHeader />
+      <main>
+        <Hero />
+        <ValueProposition />
+        <Workflow />
+        <CTASection />
+        <RoleFeatures />
+        <Pricing />
+        <FAQ />
+        <TechStack />
+      </main>
+      <Footer />
+    </div>
+  );
 }

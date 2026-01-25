@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { showToast } from '@/components/notifications/NotificationToast';
+import { TeamInvitationModal } from '@/components/notifications/TeamInvitationModal';
 
 export function NotificationBell() {
   const router = useRouter();
@@ -18,6 +19,9 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [activeInviteToken, setActiveInviteToken] = useState<string | null>(null);
+  const [activeInviteNotificationId, setActiveInviteNotificationId] = useState<number | undefined>(undefined);
 
   const fetchNotifications = async () => {
     try {
@@ -109,33 +113,29 @@ export function NotificationBell() {
     }
   };
 
-  const handleAcceptInvitation = async (notificationId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      const result = await notificationAPI.acceptInvitationFromNotification(notificationId);
-      await fetchNotifications();
-      showToast({
-        type: 'success',
-        title: 'Invitation accepted',
-        message: 'You have joined the team successfully'
-      });
-      // Navigate to team dashboard
-      router.push(`/teams/${result.team_id}/dashboard`);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Failed to accept invitation:', error);
+  const openInvitationModal = (notification: Notification, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+
+    const token = notification.metadata?.invitation_token as string | undefined;
+    if (!token) {
       showToast({
         type: 'error',
         title: 'Error',
-        message: 'Failed to accept invitation. Please try again.'
+        message: 'Missing invitation token'
       });
+      return;
     }
+
+    setActiveInviteToken(token);
+    setActiveInviteNotificationId(notification.id);
+    setInviteModalOpen(true);
   };
 
   const handleNotificationClick = (notification: Notification) => {
-    // Don't navigate if it's an invitation that can be accepted
-    if (notification.metadata?.action_type === 'invitation_received') {
-      return; // Let the accept button handle navigation
+    // Team invitation notifications should open a modal (no redirect)
+    if (notification.metadata?.action_type === 'invitation_received' && notification.metadata?.invitation_token) {
+      openInvitationModal(notification);
+      return;
     }
 
     // Mark as read
@@ -146,8 +146,6 @@ export function NotificationBell() {
     // Navigate based on notification type and metadata
     if (notification.type === 'project_approval' && notification.metadata?.project_id) {
       router.push(`/projects/${notification.metadata.project_id}`);
-    } else if (notification.type === 'team_invitation' && notification.metadata?.team_id) {
-      router.push(`/teams/${notification.metadata.team_id}/dashboard`);
     } else if (
       (notification.type === 'crs_created' || 
        notification.type === 'crs_updated' || 
@@ -191,6 +189,21 @@ export function NotificationBell() {
   };
 
   return (
+    <>
+    <TeamInvitationModal
+      open={inviteModalOpen}
+      onOpenChange={(open) => {
+        setInviteModalOpen(open);
+        if (!open) {
+          setActiveInviteToken(null);
+          setActiveInviteNotificationId(undefined);
+        }
+      }}
+      invitationToken={activeInviteToken}
+      notificationId={activeInviteNotificationId}
+      onResolved={fetchNotifications}
+    />
+
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
@@ -332,10 +345,10 @@ export function NotificationBell() {
                        notification.metadata?.invitation_token && (
                         <Button
                           size="sm"
-                          onClick={(e) => handleAcceptInvitation(notification.id, e)}
+                          onClick={(e) => openInvitationModal(notification, e)}
                           className="bg-[#341BAB] hover:bg-[#271080] text-white text-xs px-3 py-1 h-7"
                         >
-                          Accept Invite
+                          View Invite
                         </Button>
                       )}
                     </div>
@@ -363,5 +376,6 @@ export function NotificationBell() {
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
