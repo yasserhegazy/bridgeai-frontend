@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CRSOut, updateCRSStatus, CRSPattern } from "@/lib/api-crs";
+import { useState, useCallback } from "react";
+import { CRSDTO, CRSStatus, CRSPattern } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -12,80 +12,77 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { useCRSStatusUpdate } from "@/hooks/crs/useCRSStatusUpdate";
 
-const PATTERN_LABELS: Record<CRSPattern, string> = {
+type PatternKey = CRSPattern | "unknown";
+
+const PATTERN_LABELS: Record<PatternKey, string> = {
   iso_iec_ieee_29148: "ISO/IEC/IEEE 29148",
   ieee_830: "IEEE 830",
   babok: "BABOK",
   agile_user_stories: "Agile User Stories",
+  unknown: "Unknown",
 };
 
-const PATTERN_COLORS: Record<CRSPattern, { bg: string; text: string }> = {
+const PATTERN_COLORS: Record<PatternKey, { bg: string; text: string }> = {
   iso_iec_ieee_29148: { bg: "bg-blue-50", text: "text-blue-900" },
   ieee_830: { bg: "bg-purple-50", text: "text-purple-900" },
   babok: { bg: "bg-green-50", text: "text-green-900" },
   agile_user_stories: { bg: "bg-orange-50", text: "text-orange-900" },
+  unknown: { bg: "bg-gray-50", text: "text-gray-900" },
 };
 
 interface CRSReviewDialogProps {
-  crs: CRSOut;
+  crs: CRSDTO;
   open: boolean;
   onClose: () => void;
   onStatusUpdate: () => void;
 }
 
 export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSReviewDialogProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const { isUpdating, error, updateStatus, clearError } = useCRSStatusUpdate();
 
-  const handleApprove = async () => {
-    try {
-      setIsUpdating(true);
-      setError(null);
-      await updateCRSStatus(crs.id, "approved");
+  const handleApprove = useCallback(async () => {
+    setValidationError(null);
+    const success = await updateStatus(crs.id, "approved");
+    if (success) {
       onStatusUpdate();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve CRS");
-    } finally {
-      setIsUpdating(false);
     }
-  };
+  }, [crs.id, updateStatus, onStatusUpdate, onClose]);
 
-  const handleRejectClick = () => {
+  const handleRejectClick = useCallback(() => {
+    setValidationError(null);
+    clearError();
     setShowRejectDialog(true);
-  };
+  }, [clearError]);
 
-  const handleRejectConfirm = async () => {
+  const handleRejectConfirm = useCallback(async () => {
     if (!rejectionReason.trim()) {
-      setError("Please provide a reason for rejection");
+      setValidationError("Please provide a reason for rejection");
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setError(null);
-      await updateCRSStatus(crs.id, "rejected", rejectionReason);
+    const success = await updateStatus(crs.id, "rejected", rejectionReason);
+    if (success) {
       onStatusUpdate();
       setShowRejectDialog(false);
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reject CRS");
-    } finally {
-      setIsUpdating(false);
     }
-  };
+  }, [crs.id, rejectionReason, updateStatus, onStatusUpdate, onClose]);
 
   const canApprove = crs.status === "under_review" || crs.status === "draft";
   const canReject = crs.status === "under_review" || crs.status === "draft";
+  const patternKey: PatternKey = crs.pattern ?? "unknown";
 
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-          <DialogHeader className="px-6 py-4 border-b border-gray-100 flex-shrink-0 bg-white">
+          <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
             <DialogTitle className="flex items-center justify-between">
               <span className="text-xl">CRS Review - Project #{crs.project_id}</span>
               <CRSStatusBadge status={crs.status} />
@@ -100,9 +97,9 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
             {/* Left Panel: Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
               {/* Error Message */}
-              {error && (
+              {(validationError || error) && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm animate-in fade-in slide-in-from-top-2">
-                  {error}
+                  {validationError || error}
                 </div>
               )}
 
@@ -114,8 +111,8 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pattern</p>
-                  <p className={`text-sm font-semibold mt-2 px-2 py-1 rounded inline-block ${PATTERN_COLORS[crs.pattern].bg} ${PATTERN_COLORS[crs.pattern].text}`}>
-                    {PATTERN_LABELS[crs.pattern]}
+                  <p className={`text-sm font-semibold mt-2 px-2 py-1 rounded inline-block ${PATTERN_COLORS[patternKey].bg} ${PATTERN_COLORS[patternKey].text}`}>
+                    {PATTERN_LABELS[patternKey]}
                   </p>
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
@@ -162,7 +159,7 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
           </div>
 
           {/* Footer Actions */}
-          <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
+          <div className="shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
             <div className="flex gap-2">
               <CRSExportButton crsId={crs.id} version={crs.version} />
               <CRSAuditButton crsId={crs.id} />
@@ -245,7 +242,8 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
               onClick={() => {
                 setShowRejectDialog(false);
                 setRejectionReason("");
-                setError(null);
+                setValidationError(null);
+                clearError();
               }}
               variant="outline"
               disabled={isUpdating}

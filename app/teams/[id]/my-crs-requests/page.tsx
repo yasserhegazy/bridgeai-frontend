@@ -1,101 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
+import { useParams } from "next/navigation";
 import { FileCheck, Loader2 } from "lucide-react";
 import { MyCRSRequestsTable } from "@/components/my-crs-requests/MyCRSRequestsTable";
 import { CRSDetailsDialog } from "@/components/my-crs-requests/CRSDetailsDialog";
-import { fetchMyCRSRequests } from "@/lib/api-crs";
-import { fetchProjects } from "@/lib/api-projects";
-import { getCurrentUser } from "@/lib/api";
-import type { CRSOut, CRSStatus } from "@/lib/api-crs";
-import type { Project } from "@/lib/api-projects";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: "ba" | "client";
-  full_name: string;
-}
+import { useMyCRSRequests } from "@/hooks/crs/useMyCRSRequests";
+import { useProjects } from "@/hooks/projects/useProjects";
+import { CRSDTO, CRSStatus } from "@/dto/crs.dto";
+import { ProjectDTO } from "@/dto/projects.dto";
 
 export default function MyCRSRequestsPage() {
   const params = useParams();
-  const router = useRouter();
-  const teamId = parseInt(params.id as string);
+  const teamId = parseInt(params.id as string, 10);
 
-  const [crsDocuments, setCrsDocuments] = useState<CRSOut[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedCRS, setSelectedCRS] = useState<CRSOut | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedCRS, setSelectedCRS] = useState<CRSDTO | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<CRSStatus | "all">("all");
 
-  // Fetch user and verify client role, then fetch data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const user = await getCurrentUser<User>();
-        
-        // Note: This page is available to all users, but optimized for clients
-        // BAs can also view their own CRS submissions if they create any
-        
-        // Fetch projects and CRS documents in parallel
-        const [projectsData, crsData] = await Promise.all([
-          fetchProjects(teamId),
-          fetchMyCRSRequests(teamId),
-        ]);
-        
-        setProjects(projectsData);
-        setCrsDocuments(crsData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const {
+    filteredRequests,
+    isLoading: isCRSLoading,
+    error: crsError,
+    selectedStatus,
+    setSelectedStatus,
+    refreshRequests,
+  } = useMyCRSRequests(teamId);
 
-    loadData();
-  }, [router, teamId]);
+  const {
+    projects,
+    isLoading: isProjectsLoading,
+    error: projectsError,
+  } = useProjects(teamId);
 
-  const fetchCRSDocuments = async (status?: CRSStatus) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchMyCRSRequests(teamId, undefined, status);
-      setCrsDocuments(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load CRS requests");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const isLoading = isCRSLoading || isProjectsLoading;
+  const error = crsError || projectsError;
 
-  const handleFilterChange = (newStatus: CRSStatus | "all") => {
-    setStatusFilter(newStatus);
-    if (newStatus === "all") {
-      fetchCRSDocuments();
-    } else {
-      fetchCRSDocuments(newStatus);
-    }
-  };
+  const handleFilterChange = useCallback(
+    (newStatus: CRSStatus | "all") => {
+      setSelectedStatus(newStatus);
+    },
+    [setSelectedStatus]
+  );
 
-  const handleViewDetails = (crs: CRSOut) => {
+  const handleViewDetails = useCallback((crs: CRSDTO) => {
     setSelectedCRS(crs);
-  };
+  }, []);
 
-  const handleStatusUpdate = async () => {
-    // Refresh the list after status update
-    await fetchCRSDocuments(statusFilter === "all" ? undefined : statusFilter);
+  const handleCloseDialog = useCallback(() => {
+    setSelectedCRS(null);
+  }, []);
+
+  const handleStatusUpdate = useCallback(async () => {
+    await refreshRequests();
     setSuccessMessage("CRS resubmitted successfully");
     setTimeout(() => setSuccessMessage(null), 3000);
-  };
+  }, [refreshRequests]);
 
-  const getProjectName = (projectId: number): string => {
-    const project = projects.find((p) => p.id === projectId);
-    return project ? project.name : `Project #${projectId}`;
-  };
+  const getProjectName = useCallback(
+    (projectId: number): string => {
+      const project = projects.find((p) => p.id === projectId);
+      return project ? project.name : `Project #${projectId}`;
+    },
+    [projects]
+  );
 
   return (
     <div className="flex justify-center mt-14 px-6">
@@ -137,10 +104,10 @@ export default function MyCRSRequestsPage() {
           <>
             {/* CRS Table */}
             <MyCRSRequestsTable
-              documents={crsDocuments}
+              documents={filteredRequests}
               projects={projects}
               onViewDetails={handleViewDetails}
-              statusFilter={statusFilter}
+              statusFilter={selectedStatus}
               onFilterChange={handleFilterChange}
             />
 
@@ -150,7 +117,7 @@ export default function MyCRSRequestsPage() {
                 crs={selectedCRS}
                 projectName={getProjectName(selectedCRS.project_id)}
                 open={!!selectedCRS}
-                onClose={() => setSelectedCRS(null)}
+                onClose={handleCloseDialog}
                 onStatusUpdate={handleStatusUpdate}
               />
             )}

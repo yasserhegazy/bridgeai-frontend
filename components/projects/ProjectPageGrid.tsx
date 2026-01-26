@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CRSOut, fetchLatestCRS } from "@/lib/api-crs";
+import { CRSDTO } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
@@ -139,7 +140,7 @@ export function ProjectPageGrid({ projectId, projectName, projectDescription = "
 
 // Dashboard Tab Content
 function DashboardTab({ userRole, onStartChat, projectId }: { userRole: "BA" | "Client"; onStartChat: () => void; projectId: number }) {
-  const [latestCRS, setLatestCRS] = useState<CRSOut | null>(null);
+  const [latestCRS, setLatestCRS] = useState<CRSDTO | null>(null);
   const [crsLoading, setCrsLoading] = useState(false);
   const [crsError, setCrsError] = useState<string | null>(null);
 
@@ -285,7 +286,7 @@ function ChatsTab({ projectId, createChatTrigger }: { projectId: number; createC
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<ChatSummary | null>(null);
-  const [latestCRS, setLatestCRS] = useState<CRSOut | null>(null);
+  const [latestCRS, setLatestCRS] = useState<CRSDTO | null>(null);
   const router = useRouter();
 
   const normalizeChat = (chat: ChatSummary | ChatDetail): ChatSummary => ({

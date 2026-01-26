@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CRSOut, updateCRSStatus } from "@/lib/api-crs";
+import { useCallback } from "react";
+import { CRSDTO } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
+import { useCRSStatusUpdate } from "@/hooks/crs/useCRSStatusUpdate";
 
 interface CRSDetailsDialogProps {
-  crs: CRSOut;
+  crs: CRSDTO;
   projectName: string;
   open: boolean;
   onClose: () => void;
@@ -25,22 +26,16 @@ export function CRSDetailsDialog({
   onClose,
   onStatusUpdate
 }: CRSDetailsDialogProps) {
-  const [isResubmitting, setIsResubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { isUpdating, error, updateStatus, clearError } = useCRSStatusUpdate();
 
-  const handleResubmit = async () => {
-    try {
-      setIsResubmitting(true);
-      setError(null);
-      await updateCRSStatus(crs.id, "under_review");
+  const handleResubmit = useCallback(async () => {
+    clearError();
+    const success = await updateStatus(crs.id, "under_review");
+    if (success) {
       onStatusUpdate();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resubmit CRS");
-    } finally {
-      setIsResubmitting(false);
     }
-  };
+  }, [crs.id, updateStatus, onStatusUpdate, onClose, clearError]);
 
   const canResubmit = crs.status === "rejected";
 
@@ -194,7 +189,7 @@ export function CRSDetailsDialog({
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={onClose} variant="outline" disabled={isResubmitting}>
+            <Button onClick={onClose} variant="outline" disabled={isUpdating}>
               Close
             </Button>
 
@@ -202,13 +197,13 @@ export function CRSDetailsDialog({
               <Button
                 onClick={handleResubmit}
                 variant="default"
-                disabled={isResubmitting}
-                className="bg-[#341bab] hover:bg-[#2a1589] text-white"
+                disabled={isUpdating}
+                className="bg-[#341BAB] hover:bg-[#2a1589] text-white"
               >
-                {isResubmitting ? (
+                {isUpdating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting...
+                    Resubmitting...
                   </>
                 ) : (
                   <>

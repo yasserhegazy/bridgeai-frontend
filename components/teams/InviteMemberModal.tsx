@@ -14,8 +14,8 @@ import { cn } from "@/lib/utils";
 import { FormField } from "@/components/auth/FormField";
 import { FormSelect, SelectOption } from "@/components/auth/FormSelect";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
-import { useInviteMember } from "@/hooks/useInviteMember";
-import { useFormValidation } from "@/hooks/useFormValidation";
+import { useInviteMember } from "@/hooks/teams/useInviteMember";
+import { useFormValidation } from "@/hooks/shared/useFormValidation";
 import { MemberRole } from "@/dto/teams.dto";
 
 interface InviteMemberModalProps {

@@ -1,86 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { FileCheck, Loader2 } from "lucide-react";
 import { CRSDashboardTable } from "@/components/crs-dashboard/CRSDashboardTable";
 import { CRSReviewDialog } from "@/components/crs-dashboard/CRSReviewDialog";
-import { fetchCRSForReview } from "@/lib/api-crs";
-import { getCurrentUser } from "@/lib/api";
-import type { CRSOut, CRSStatus } from "@/lib/api-crs";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: "ba" | "client";
-  full_name: string;
-}
+import { useCRSDashboard } from "@/hooks/crs/useCRSDashboard";
+import { useRoleGuard } from "@/hooks/shared/useRoleGuard";
+import { CRSDTO, CRSStatus } from "@/dto/crs.dto";
 
 export default function TeamCRSDashboardPage() {
   const params = useParams();
-  const router = useRouter();
-  const teamId = parseInt(params.id as string);
+  const teamId = parseInt(params.id as string, 10);
 
-  const [crsDocuments, setCrsDocuments] = useState<CRSOut[]>([]);
-  const [selectedCRS, setSelectedCRS] = useState<CRSOut | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedCRS, setSelectedCRS] = useState<CRSDTO | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<CRSStatus | "all">("under_review");
+  const { isChecking, isAuthorized } = useRoleGuard({
+    roles: ["ba"],
+    redirectTo: "/",
+  });
 
-  // Fetch user and verify BA role
-  useEffect(() => {
-    const verifyUser = async () => {
-      try {
-        const user = await getCurrentUser<User>();
-        if (user.role !== "ba") {
-          router.push("/");
-          return;
-        }
-        // User is BA, continue to fetch CRS documents (only submitted ones by default)
-        await fetchCRSDocuments("under_review");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to verify user");
-        setIsLoading(false);
-      }
-    };
+  const {
+    filteredDocuments,
+    isLoading,
+    error,
+    selectedStatus,
+    setSelectedStatus,
+    refreshDocuments,
+  } = useCRSDashboard(teamId, isAuthorized);
 
-    verifyUser();
-  }, [router, teamId]);
+  const handleFilterChange = useCallback(
+    (newStatus: CRSStatus | "all") => {
+      setSelectedStatus(newStatus);
+    },
+    [setSelectedStatus]
+  );
 
-  const fetchCRSDocuments = async (status?: CRSStatus) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchCRSForReview(teamId, status);
-      setCrsDocuments(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load CRS documents");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (newStatus: CRSStatus | "all") => {
-    setStatusFilter(newStatus);
-    if (newStatus === "all") {
-      fetchCRSDocuments();
-    } else {
-      fetchCRSDocuments(newStatus);
-    }
-  };
-
-  const handleViewDetails = (crs: CRSOut) => {
+  const handleViewDetails = useCallback((crs: CRSDTO) => {
     setSelectedCRS(crs);
-  };
+  }, []);
 
-  const handleStatusUpdate = async () => {
-    // Refresh the list after status update
-    await fetchCRSDocuments(statusFilter === "all" ? undefined : statusFilter);
+  const handleCloseDialog = useCallback(() => {
+    setSelectedCRS(null);
+  }, []);
+
+  const handleStatusUpdate = useCallback(async () => {
+    await refreshDocuments();
     setSuccessMessage("CRS status updated successfully");
     setTimeout(() => setSuccessMessage(null), 3000);
-  };
+  }, [refreshDocuments]);
 
   return (
     <div className="flex justify-center mt-14 px-6">
@@ -113,18 +81,20 @@ export default function TeamCRSDashboardPage() {
         )}
 
         {/* Loading State */}
-        {isLoading ? (
+        {(isChecking || isLoading) ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-[#341bab]" />
-            <span className="ml-3 text-gray-600">Loading CRS documents...</span>
+            <span className="ml-3 text-gray-600">
+              {isChecking ? "Verifying access..." : "Loading CRS documents..."}
+            </span>
           </div>
         ) : (
           <>
             {/* CRS Table */}
             <CRSDashboardTable
-              documents={crsDocuments}
+              documents={filteredDocuments}
               onViewDetails={handleViewDetails}
-              statusFilter={statusFilter}
+              statusFilter={selectedStatus}
               onFilterChange={handleFilterChange}
             />
 
@@ -133,7 +103,7 @@ export default function TeamCRSDashboardPage() {
               <CRSReviewDialog
                 crs={selectedCRS}
                 open={!!selectedCRS}
-                onClose={() => setSelectedCRS(null)}
+                onClose={handleCloseDialog}
                 onStatusUpdate={handleStatusUpdate}
               />
             )}

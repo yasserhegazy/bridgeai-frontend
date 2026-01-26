@@ -3,10 +3,11 @@
  */
 
 import { apiCall, getAccessToken } from "./api";
+import { CRSDTO, CRSStatus, CRSPattern } from "@/dto/crs.dto";
 
-export type CRSStatus = "draft" | "under_review" | "approved" | "rejected";
-export type CRSPattern = "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";
+export type { CRSStatus, CRSPattern, CRSDTO };
 
+// Legacy type - kept for backward compatibility
 export interface CRSOut {
   id: number;
   project_id: number;
@@ -57,16 +58,16 @@ export interface CRSStatusUpdate {
 /**
  * Fetch the latest CRS for a project
  */
-export async function fetchLatestCRS(projectId: number): Promise<CRSOut> {
-  return apiCall<CRSOut>(`/api/crs/latest?project_id=${projectId}`);
+export async function fetchLatestCRS(projectId: number): Promise<CRSDTO> {
+  return apiCall<CRSDTO>(`/api/crs/latest?project_id=${projectId}`);
 }
 
 /**
  * Fetch the CRS document linked to a specific chat session
  */
-export async function fetchCRSForSession(sessionId: number): Promise<CRSOut | null> {
+export async function fetchCRSForSession(sessionId: number): Promise<CRSDTO | null> {
   try {
-    return await apiCall<CRSOut>(`/api/crs/session/${sessionId}`);
+    return await apiCall<CRSDTO>(`/api/crs/session/${sessionId}`);
   } catch (error) {
     // Return null if no CRS exists for this session
     return null;
@@ -76,14 +77,14 @@ export async function fetchCRSForSession(sessionId: number): Promise<CRSOut | nu
 /**
  * Fetch all CRS versions for a project
  */
-export async function fetchCRSVersions(projectId: number): Promise<CRSOut[]> {
-  return apiCall<CRSOut[]>(`/api/crs/versions?project_id=${projectId}`);
+export async function fetchCRSVersions(projectId: number): Promise<CRSDTO[]> {
+  return apiCall<CRSDTO[]>(`/api/crs/versions?project_id=${projectId}`);
 }
 
 /**
  * Fetch all CRS documents for BA review (optionally filtered by team and status)
  */
-export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Promise<CRSOut[]> {
+export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Promise<CRSDTO[]> {
   const params = new URLSearchParams();
   if (teamId) params.append("team_id", teamId.toString());
   if (status) params.append("status", status);
@@ -91,14 +92,14 @@ export async function fetchCRSForReview(teamId?: number, status?: CRSStatus): Pr
   const url = params.toString()
     ? `/api/crs/review?${params.toString()}`
     : `/api/crs/review`;
-  return apiCall<CRSOut[]>(url);
+  return apiCall<CRSDTO[]>(url);
 }
 
 /**
  * Fetch all CRS documents created by the current user (client view)
  * Optionally filter by team, project, and status
  */
-export async function fetchMyCRSRequests(teamId?: number, projectId?: number, status?: CRSStatus): Promise<CRSOut[]> {
+export async function fetchMyCRSRequests(teamId?: number, projectId?: number, status?: CRSStatus): Promise<CRSDTO[]> {
   const params = new URLSearchParams();
   if (teamId) params.append("team_id", teamId.toString());
   if (projectId) params.append("project_id", projectId.toString());
@@ -107,14 +108,14 @@ export async function fetchMyCRSRequests(teamId?: number, projectId?: number, st
   const url = params.toString()
     ? `/api/crs/my-requests?${params.toString()}`
     : `/api/crs/my-requests`;
-  return apiCall<CRSOut[]>(url);
+  return apiCall<CRSDTO[]>(url);
 }
 
 /**
  * Create a new CRS document
  */
-export async function createCRS(payload: CRSCreate): Promise<CRSOut> {
-  return apiCall<CRSOut>("/api/crs/", {
+export async function createCRS(payload: CRSCreate): Promise<CRSDTO> {
+  return apiCall<CRSDTO>("/api/crs/", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -134,8 +135,8 @@ export async function updateCRSStatus(
   crsId: number,
   status: CRSStatus,
   rejectionReason?: string
-): Promise<CRSOut> {
-  return apiCall<CRSOut>(`/api/crs/${crsId}/status`, {
+): Promise<CRSDTO> {
+  return apiCall<CRSDTO>(`/api/crs/${crsId}/status`, {
     method: "PUT",
     body: JSON.stringify({ status, rejection_reason: rejectionReason }),
   });
@@ -206,8 +207,8 @@ export async function fetchCRSPreview(sessionId: number): Promise<CRSPreviewOut>
  * Generate and persist a draft CRS from current conversation, even if incomplete
  * Creates a draft status CRS document that can be refined later
  */
-export async function generateDraftCRS(sessionId: number): Promise<CRSOut> {
-  return apiCall<CRSOut>(`/api/crs/sessions/${sessionId}/generate-draft`, {
+export async function generateDraftCRS(sessionId: number): Promise<CRSDTO> {
+  return apiCall<CRSDTO>(`/api/crs/sessions/${sessionId}/generate-draft`, {
     method: "POST",
   });
 }

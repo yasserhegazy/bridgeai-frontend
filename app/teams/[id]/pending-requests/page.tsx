@@ -1,113 +1,71 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { use, useState, useCallback } from "react";
 import { PendingRequestsTable } from "@/components/pending-requests/PendingRequestsTable";
 import { ProjectDetailsDialog } from "@/components/pending-requests/ProjectDetailsDialog";
-import {
-  fetchPendingProjects,
-  approveProject,
-  rejectProject,
-  Project,
-} from "@/lib/api-projects";
-import { getCurrentUser } from "@/lib/api";
+import { usePendingProjects } from "@/hooks/projects/usePendingProjects";
+import { useRoleGuard } from "@/hooks/shared/useRoleGuard";
+import { ProjectDTO } from "@/dto/projects.dto";
 
 interface PendingRequestsPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: "ba" | "client";
-  full_name: string;
-}
-
 export default function PendingRequestsPage({ params }: PendingRequestsPageProps) {
   const { id: teamId } = use(params);
-  const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectDTO | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Fetch user and verify BA role
-  useEffect(() => {
-    const verifyUser = async () => {
-      try {
-        const user = await getCurrentUser<User>();
-        if (user.role !== "ba") {
-          router.push(`/teams/${teamId}/dashboard`);
-          return;
-        }
-        // User is BA, continue to fetch projects
-        await fetchProjects();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to verify user");
-        setIsLoading(false);
+  const { isChecking, isAuthorized } = useRoleGuard({
+    roles: ["ba"],
+    redirectTo: `/teams/${teamId}/dashboard`,
+  });
+
+  const {
+    pendingProjects,
+    isLoading,
+    error,
+    isProcessing,
+    handleApprove,
+    handleReject,
+  } = usePendingProjects(isAuthorized);
+
+  const onApprove = useCallback(
+    async (projectId: number) => {
+      const success = await handleApprove(projectId);
+      if (success) {
+        setSuccessMessage("Project approved successfully");
+        setTimeout(() => setSuccessMessage(null), 3000);
       }
-    };
+    },
+    [handleApprove]
+  );
 
-    verifyUser();
-  }, [router, teamId]);
+  const onReject = useCallback(
+    async (projectId: number, reason: string) => {
+      const success = await handleReject(projectId, reason);
+      if (success) {
+        setSuccessMessage("Project rejected successfully");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      }
+    },
+    [handleReject]
+  );
 
-  const fetchProjects = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchPendingProjects();
-      setProjects(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load pending requests");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleApprove = async (projectId: number) => {
-    try {
-      setError(null);
-      setSuccessMessage(null);
-      await approveProject(projectId);
-      setSuccessMessage("Project approved successfully");
-      
-      // Remove approved project from list
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve project");
-    }
-  };
-
-  const handleReject = async (projectId: number, reason: string) => {
-    try {
-      setError(null);
-      setSuccessMessage(null);
-      await rejectProject(projectId, reason);
-      setSuccessMessage("Project rejected successfully");
-      
-      // Remove rejected project from list
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reject project");
-    }
-  };
-
-  const handleViewDetails = (project: Project) => {
+  const onViewDetails = useCallback((project: ProjectDTO) => {
     setSelectedProject(project);
-  };
+  }, []);
 
-  if (isLoading) {
+  const onCloseDialog = useCallback(() => {
+    setSelectedProject(null);
+  }, []);
+
+  if (isChecking || isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p className="text-lg text-muted-foreground">Loading pending requests...</p>
+        <p className="text-lg text-muted-foreground">
+          {isChecking ? "Verifying access..." : "Loading pending requests..."}
+        </p>
       </div>
     );
   }
@@ -140,22 +98,22 @@ export default function PendingRequestsPage({ params }: PendingRequestsPageProps
         {/* Projects Count */}
         <div className="mb-4">
           <p className="text-sm text-muted-foreground">
-            {projects.length} {projects.length === 1 ? "request" : "requests"} pending review
+            {pendingProjects.length} {pendingProjects.length === 1 ? "request" : "requests"} pending review
           </p>
         </div>
 
         {/* Table */}
         <PendingRequestsTable
-          projects={projects}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onViewDetails={handleViewDetails}
+          projects={pendingProjects}
+          onApprove={onApprove}
+          onReject={onReject}
+          onViewDetails={onViewDetails}
         />
 
         {/* Details Dialog */}
         <ProjectDetailsDialog
           isOpen={selectedProject !== null}
-          onClose={() => setSelectedProject(null)}
+          onClose={onCloseDialog}
           project={selectedProject}
         />
       </div>

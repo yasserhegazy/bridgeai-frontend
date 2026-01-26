@@ -1,28 +1,32 @@
 "use client";
 
-import { CRSOut, CRSStatus, CRSPattern } from "@/lib/api-crs";
+import { CRSDTO, CRSStatus, CRSPattern } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { Eye } from "lucide-react";
 
 interface CRSDashboardTableProps {
-  documents: CRSOut[];
-  onViewDetails: (crs: CRSOut) => void;
+  documents: CRSDTO[];
+  onViewDetails: (crs: CRSDTO) => void;
   statusFilter: CRSStatus | "all";
   onFilterChange: (status: CRSStatus | "all") => void;
 }
 
-const PATTERN_LABELS: Record<CRSPattern, string> = {
+type PatternKey = CRSPattern | "unknown";
+
+const PATTERN_LABELS: Record<PatternKey, string> = {
   iso_iec_ieee_29148: "ISO/IEC/IEEE 29148",
   ieee_830: "IEEE 830",
   babok: "BABOK",
   agile_user_stories: "Agile User Stories",
+  unknown: "Unknown",
 };
 
-const PATTERN_COLORS: Record<CRSPattern, string> = {
+const PATTERN_COLORS: Record<PatternKey, string> = {
   iso_iec_ieee_29148: "bg-blue-100 text-blue-800",
   ieee_830: "bg-purple-100 text-purple-800",
   babok: "bg-green-100 text-green-800",
   agile_user_stories: "bg-orange-100 text-orange-800",
+  unknown: "bg-gray-100 text-gray-800",
 };
 
 export function CRSDashboardTable({
@@ -98,14 +102,17 @@ export function CRSDashboardTable({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {documents.map((crs) => (
+              {documents.map((crs) => {
+                const patternKey: PatternKey = crs.pattern ?? "unknown";
+                const summaryCount = crs.summary_points?.length ?? 0;
+                return (
                 <tr key={crs.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     Project #{crs.project_id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PATTERN_COLORS[crs.pattern]}`}>
-                      {PATTERN_LABELS[crs.pattern]}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PATTERN_COLORS[patternKey]}`}>
+                      {PATTERN_LABELS[patternKey]}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -118,9 +125,9 @@ export function CRSDashboardTable({
                     <div className="max-w-xs truncate">
                       {crs.summary_points?.[0] || "No summary available"}
                     </div>
-                    {crs.summary_points?.length > 1 && (
+                    {summaryCount > 1 && (
                       <div className="text-xs text-gray-500 mt-1">
-                        +{crs.summary_points.length - 1} more points
+                        +{summaryCount - 1} more points
                       </div>
                     )}
                   </td>
@@ -141,7 +148,8 @@ export function CRSDashboardTable({
                     </button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

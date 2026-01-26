@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, Eye } from "lucide-react";
-import { Project } from "@/lib/api-projects";
+import { ProjectDTO } from "@/dto/projects.dto";
 import { RejectDialog } from "./RejectDialog";
 
 // Helper function to format date
@@ -18,10 +18,10 @@ function formatDate(dateString: string): string {
 }
 
 interface PendingRequestsTableProps {
-  projects: Project[];
+  projects: ProjectDTO[];
   onApprove: (projectId: number) => Promise<void>;
   onReject: (projectId: number, reason: string) => Promise<void>;
-  onViewDetails: (project: Project) => void;
+  onViewDetails: (project: ProjectDTO) => void;
 }
 
 export function PendingRequestsTable({

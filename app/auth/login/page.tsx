@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
 import { FormField } from "@/components/auth/FormField";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
-import { useLogin } from "@/hooks/useLogin";
+import { useLogin } from "@/hooks/auth/useLogin";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");

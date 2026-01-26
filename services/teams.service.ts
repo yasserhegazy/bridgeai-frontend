@@ -150,11 +150,38 @@ export async function inviteTeamMember(
 }
 
 /**
+ * Fetch a specific team by ID
+ */
+export async function fetchTeamById(teamId: number | string): Promise<TeamDTO> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
+      method: "GET",
+      headers: createAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = parseApiError(errorData, response.status);
+      throw new TeamsError(errorMessage, response.status, errorData);
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof TeamsError) {
+      throw error;
+    }
+    throw new TeamsError(
+      error instanceof Error ? error.message : "Network error occurred"
+    );
+  }
+}
+
+/**
  * Delete a team
  */
 export async function deleteTeam(teamId: number): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}/`, {
       method: "DELETE",
       headers: createAuthHeaders(),
     });
@@ -179,11 +206,11 @@ export async function deleteTeam(teamId: number): Promise<void> {
  */
 export async function updateTeam(
   teamId: number,
-  updates: Partial<CreateTeamRequestDTO>
+  updates: Partial<CreateTeamRequestDTO & { status?: string }>
 ): Promise<TeamDTO> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}`, {
-      method: "PATCH",
+    const response = await fetch(`${API_BASE_URL}/api/teams/${teamId}/`, {
+      method: "PUT",
       headers: createAuthHeaders(),
       body: JSON.stringify(updates),
     });
@@ -203,4 +230,35 @@ export async function updateTeam(
       error instanceof Error ? error.message : "Network error occurred"
     );
   }
+}
+
+/**
+ * Update team status (archive, activate, deactivate)
+ */
+export async function updateTeamStatus(
+  teamId: number,
+  status: "active" | "inactive" | "archived"
+): Promise<TeamDTO> {
+  return updateTeam(teamId, { status });
+}
+
+/**
+ * Archive a team
+ */
+export async function archiveTeam(teamId: number): Promise<TeamDTO> {
+  return updateTeamStatus(teamId, "archived");
+}
+
+/**
+ * Activate a team
+ */
+export async function activateTeam(teamId: number): Promise<TeamDTO> {
+  return updateTeamStatus(teamId, "active");
+}
+
+/**
+ * Deactivate a team
+ */
+export async function deactivateTeam(teamId: number): Promise<TeamDTO> {
+  return updateTeamStatus(teamId, "inactive");
 }

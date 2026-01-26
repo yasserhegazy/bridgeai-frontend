@@ -3,7 +3,7 @@
  * Displays status badges for CRS (Client Requirements Specification) documents
  */
 
-import { CRSStatus } from "@/lib/api-crs";
+import { CRSStatus } from "@/dto/crs.dto";
 
 interface CRSStatusBadgeProps {
   status: CRSStatus;

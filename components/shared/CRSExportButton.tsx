@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { exportCRS } from "@/lib/api-crs";
+import { useCRSExport } from "@/hooks/crs/useCRSExport";
 
 interface CRSExportButtonProps {
   crsId: number;
@@ -17,38 +16,7 @@ interface CRSExportButtonProps {
 }
 
 export function CRSExportButton({ crsId, version }: CRSExportButtonProps) {
-  const [isExporting, setIsExporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleExport = async (format: "pdf" | "markdown" | "csv") => {
-    setIsExporting(true);
-    setError(null);
-
-    try {
-      let extension = "md";
-      if (format === "pdf") extension = "pdf";
-      if (format === "csv") extension = "csv";
-      const filename = `crs-v${version}.${extension}`;
-
-      const blob = await exportCRS(crsId, format);
-
-      // Download the blob
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Export failed";
-      setError(message);
-      console.error("CRS export error:", err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  const { isExporting, error, exportDocument } = useCRSExport();
 
   return (
     <div className="flex items-center gap-2">
@@ -70,19 +38,19 @@ export function CRSExportButton({ crsId, version }: CRSExportButtonProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => handleExport("markdown")}
+            onClick={() => exportDocument(crsId, version, "markdown")}
             disabled={isExporting}
           >
             Markdown
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => handleExport("pdf")}
+            onClick={() => exportDocument(crsId, version, "pdf")}
             disabled={isExporting}
           >
             PDF
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => handleExport("csv")}
+            onClick={() => exportDocument(crsId, version, "csv")}
             disabled={isExporting}
           >
             CSV

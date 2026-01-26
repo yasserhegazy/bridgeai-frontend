@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CRSDashboardTable } from "@/components/crs-dashboard/CRSDashboardTable";
 import { CRSReviewDialog } from "@/components/crs-dashboard/CRSReviewDialog";
-import { CRSOut, CRSStatus, fetchCRSForReview } from "@/lib/api-crs";
+import { fetchCRSForReview } from "@/lib/api-crs";
+import { CRSDTO, CRSStatus } from "@/dto/crs.dto";
 import { getCurrentUser } from "@/lib/api";
 import { Loader2, FileCheck } from "lucide-react";
 
@@ -18,8 +19,8 @@ interface User {
 
 export default function CRSDashboardPage() {
   const router = useRouter();
-  const [crsDocuments, setCrsDocuments] = useState<CRSOut[]>([]);
-  const [selectedCRS, setSelectedCRS] = useState<CRSOut | null>(null);
+  const [crsDocuments, setCrsDocuments] = useState<CRSDTO[]>([]);
+  const [selectedCRS, setSelectedCRS] = useState<CRSDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export default function CRSDashboardPage() {
     }
   };
 
-  const handleViewDetails = (crs: CRSOut) => {
+  const handleViewDetails = (crs: CRSDTO) => {
     setSelectedCRS(crs);
   };
 

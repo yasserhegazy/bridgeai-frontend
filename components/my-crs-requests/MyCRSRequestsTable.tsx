@@ -1,14 +1,14 @@
 "use client";
 
-import { CRSOut, CRSStatus } from "@/lib/api-crs";
-import { Project } from "@/lib/api-projects";
+import { CRSDTO, CRSStatus } from "@/dto/crs.dto";
+import { ProjectDTO } from "@/dto/projects.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { Eye, AlertCircle } from "lucide-react";
 
 interface MyCRSRequestsTableProps {
-  documents: CRSOut[];
-  projects: Project[];
-  onViewDetails: (crs: CRSOut) => void;
+  documents: CRSDTO[];
+  projects: ProjectDTO[];
+  onViewDetails: (crs: CRSDTO) => void;
   statusFilter: CRSStatus | "all";
   onFilterChange: (status: CRSStatus | "all") => void;
 }
@@ -104,7 +104,9 @@ export function MyCRSRequestsTable({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {documents.map((crs) => (
+              {documents.map((crs) => {
+                const summaryCount = crs.summary_points?.length ?? 0;
+                return (
                 <tr key={crs.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {getProjectName(crs.project_id)}
@@ -131,9 +133,9 @@ export function MyCRSRequestsTable({
                         <div className="truncate">
                           {crs.summary_points?.[0] || "No summary available"}
                         </div>
-                        {crs.summary_points?.length > 1 && (
+                        {summaryCount > 1 && (
                           <div className="text-xs text-gray-500 mt-1">
-                            +{crs.summary_points.length - 1} more points
+                            +{summaryCount - 1} more points
                           </div>
                         )}
                       </div>
@@ -159,7 +161,8 @@ export function MyCRSRequestsTable({
                     </button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

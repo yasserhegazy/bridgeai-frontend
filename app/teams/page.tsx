@@ -1,16 +1,26 @@
+/**
+ * Teams List Page
+ * Displays and manages teams
+ * Refactored for SOLID principles and best practices
+ */
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { SearchBar } from "@/components/shared/SearchBar";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SearchFilterBar } from "@/components/shared/SearchFilterBar";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { CardGrid } from "@/components/shared/CardGrid";
 import { CreateTeamModal } from "@/components/teams/CreateTeamModal";
 import { TeamsFilters } from "@/components/teams/TeamsFilters";
-import { useTeamsList } from "@/hooks/useTeamsList";
+import { useTeamsList, useModal } from "@/hooks";
+
 
 export default function TeamsList() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isOpen, openModal, closeModal } = useModal();
 
   const {
     filteredTeams,
@@ -24,13 +34,14 @@ export default function TeamsList() {
     refetchTeams,
   } = useTeamsList();
 
-  const handleOpenModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
-
-  const handleCloseModal = useCallback((open: boolean) => {
-    setIsModalOpen(open);
-  }, []);
+  const handleCloseModal = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        closeModal();
+      }
+    },
+    [closeModal]
+  );
 
   const handleTeamCreated = useCallback(() => {
     refetchTeams();
@@ -38,63 +49,52 @@ export default function TeamsList() {
 
   return (
     <div className="max-w-6xl mx-auto mt-14 px-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5">
-        <div className="mb-4 sm:mb-0">
-          <h1 className="text-3xl font-semibold tracking-tight">Teams</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage all teams for your organization in one place.
-          </p>
-        </div>
-      </div>
+      {/* Header */}
+      <PageHeader
+        title="Teams"
+        description="Manage all teams for your organization in one place."
+      />
 
-      <div className="flex items-center bg-[#fafafb] p-4 justify-between mb-7 w-full max-w-7xl mx-auto gap-3 rounded">
-        <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <SearchBar 
-            placeholder="Search teams by name" 
-            value={searchQuery}
-            onChange={setSearchQuery}
-          />
-          <TeamsFilters 
+      {/* Search and Filters */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search teams by name"
+        filters={
+          <TeamsFilters
             selectedStatuses={selectedStatuses}
             onStatusChange={setSelectedStatuses}
             onReset={resetFilters}
           />
-        </div>
-        <Button 
-          variant="primary" 
-          className="hover:cursor-pointer" 
-          onClick={handleOpenModal}
-        >
-          Add Team
-        </Button>
-      </div>
+        }
+        actions={
+          <Button variant="primary" className="hover:cursor-pointer" onClick={openModal}>
+            Add Team
+          </Button>
+        }
+      />
 
+      {/* Loading State */}
       {isLoading && (
-        <p className="text-center text-muted-foreground">Loading teams...</p>
-      )}
-      
-      {error && (
-        <p className="text-center text-red-500">{error}</p>
-      )}
-      
-      {!isLoading && !error && (
-        <>
-          {filteredTeams.length === 0 ? (
-            <p className="text-center text-muted-foreground">
-              No teams found matching your filters.
-            </p>
-          ) : (
-            <CardGrid 
-              items={filteredTeams} 
-              type="team" 
-              onItemsChange={refetchTeams} 
-            />
-          )}
-        </>
+        <LoadingSpinner className="py-12" message="Loading teams..." />
       )}
 
-      <CreateTeamModal 
-        open={isModalOpen} 
+      {/* Error State */}
+      {error && !isLoading && <ErrorState message={error} />}
+
+      {/* Empty State */}
+      {!isLoading && !error && filteredTeams.length === 0 && (
+        <EmptyState message="No teams found matching your filters." />
+      )}
+
+      {/* Teams Grid */}
+      {!isLoading && !error && filteredTeams.length > 0 && (
+        <CardGrid items={filteredTeams} type="team" onItemsChange={refetchTeams} />
+      )}
+
+      {/* Create Team Modal */}
+      <CreateTeamModal
+        open={isOpen}
         onOpenChange={handleCloseModal}
         onTeamCreated={handleTeamCreated}
       />

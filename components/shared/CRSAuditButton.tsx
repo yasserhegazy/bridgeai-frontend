@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { History, Loader2, FileText, CheckCircle, XCircle, Edit } from "lucide-react";
-import { fetchCRSAudit, CRSAuditLog } from "@/lib/api-crs";
+import { useCRSAuditLogs } from "@/hooks/crs/useCRSAuditLogs";
 
 interface CRSAuditButtonProps {
     crsId: number;
@@ -12,56 +12,7 @@ interface CRSAuditButtonProps {
 
 export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    interface FormattedAuditLog extends CRSAuditLog {
-        formattedDate: string;
-    }
-
-    const [logs, setLogs] = useState<FormattedAuditLog[]>([]);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (open) {
-            loadAuditLogs();
-        }
-    }, [open, crsId]);
-
-    const loadAuditLogs = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await fetchCRSAudit(crsId);
-            // Sort by date descending
-            const sorted = data.sort((a, b) =>
-                new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime()
-            );
-
-            // Pre-process date formatting
-            const formattedLogs: FormattedAuditLog[] = sorted.map(log => {
-                let formattedDate = log.changed_at || "Unknown Date";
-                try {
-                    const date = new Date(log.changed_at);
-                    if (!isNaN(date.getTime())) {
-                        formattedDate = date.toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit"
-                        });
-                    }
-                } catch (e) {
-                    // fall back to original string
-                }
-                return { ...log, formattedDate };
-            });
-
-            setLogs(formattedLogs);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to load audit trail");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { logs, isLoading, error, refresh } = useCRSAuditLogs(crsId, open);
 
     const getActionIcon = (action: string) => {
         switch (action.toLowerCase()) {
@@ -85,6 +36,10 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
         ).join(' ');
     };
 
+    const handleRetry = useCallback(() => {
+        refresh();
+    }, [refresh]);
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -102,7 +57,7 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto pr-2 mt-4">
-                    {loading ? (
+                    {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                             <Loader2 className="w-8 h-8 animate-spin mb-2" />
                             <p>Loading history...</p>
@@ -113,7 +68,7 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={loadAuditLogs}
+                                onClick={handleRetry}
                                 className="mt-2 text-red-800 border-red-300 hover:bg-red-100 block mx-auto"
                             >
                                 Retry
@@ -129,7 +84,7 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
                                 <div key={log.id} className="relative flex gap-4">
                                     {/* Timeline Line */}
                                     {idx !== logs.length - 1 && (
-                                        <div className="absolute left-[9px] top-8 bottom-[-24px] w-0.5 bg-gray-200" />
+                                        <div className="absolute left-[9px] top-8 -bottom-6 w-0.5 bg-gray-200" />
                                     )}
 
                                     {/* Icon */}

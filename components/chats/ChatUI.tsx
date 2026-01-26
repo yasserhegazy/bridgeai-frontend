@@ -11,6 +11,7 @@ import { ChatDetail, ChatMessage as ChatMessageType } from "@/lib/api-chats";
 import { ChatMessage, TypingIndicator, ChatMessageData } from "@/components/chats/ChatMessage";
 import { getAccessToken } from "@/lib/api";
 import { CRSOut, fetchCRSForSession, updateCRSStatus, createCRS, getPreviewCRS, CRSPreviewOut } from "@/lib/api-crs";
+import { CRSDTO } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { ExportButton } from "@/components/shared/ExportButton";
@@ -280,7 +281,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   // CRS state
   const [openDraft, setOpenDraft] = useState(false);
   const [openGenerate, setOpenGenerate] = useState(false);
-  const [latestCRS, setLatestCRS] = useState<CRSOut | null>(null);
+  const [latestCRS, setLatestCRS] = useState<CRSDTO | null>(null);
   const [crsLoading, setCrsLoading] = useState(false);
   const [crsError, setCrsError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);

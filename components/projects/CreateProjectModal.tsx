@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,20 +11,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { apiCall, getCurrentUser } from "@/lib/api";
+import { useCreateProject } from "@/hooks/projects/useCreateProject";
+import { useCurrentUser } from "@/hooks/auth/useCurrentUser";
 
 interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   teamId: string;
   onProjectCreated?: () => void;
-}
-
-interface UserResponse {
-  id: number;
-  full_name: string;
-  email: string;
-  role: string;
 }
 
 export function CreateProjectModal({
@@ -35,45 +29,41 @@ export function CreateProjectModal({
 }: CreateProjectModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const { user } = useCurrentUser();
+  const { isCreating, error, createNewProject, clearError } = useCreateProject();
+
+  const handleCreateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
+    clearError();
     setSuccessMessage(null);
 
     if (!name.trim()) {
-      setError("Project name is required");
+      setFormError("Project name is required");
       return;
     }
 
     if (name.trim().length > 256) {
-      setError("Project name must be 256 characters or less");
+      setFormError("Project name must be 256 characters or less");
       return;
     }
 
     try {
-      setIsLoading(true);
-
-      // Get current user to determine role
-      const user = await getCurrentUser<UserResponse>();
-
-      // Create project with exact API format
-      const payload = {
+      const success = await createNewProject({
         name: name.trim(),
         description: description.trim() || undefined,
         team_id: parseInt(teamId, 10),
-      };
-
-      await apiCall("/api/projects/", {
-        method: "POST",
-        body: JSON.stringify(payload),
       });
 
+      if (!success) {
+        return;
+      }
+
       // Show role-based success message
-      if (user.role === "ba") {
+      if (user?.role === "ba") {
         setSuccessMessage("Project created successfully!");
       } else {
         setSuccessMessage(
@@ -95,11 +85,9 @@ export function CreateProjectModal({
       }, 2000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create project";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      setFormError(errorMessage);
     }
-  };
+  }, [name, description, teamId, createNewProject, user?.role, onOpenChange, onProjectCreated, clearError]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,7 +109,7 @@ export function CreateProjectModal({
               placeholder="Enter project name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={isLoading}
+              disabled={isCreating}
               required
               maxLength={256}
             />
@@ -139,15 +127,15 @@ export function CreateProjectModal({
               placeholder="Enter project description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              disabled={isLoading}
+              disabled={isCreating}
               rows={4}
               className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
             />
           </div>
 
-          {error && (
+          {(formError || error) && (
             <div className="p-3 rounded-md bg-red-50 border border-red-200">
-              <p className="text-sm text-red-900">{error}</p>
+              <p className="text-sm text-red-900">{formError || error}</p>
             </div>
           )}
 
@@ -162,7 +150,7 @@ export function CreateProjectModal({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={isCreating}
               className="hover:cursor-pointer"
             >
               Cancel
@@ -170,10 +158,10 @@ export function CreateProjectModal({
             <Button
               type="submit"
               variant="primary"
-              disabled={isLoading}
+              disabled={isCreating}
               className="hover:cursor-pointer sm:ml-2"
             >
-              {isLoading ? "Creating..." : "Create Project"}
+              {isCreating ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>
         </form>

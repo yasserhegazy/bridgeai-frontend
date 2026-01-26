@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Project } from "@/lib/api-projects";
+import { ProjectDTO } from "@/dto/projects.dto";
 import { X } from "lucide-react";
 
 interface ProjectDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  project: Project | null;
+  project: ProjectDTO | null;
 }
 
 export function ProjectDetailsDialog({

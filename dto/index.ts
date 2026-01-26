@@ -25,3 +25,22 @@ export type {
   TeamStatus,
   MemberRole,
 } from "./teams.dto";
+
+export type {
+  ProjectDTO,
+  CreateProjectRequestDTO,
+  CreateProjectResponseDTO,
+  ProjectListItemDTO,
+  ApproveProjectRequestDTO,
+  RejectProjectRequestDTO,
+  ProjectStatus,
+} from "./projects.dto";
+
+export type {
+  CRSDTO,
+  CRSListItemDTO,
+  CreateCRSRequestDTO,
+  UpdateCRSStatusRequestDTO,
+  UpdateCRSStatusResponseDTO,
+  CRSStatus,
+} from "./crs.dto";
