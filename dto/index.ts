@@ -13,3 +13,15 @@ export type {
   ApiErrorDTO,
   UserRole,
 } from "./auth.dto";
+
+export type {
+  TeamDTO,
+  CreateTeamRequestDTO,
+  CreateTeamResponseDTO,
+  TeamListItemDTO,
+  InviteMemberRequestDTO,
+  InviteMemberResponseDTO,
+  TeamMemberDTO,
+  TeamStatus,
+  MemberRole,
+} from "./teams.dto";
