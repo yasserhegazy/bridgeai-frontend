@@ -1,13 +1,20 @@
+/**
+ * Team Invitation Modal Component
+ * Displays invitation details and allows accept/reject actions
+ * Single Responsibility: Invitation dialog UI
+ */
+
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Clock, Users } from "lucide-react";
-import { invitationAPI, InvitationPublicDetails } from "@/lib/api-invitations";
-import { notificationAPI } from "@/lib/api-notifications";
+import { useInvitationDetails, useNotificationActions } from "@/hooks";
 import { showToast } from "@/components/notifications/NotificationToast";
+import { acceptInvitation, rejectInvitation } from "@/services/invitations.service";
+import { markNotificationAsRead } from "@/services/notifications.service";
 
 export type TeamInvitationModalProps = {
   open: boolean;
@@ -25,59 +32,46 @@ export function TeamInvitationModal({
   onResolved,
 }: TeamInvitationModalProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [acting, setActing] = useState<"accept" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [details, setDetails] = useState<InvitationPublicDetails | null>(null);
 
   const token = useMemo(() => invitationToken ?? "", [invitationToken]);
+  
+  // Use the invitation details hook
+  const {
+    invitation: details,
+    isLoading: loading,
+    error: loadError,
+  } = useInvitationDetails(open ? token : null);
 
+  // Update error when load error changes
+  useEffect(() => {
+    if (loadError) {
+      setError(loadError);
+    }
+  }, [loadError]);
+
+  // Reset state when modal closes
   useEffect(() => {
     if (!open) {
       setError(null);
-      setDetails(null);
-      setLoading(false);
       setActing(null);
-      return;
     }
+  }, [open]);
 
-    if (!token) {
-      setError("Missing invitation token");
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await invitationAPI.getInvitationDetails(token);
-        if (!cancelled) setDetails(data);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load invitation");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, token]);
-
-  const handleAccept = async () => {
+  const handleAccept = useCallback(async () => {
     if (!token) return;
     try {
       setActing("accept");
       setError(null);
 
-      // Prefer accepting via notification endpoint (marks it read + avoids relying on token state)
-      const result = notificationId
-        ? await notificationAPI.acceptInvitationFromNotification(notificationId)
-        : await invitationAPI.acceptInvitation(token);
+      // Accept the invitation
+      const result = await acceptInvitation(token);
+
+      // Mark notification as read if available
+      if (notificationId) {
+        await markNotificationAsRead(notificationId);
+      }
 
       showToast({
         type: "success",
@@ -88,7 +82,7 @@ export function TeamInvitationModal({
       onOpenChange(false);
       onResolved?.();
 
-      const teamId = (result as any).team_id;
+      const teamId = result.team?.id || result.team_id;
       if (teamId) {
         router.push(`/teams/${teamId}/dashboard`);
       }
@@ -97,20 +91,19 @@ export function TeamInvitationModal({
     } finally {
       setActing(null);
     }
-  };
+  }, [token, notificationId, onOpenChange, onResolved, router]);
 
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     if (!token) return;
 
     try {
       setActing("reject");
       setError(null);
 
-      await invitationAPI.rejectInvitation(token);
+      await rejectInvitation(token);
 
       if (notificationId) {
-        // Make UX consistent: treat a rejection as "handled"
-        await notificationAPI.markAsRead(notificationId);
+        await markNotificationAsRead(notificationId);
       }
 
       showToast({
@@ -126,7 +119,7 @@ export function TeamInvitationModal({
     } finally {
       setActing(null);
     }
-  };
+  }, [token, notificationId, onOpenChange, onResolved]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
