@@ -29,6 +29,25 @@ export { useInviteMember } from "./teams/useInviteMember";
 export { useProjects } from "./projects/useProjects";
 export { useCreateProject } from "./projects/useCreateProject";
 export { usePendingProjects } from "./projects/usePendingProjects";
+export { useProjectChats } from "./projects/useProjectChats";
+export { useProjectDetails } from "./projects/useProjectDetails";
+
+// ============================================================================
+// NOTIFICATIONS HOOKS
+// ============================================================================
+export { useNotificationsList } from "./notifications/useNotificationsList";
+export { useNotificationActions } from "./notifications/useNotificationActions";
+
+// ============================================================================
+// INVITATIONS HOOKS
+// ============================================================================
+export { useInvitationDetails } from "./invitations/useInvitationDetails";
+export { useInvitationActions } from "./invitations/useInvitationActions";
+
+// ============================================================================
+// PENDING REQUESTS HOOKS
+// ============================================================================
+export { usePendingRequests } from "./pending-requests/usePendingRequests";
 
 // ============================================================================
 // CRS HOOKS
