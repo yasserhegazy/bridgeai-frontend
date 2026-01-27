@@ -5,7 +5,8 @@
 
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Edit, MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,8 @@ import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
+import { CRSContentEditor } from "@/components/shared/CRSContentEditor";
+import { updateCRSContent } from "@/lib/api-crs";
 
 interface CRSDraftDialogProps {
   open: boolean;
@@ -29,6 +32,7 @@ interface CRSDraftDialogProps {
   crsError: string | null;
   onSubmitForReview: () => Promise<void>;
   onRegenerate: () => void;
+  onCRSUpdate?: () => void; // Callback to refresh CRS data after edit
 }
 
 export function CRSDraftDialog({
@@ -39,14 +43,71 @@ export function CRSDraftDialog({
   crsError,
   onSubmitForReview,
   onRegenerate,
+  onCRSUpdate,
 }: CRSDraftDialogProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+  const [currentCrs, setCurrentCrs] = useState<CRSDTO | null>(latestCRS);
+  const [isCommentsCollapsed, setIsCommentsCollapsed] = useState(false);
+
+  // Sync currentCrs with latestCRS when dialog opens or latestCRS changes
+  if (open && latestCRS && (currentCrs?.id !== latestCRS.id || currentCrs?.version !== latestCRS.version)) {
+    setCurrentCrs(latestCRS);
+  }
+
+  const handleSaveContent = async (newContent: string) => {
+    if (!currentCrs) return;
+
+    try {
+      setContentError(null);
+      await updateCRSContent(currentCrs.id, newContent, currentCrs.edit_version || 0);
+
+      // Update local view immediately
+      setCurrentCrs(prev => prev ? {
+        ...prev,
+        content: newContent,
+        edit_version: (prev.edit_version || 0) + 1
+      } : null);
+      setIsEditing(false);
+
+      // Notify parent to refresh data
+      if (onCRSUpdate) {
+        onCRSUpdate();
+      }
+    } catch (err) {
+      setContentError(err instanceof Error ? err.message : "Failed to save changes");
+    }
+  };
+
+  const canEdit = currentCrs?.status !== "approved";
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => {
+      if (!val) {
+        setIsEditing(false);
+        setContentError(null);
+      }
+      onOpenChange(val);
+    }}>
       <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
           <DialogTitle className="flex items-center justify-between">
             <span className="text-xl">CRS Document</span>
-            {latestCRS && <CRSStatusBadge status={latestCRS.status} />}
+            <div className="flex items-center gap-3">
+              {currentCrs && <CRSStatusBadge status={currentCrs.status} />}
+              {currentCrs && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCommentsCollapsed(!isCommentsCollapsed)}
+                  className={`${isCommentsCollapsed ? 'bg-gray-100' : ''}`}
+                  title={isCommentsCollapsed ? "Show comments" : "Hide comments"}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {isCommentsCollapsed && <span className="ml-2">Comments</span>}
+                </Button>
+              )}
+            </div>
           </DialogTitle>
           <DialogDescription className="sr-only">
             Review the Client Requirements Specification document.
@@ -61,34 +122,52 @@ export function CRSDraftDialog({
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 <span className="ml-2 text-base text-gray-500">Loading document...</span>
               </div>
-            ) : crsError || !latestCRS ? (
+            ) : crsError || !currentCrs ? (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
                   {crsError || "No CRS document found for this project."}
                 </p>
               </div>
+            ) : isEditing ? (
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <CRSContentEditor
+                  initialContent={currentCrs.content}
+                  onSave={handleSaveContent}
+                  onCancel={() => {
+                    setIsEditing(false);
+                    setContentError(null);
+                  }}
+                />
+              </div>
             ) : (
               <>
+                {/* Error Display */}
+                {contentError && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-800">{contentError}</p>
+                  </div>
+                )}
+
                 {/* Header Info */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Version
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">v{latestCRS.version}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">v{currentCrs.version}</p>
                   </div>
                   <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Pattern
                     </p>
                     <p className="text-sm font-medium text-gray-900 mt-2">
-                      {latestCRS.pattern === "iso_iec_ieee_29148"
+                      {currentCrs.pattern === "iso_iec_ieee_29148"
                         ? "ISO/IEC/IEEE 29148"
-                        : latestCRS.pattern === "ieee_830"
-                        ? "IEEE 830"
-                        : latestCRS.pattern === "agile_user_stories"
-                        ? "Agile User Stories"
-                        : "BABOK"}
+                        : currentCrs.pattern === "ieee_830"
+                          ? "IEEE 830"
+                          : currentCrs.pattern === "agile_user_stories"
+                            ? "Agile User Stories"
+                            : "BABOK"}
                     </p>
                   </div>
                   <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
@@ -96,7 +175,7 @@ export function CRSDraftDialog({
                       Created
                     </p>
                     <p className="text-sm font-medium text-gray-900 mt-2">
-                      {new Date(latestCRS.created_at).toLocaleDateString(undefined, {
+                      {new Date(currentCrs.created_at).toLocaleDateString(undefined, {
                         dateStyle: "medium",
                       })}
                     </p>
@@ -104,14 +183,14 @@ export function CRSDraftDialog({
                 </div>
 
                 {/* Summary Points */}
-                {latestCRS.summary_points && latestCRS.summary_points.length > 0 && (
+                {currentCrs.summary_points && currentCrs.summary_points.length > 0 && (
                   <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 shadow-sm">
                     <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                       Key Points
                     </h3>
                     <ul className="grid gap-2">
-                      {latestCRS.summary_points.map((point, idx) => (
+                      {currentCrs.summary_points.map((point, idx) => (
                         <li
                           key={idx}
                           className="text-sm text-blue-900/80 pl-2 border-l-2 border-blue-200"
@@ -125,58 +204,69 @@ export function CRSDraftDialog({
 
                 {/* Structured CRS Content */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm min-h-[400px]">
-                  <CRSContentDisplay content={latestCRS.content} />
+                  <CRSContentDisplay content={currentCrs.content} />
                 </div>
               </>
             )}
           </div>
 
-          {/* Right Panel: Comments */}
-          {latestCRS && (
-            <div className="w-[350px] lg:w-[400px] border-l border-gray-200 bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_20px_-5px_inset]">
-              <CommentsSection
-                crsId={latestCRS.id}
-                className="h-full border-none rounded-none shadow-none"
-              />
+          {/* Right Panel: Comments - Collapsible */}
+          {currentCrs && (
+            <div className={`border-l border-gray-200 bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_20px_-5px_inset] transition-all duration-300 ${isCommentsCollapsed ? 'w-0' : 'w-[350px] lg:w-[400px]'
+              }`}>
+              {!isCommentsCollapsed && (
+                <CommentsSection
+                  crsId={currentCrs.id}
+                  className="h-full border-none rounded-none shadow-none"
+                />
+              )}
             </div>
           )}
         </div>
 
-        <DialogFooter className="shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
-          <div className="flex gap-2">
-            <Button onClick={() => onOpenChange(false)} variant="outline" className="border-gray-300">
-              Close
-            </Button>
-            {latestCRS && <CRSExportButton crsId={latestCRS.id} version={latestCRS.version} />}
-          </div>
+        {/* Footer - Hide when editing as Editor has its own actions */}
+        {!isEditing && (
+          <DialogFooter className="shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
+            <div className="flex gap-2">
+              <Button onClick={() => onOpenChange(false)} variant="outline" className="border-gray-300">
+                Close
+              </Button>
+              {currentCrs && <CRSExportButton crsId={currentCrs.id} version={currentCrs.version} />}
+            </div>
 
-          <div className="flex gap-2">
-            {latestCRS && latestCRS.status === "draft" && (
-              <Button onClick={onSubmitForReview} variant="primary">
-                Submit for Review
-              </Button>
-            )}
-            {latestCRS && latestCRS.status === "rejected" && (
-              <Button
-                onClick={onRegenerate}
-                variant="primary"
-                className="bg-orange-600 hover:bg-orange-700"
-              >
-                Regenerate CRS
-              </Button>
-            )}
-            {latestCRS && latestCRS.status === "approved" && (
-              <span className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-md border border-green-200 flex items-center">
-                ✅ Final Approved
-              </span>
-            )}
-            {latestCRS && latestCRS.status === "under_review" && (
-              <span className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-md border border-blue-200 flex items-center">
-                ⏳ Pending Review
-              </span>
-            )}
-          </div>
-        </DialogFooter>
+            <div className="flex gap-2">
+              {canEdit && currentCrs && (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Content
+                </Button>
+              )}
+              {currentCrs && currentCrs.status === "draft" && (
+                <Button onClick={onSubmitForReview} variant="primary">
+                  Submit for Review
+                </Button>
+              )}
+              {currentCrs && currentCrs.status === "rejected" && (
+                <Button
+                  onClick={onRegenerate}
+                  variant="primary"
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  Regenerate CRS
+                </Button>
+              )}
+              {currentCrs && currentCrs.status === "approved" && (
+                <span className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-md border border-green-200 flex items-center">
+                  ✅ Final Approved
+                </span>
+              )}
+
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

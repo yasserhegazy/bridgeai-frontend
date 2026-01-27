@@ -304,6 +304,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         crsError={crsError}
         onSubmitForReview={handleSubmitForReview}
         onRegenerate={handleRegenerate}
+        onCRSUpdate={loadCRS}
       />
 
       {previewData && (
