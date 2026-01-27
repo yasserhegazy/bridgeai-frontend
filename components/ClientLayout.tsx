@@ -9,7 +9,7 @@ import { NotificationProvider } from "@/components/notifications/NotificationPro
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     // Extract team ID synchronously from /teams/{id}/...
     const parts = pathname.split("/");
