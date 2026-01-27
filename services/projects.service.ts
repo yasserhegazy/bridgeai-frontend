@@ -93,13 +93,14 @@ export async function createProject(
 ): Promise<CreateProjectResponseDTO> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/teams/${projectData.team_id}/projects`,
+      `${API_BASE_URL}/api/projects`,
       {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           name: projectData.name,
           description: projectData.description,
+          team_id: projectData.team_id,
         }),
       }
     );
