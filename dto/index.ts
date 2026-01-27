@@ -44,3 +44,15 @@ export type {
   UpdateCRSStatusResponseDTO,
   CRSStatus,
 } from "./crs.dto";
+
+export type {
+  ChatSessionDTO,
+  ChatMessageDTO,
+  LocalChatMessage,
+  SendMessagePayload,
+  WebSocketMessageData,
+  CRSPreviewOut,
+  CreateCRSPayload,
+  SenderType,
+  ConnectionState,
+} from "./chat.dto";

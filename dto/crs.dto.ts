@@ -37,10 +37,17 @@ export interface CRSListItemDTO {
 
 export type CRSPattern = "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";
 
+/**
+ * Create CRS Request DTO (matches backend CRSCreate schema)
+ */
 export interface CreateCRSRequestDTO {
   project_id: number;
-  chat_session_id: number;
   content: string;
+  summary_points?: string[];
+  allow_partial?: boolean;
+  completeness_percentage?: number;
+  session_id?: number;
+  pattern?: CRSPattern;
 }
 
 export interface UpdateCRSStatusRequestDTO {
