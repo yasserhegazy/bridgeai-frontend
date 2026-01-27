@@ -251,7 +251,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-chat-bg">
       <ChatHeader
         chat={chat}
         currentUser={currentUser}

@@ -27,7 +27,7 @@ export function ChatMessageList({
   bottomRef,
 }: ChatMessageListProps) {
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50">
+    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
       {wsError && (
         <div className="text-sm text-red-700 bg-red-50 border border-red-100 px-3 py-2 rounded">
           {wsError}
