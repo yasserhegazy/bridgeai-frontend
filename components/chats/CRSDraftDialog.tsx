@@ -1,6 +1,7 @@
 /**
  * CRSDraftDialog Component
  * Modal for viewing and managing CRS draft
+ * Refactored to use CRS service layer
  */
 
 "use client";
@@ -22,7 +23,8 @@ import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { CRSContentEditor } from "@/components/shared/CRSContentEditor";
-import { updateCRSContent } from "@/lib/api-crs";
+import { updateCRSContent } from "@/services/crs.service";
+import { CRSError } from "@/services/errors.service";
 
 interface CRSDraftDialogProps {
   open: boolean;
@@ -60,14 +62,14 @@ export function CRSDraftDialog({
 
     try {
       setContentError(null);
-      await updateCRSContent(currentCrs.id, newContent, currentCrs.edit_version || 0);
+      const updatedCRS = await updateCRSContent(
+        currentCrs.id,
+        newContent,
+        currentCrs.edit_version || 0
+      );
 
-      // Update local view immediately
-      setCurrentCrs(prev => prev ? {
-        ...prev,
-        content: newContent,
-        edit_version: (prev.edit_version || 0) + 1
-      } : null);
+      // Update local view with response from server
+      setCurrentCrs(updatedCRS);
       setIsEditing(false);
 
       // Notify parent to refresh data
@@ -75,7 +77,11 @@ export function CRSDraftDialog({
         onCRSUpdate();
       }
     } catch (err) {
-      setContentError(err instanceof Error ? err.message : "Failed to save changes");
+      if (err instanceof CRSError) {
+        setContentError(err.message);
+      } else {
+        setContentError("Failed to save changes. Please try again.");
+      }
     }
   };
 
@@ -90,7 +96,7 @@ export function CRSDraftDialog({
       onOpenChange(val);
     }}>
       <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
+        <DialogHeader className="px-8 py-5 border-b border-gray-100 shrink-0 bg-white">
           <DialogTitle className="flex items-center justify-between">
             <span className="text-xl">CRS Document</span>
             <div className="flex items-center gap-3 pr-8">
@@ -99,7 +105,7 @@ export function CRSDraftDialog({
                 <Button
                   variant="outline"
                   onClick={() => setIsCommentsCollapsed(!isCommentsCollapsed)}
-                  className={`min-w-[44px] ${isCommentsCollapsed ? 'bg-gray-100' : ''}`}
+                  className={`min-w-11 ${isCommentsCollapsed ? 'bg-gray-100' : ''}`}
                   title={isCommentsCollapsed ? "Show comments" : "Hide comments"}
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -115,7 +121,7 @@ export function CRSDraftDialog({
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel: Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+          <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 bg-gray-50/30">
             {crsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -225,7 +231,7 @@ export function CRSDraftDialog({
 
         {/* Footer - Hide when editing as Editor has its own actions */}
         {!isEditing && (
-          <DialogFooter className="shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
+          <DialogFooter className="shrink-0 px-8 py-5 border-t border-gray-200 bg-white flex items-center justify-between gap-4 z-10">
             <div className="flex gap-2">
               <Button onClick={() => onOpenChange(false)} variant="outline">
                 Close

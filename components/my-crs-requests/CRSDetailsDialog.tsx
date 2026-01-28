@@ -1,3 +1,9 @@
+/**
+ * CRS Details Dialog Component
+ * Modal for viewing and managing CRS details from client's my-crs-requests page
+ * Refactored to use CRS service layer
+ */
+
 "use client";
 
 import { useCallback, useState } from "react";
@@ -11,6 +17,8 @@ import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 import { CRSContentEditor } from "@/components/shared/CRSContentEditor";
 import { useCRSStatusUpdate } from "@/hooks/crs/useCRSStatusUpdate";
+import { updateCRSContent } from "@/services/crs.service";
+import { CRSError } from "@/services/errors.service";
 
 interface CRSDetailsDialogProps {
   crs: CRSDTO;
@@ -52,14 +60,22 @@ export function CRSDetailsDialog({
   const handleSaveContent = async (newContent: string) => {
     try {
       setContentError(null);
-      await import("@/lib/api-crs").then(m => m.updateCRSContent(currentCrs.id, newContent, currentCrs.edit_version));
+      const updatedCRS = await updateCRSContent(
+        currentCrs.id,
+        newContent,
+        currentCrs.edit_version
+      );
 
-      // Update local view immediately
-      setCurrentCrs(prev => ({ ...prev, content: newContent, edit_version: (prev.edit_version || 0) + 1 }));
+      // Update local view with response from server
+      setCurrentCrs(updatedCRS);
       setIsEditing(false);
       onStatusUpdate(); // Tell parent to refresh list/data
     } catch (err) {
-      setContentError(err instanceof Error ? err.message : "Failed to save changes");
+      if (err instanceof CRSError) {
+        setContentError(err.message);
+      } else {
+        setContentError("Failed to save changes. Please try again.");
+      }
     }
   };
 
@@ -76,7 +92,7 @@ export function CRSDetailsDialog({
         onClose();
       }
     }}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col px-8 py-6">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>CRS Request - {projectName}</span>
@@ -184,7 +200,7 @@ export function CRSDetailsDialog({
             )}
 
             {/* Metadata */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="p-3 bg-gray-100 rounded-lg">
                 <p className="text-xs font-semibold text-gray-600">Version</p>
                 <p className="text-xl font-bold text-black">v{currentCrs.version}</p>
@@ -209,7 +225,7 @@ export function CRSDetailsDialog({
 
             {/* Summary Points */}
             {currentCrs.summary_points && currentCrs.summary_points.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
                 <h3 className="text-sm font-semibold text-gray-800 mb-2">Key Points</h3>
                 <ul className="list-disc list-inside space-y-1">
                   {currentCrs.summary_points.map((point, idx) => (
@@ -220,7 +236,7 @@ export function CRSDetailsDialog({
             )}
 
             {/* CRS Content */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
               <CRSContentDisplay content={currentCrs.content} />
             </div>
           </div>
@@ -228,7 +244,7 @@ export function CRSDetailsDialog({
 
         {/* Actions - Hide when editing as Editor defines its own actions */}
         {!isEditing && (
-          <div className="mt-4 flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
+          <div className="mt-6 flex items-center justify-between gap-4 pt-5 border-t border-gray-200">
             <div className="flex gap-2">
               <CRSExportButton crsId={currentCrs.id} version={currentCrs.version} />
               <CRSAuditButton crsId={currentCrs.id} />
