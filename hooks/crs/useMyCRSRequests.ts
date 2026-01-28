@@ -20,7 +20,7 @@ interface UseMyCRSRequestsReturn {
   setSelectedStatus: (status: CRSStatus | "all") => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  refreshRequests: () => Promise<void>;
+  refreshRequests: () => Promise<CRSDTO[] | null>;
 }
 
 export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
@@ -31,8 +31,8 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
   const [selectedStatus, setSelectedStatus] = useState<CRSStatus | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const loadCRSRequests = useCallback(async () => {
-    if (!teamId) return;
+  const loadCRSRequests = useCallback(async (): Promise<CRSDTO[] | null> => {
+    if (!teamId) return null;
 
     setIsLoading(true);
     setError(null);
@@ -42,10 +42,12 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
       const status = selectedStatus === "all" ? undefined : selectedStatus;
       const data = await fetchMyCRSRequests(teamId, projectId, status);
       setCRSRequests(data);
+      return data;
     } catch (err) {
       const errorMessage =
         err instanceof CRSError ? err.message : "Failed to load CRS requests";
       setError(errorMessage);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -67,8 +69,8 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
     });
   }, [crsRequests, searchTerm]);
 
-  const refreshRequests = useCallback(async () => {
-    await loadCRSRequests();
+  const refreshRequests = useCallback(async (): Promise<CRSDTO[] | null> => {
+    return await loadCRSRequests();
   }, [loadCRSRequests]);
 
   return {
