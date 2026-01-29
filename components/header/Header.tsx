@@ -270,6 +270,12 @@ export function Header({ currentTeamId: initialTeamId, setCurrentTeamId: setPare
                     // Clear token and role from cookies
                     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
                     document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+                    // Clear team context
+                    try {
+                      sessionStorage.removeItem('current_team_id');
+                    } catch (e) {
+                      // ignore storage errors
+                    }
                     // Update authentication state
                     setIsAuthenticated(false);
                     // Dispatch auth state change event

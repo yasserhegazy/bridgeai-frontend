@@ -21,6 +21,7 @@ import { useProjectChats } from "@/hooks";
 
 interface ProjectPageGridProps {
   projectId: number;
+  teamId?: number;
   projectName: string;
   projectDescription?: string;
   userRole: "BA" | "Client";
@@ -29,6 +30,7 @@ interface ProjectPageGridProps {
 
 export function ProjectPageGrid({
   projectId,
+  teamId,
   userRole,
   initialTab,
 }: ProjectPageGridProps) {
@@ -101,7 +103,7 @@ export function ProjectPageGrid({
       )}
 
       {activeTab === "chats" && userRole === "Client" && (
-        <ChatsTab projectId={projectId} createChatTrigger={createChatTrigger} />
+        <ChatsTab projectId={projectId} teamId={teamId} createChatTrigger={createChatTrigger} />
       )}
 
       {activeTab === "settings" && <SettingsTab projectId={projectId} />}

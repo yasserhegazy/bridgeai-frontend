@@ -18,9 +18,11 @@ import { DeleteChatModal } from "@/components/projects/DeleteChatModal";
 import { useProjectChats, useFlashMessage } from "@/hooks";
 import { ChatSummaryDTO, CRSPattern, fetchLatestCRS } from "@/services";
 import { CRSDTO } from "@/dto/crs.dto";
+import { setCurrentTeamId } from "@/lib/team-context";
 
 interface ChatsTabProps {
   projectId: number;
+  teamId?: number;
   createChatTrigger?: number;
 }
 
@@ -29,7 +31,7 @@ const statusStyles: Record<string, string> = {
   completed: "bg-blue-100 text-blue-800",
 };
 
-export function ChatsTab({ projectId, createChatTrigger }: ChatsTabProps) {
+export function ChatsTab({ projectId, teamId, createChatTrigger }: ChatsTabProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -112,12 +114,16 @@ export function ChatsTab({ projectId, createChatTrigger }: ChatsTabProps) {
     (id: number) => {
       try {
         sessionStorage.setItem("chatReturnTo", `/projects/${projectId}/chats`);
+        // Store team ID for sidebar navigation
+        if (teamId) {
+          setCurrentTeamId(teamId);
+        }
       } catch {
         // ignore sessionStorage errors
       }
       router.push(`/chats/${id}?projectId=${projectId}`);
     },
-    [projectId, router]
+    [projectId, teamId, router]
   );
 
   const openRenameModal = useCallback((chat: ChatSummaryDTO) => {

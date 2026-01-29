@@ -9,11 +9,12 @@
 
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import { ProjectPageGrid } from "@/components/projects/ProjectPageGrid";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useProjectDetails, useCurrentUser } from "@/hooks";
+import { setCurrentTeamId } from "@/lib/team-context";
 
 interface ProjectPageProps {
   params: Promise<{ id: string }>;
@@ -28,6 +29,13 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   const isLoading = projectLoading || userLoading;
   const userRole = user?.role === "ba" ? "BA" : "Client";
+
+  // Store team ID when project is loaded
+  useEffect(() => {
+    if (project?.team_id) {
+      setCurrentTeamId(project.team_id);
+    }
+  }, [project?.team_id]);
 
   if (isLoading) {
     return (
@@ -61,6 +69,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         <main className="flex-1 mt-4 overflow-auto">
           <ProjectPageGrid 
             projectId={project.id}
+            teamId={project.team_id}
             projectName={project.name} 
             projectDescription={project.description || ""}
             userRole={userRole} 

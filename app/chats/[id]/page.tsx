@@ -6,6 +6,8 @@ import { ChatUI } from "@/components/chats/ChatUI";
 import { ChatDetail, fetchProjectChat } from "@/lib/api-chats";
 import { getCurrentUser } from "@/lib/api";
 import { CurrentUserDTO } from "@/dto";
+import { fetchProjectById } from "@/services/projects.service";
+import { setCurrentTeamId } from "@/lib/team-context";
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
@@ -56,6 +58,17 @@ export default function ChatPage({ params }: ChatPageProps) {
         if (userData.role === "ba") {
           setError("Access denied. Only clients can view chats.");
           return;
+        }
+
+        // Store team ID from project for sidebar navigation
+        try {
+          const projectData = await fetchProjectById(projectId);
+          if (projectData.team_id) {
+            setCurrentTeamId(projectData.team_id);
+          }
+        } catch (err) {
+          // Non-critical: team context won't be available but chat still works
+          console.warn("Could not load team context:", err);
         }
 
         setChat(chatData);

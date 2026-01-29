@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/header/Header";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { NotificationToastContainer } from "@/components/notifications/NotificationToast";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
+import { getCurrentTeamId, setCurrentTeamId } from "@/lib/team-context";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -14,7 +15,17 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     // Extract team ID synchronously from /teams/{id}/...
     const parts = pathname.split("/");
     const idIndex = parts.indexOf("teams") + 1;
-    const currentTeamId = idIndex > 0 && idIndex < parts.length ? parts[idIndex] : "";
+    const teamIdFromUrl = idIndex > 0 && idIndex < parts.length ? parts[idIndex] : "";
+    
+    // Use URL team ID first, fallback to stored team ID
+    const currentTeamId = teamIdFromUrl || getCurrentTeamId() || "";
+
+    // Store team ID when navigating through team routes
+    useEffect(() => {
+        if (teamIdFromUrl) {
+            setCurrentTeamId(teamIdFromUrl);
+        }
+    }, [teamIdFromUrl]);
 
     const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications";
 
