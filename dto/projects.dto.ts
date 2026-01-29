@@ -52,3 +52,39 @@ export interface RejectProjectRequestDTO {
 }
 
 export type ProjectStatus = "pending" | "approved" | "rejected" | "active" | "completed";
+
+// Dashboard Statistics DTOs
+export interface SessionSimpleDTO {
+  id: number;
+  name: string;
+  status: string;
+  started_at: string;
+  ended_at?: string;
+  message_count: number;
+}
+
+export interface LatestCRSDTO {
+  id: number;
+  version: number;
+  status: string;
+  pattern: string;
+  created_at: string;
+}
+
+export interface ProjectDashboardStatsDTO {
+  chats: {
+    total: number;
+    by_status: Record<string, number>;
+    total_messages: number;
+  };
+  crs: {
+    total: number;
+    by_status: Record<string, number>;
+    latest: LatestCRSDTO | null;
+    version_count: number;
+  };
+  documents: {
+    total: number;
+  };
+  recent_chats: SessionSimpleDTO[];
+}

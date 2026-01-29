@@ -64,3 +64,39 @@ export interface TeamMemberDTO {
 
 export type TeamStatus = "active" | "inactive" | "archived";
 export type MemberRole = "owner" | "admin" | "member" | "viewer";
+
+// Dashboard Statistics DTOs
+export interface StatusBreakdownDTO {
+  total: number;
+  by_status: Record<string, number>;
+}
+
+export interface ProjectStatsDTO {
+  total: number;
+  by_status: Record<string, number>;
+}
+
+export interface ChatStatsDTO {
+  total: number;
+  by_status: Record<string, number>;
+}
+
+export interface CRSStatsDTO {
+  total: number;
+  by_status: Record<string, number>;
+}
+
+export interface ProjectSimpleDTO {
+  id: number;
+  name: string;
+  description?: string;
+  status: string;
+  created_at: string;
+}
+
+export interface TeamDashboardStatsDTO {
+  projects: ProjectStatsDTO;
+  chats: ChatStatsDTO;
+  crs: CRSStatsDTO;
+  recent_projects: ProjectSimpleDTO[];
+}
