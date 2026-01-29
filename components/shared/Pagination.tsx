@@ -6,7 +6,7 @@
 
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -16,11 +16,56 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+/**
+ * Generate page numbers with ellipsis for large page counts
+ * Shows: first page, last page, current page, and 1 page on each side of current
+ */
+function getPageNumbers(currentPage: number, totalPages: number): (number | "ellipsis")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const pages: (number | "ellipsis")[] = [];
+
+  // Always show first page
+  pages.push(1);
+
+  if (currentPage > 3) {
+    pages.push("ellipsis");
+  }
+
+  // Pages around current
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  for (let i = start; i <= end; i++) {
+    if (!pages.includes(i)) {
+      pages.push(i);
+    }
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push("ellipsis");
+  }
+
+  // Always show last page
+  if (!pages.includes(totalPages)) {
+    pages.push(totalPages);
+  }
+
+  return pages;
+}
+
 export const Pagination = memo(function Pagination({
   currentPage,
   totalPages,
   onPageChange,
 }: PaginationProps) {
+  const pageNumbers = useMemo(
+    () => getPageNumbers(currentPage, totalPages),
+    [currentPage, totalPages]
+  );
+
   if (totalPages <= 1) {
     return null;
   }
@@ -37,21 +82,30 @@ export const Pagination = memo(function Pagination({
         <ChevronLeft className="w-4 h-4" />
         Previous
       </Button>
-      
+
       <div className="flex items-center gap-1">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? "primary" : "outline"}
-            size="sm"
-            onClick={() => onPageChange(page)}
-            className="min-w-[2.5rem]"
-          >
-            {page}
-          </Button>
-        ))}
+        {pageNumbers.map((page, index) =>
+          page === "ellipsis" ? (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-2 text-gray-500"
+            >
+              ...
+            </span>
+          ) : (
+            <Button
+              key={page}
+              variant={currentPage === page ? "primary" : "outline"}
+              size="sm"
+              onClick={() => onPageChange(page)}
+              className="min-w-[2.5rem]"
+            >
+              {page}
+            </Button>
+          )
+        )}
       </div>
-      
+
       <Button
         variant="outline"
         size="sm"
@@ -62,7 +116,7 @@ export const Pagination = memo(function Pagination({
         Next
         <ChevronRight className="w-4 h-4" />
       </Button>
-      
+
     </div>
   );
 });

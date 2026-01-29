@@ -40,17 +40,6 @@ export const QuickActions = memo(function QuickActions({
         </button>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-100">
-        <p className="text-sm text-gray-600 text-center">
-          Need help getting started? Check out our{" "}
-          <a
-            href="#"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            quick guide
-          </a>
-        </p>
-      </div>
     </div>
   );
 });

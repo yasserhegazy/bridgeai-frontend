@@ -86,19 +86,6 @@ export const EmptyDashboard = memo(function EmptyDashboard({
           </div>
         </div>
 
-        {/* Additional Help */}
-        <div className="mt-8 pt-8 border-t border-blue-200">
-          <p className="text-sm text-gray-600">
-            Need help?{" "}
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
-              View documentation
-            </a>{" "}
-            or{" "}
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
-              watch tutorial video
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
