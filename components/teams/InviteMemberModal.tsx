@@ -20,6 +20,8 @@ import { MemberRole } from "@/dto/teams.dto";
 
 interface InviteMemberModalProps {
   teamId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onInviteSent?: () => void;
   triggerClassName?: string;
   triggerLabel?: string;
@@ -36,15 +38,21 @@ const ROLE_OPTIONS: SelectOption[] = [
 
 export function InviteMemberModal({ 
   teamId, 
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   onInviteSent, 
   triggerClassName,
   triggerLabel = "Invite Member",
   triggerSize = "sm",
   triggerVariant = "primary"
 }: InviteMemberModalProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("member");
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const { isLoading, error, success, inviteMember, resetSuccess } = useInviteMember();
 
@@ -112,19 +120,21 @@ export function InviteMemberModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button 
-          size={triggerSize}
-          variant={triggerVariant}
-          className={cn(
-            "flex items-center gap-2",
-            triggerClassName
-          )}
-        >
-          <Plus className="w-4 h-4" />
-          {triggerLabel}
-        </Button>
-      </DialogTrigger>
+      {!controlledOpen && (
+        <DialogTrigger asChild>
+          <Button 
+            size={triggerSize}
+            variant={triggerVariant}
+            className={cn(
+              "flex items-center gap-2",
+              triggerClassName
+            )}
+          >
+            <Plus className="w-4 h-4" />
+            {triggerLabel}
+          </Button>
+        </DialogTrigger>
+      )}
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
