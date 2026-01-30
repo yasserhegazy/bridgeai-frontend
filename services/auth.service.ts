@@ -60,7 +60,7 @@ export async function loginUser(
   formData.append("password", credentials.password);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/token`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
       method: "POST",
       body: formData,
     });
@@ -98,7 +98,7 @@ export async function registerUser(
   userData: RegisterRequestDTO
 ): Promise<RegisterResponseDTO> {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export async function getCurrentUser(
   token: string
 ): Promise<CurrentUserDTO> {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -124,7 +124,7 @@ export async function login(
   token_type: string;
   role?: string;
 }> {
-  const url = `${API_BASE_URL}/auth/token`;
+  const url = `${API_BASE_URL}/api/auth/token`;
   const formData = new FormData();
   formData.append("username", username);
   formData.append("password", password);
@@ -145,7 +145,7 @@ export async function login(
  * Get current user information
  */
 export async function getCurrentUser<T = any>(): Promise<T> {
-  return apiCall<T>("/auth/me");
+  return apiCall<T>("/api/auth/me");
 }
 
 /**
@@ -156,7 +156,7 @@ export async function register(
   email: string,
   password: string
 ): Promise<any> {
-  const url = `${API_BASE_URL}/auth/register`;
+  const url = `${API_BASE_URL}/api/auth/register`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
