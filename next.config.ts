@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Enable standalone output for Docker
+  output: 'standalone',
+
   // Explicitly acknowledge both bundlers exist
   turbopack: {}, // This silences the warning
 
