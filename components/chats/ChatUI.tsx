@@ -7,6 +7,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessageList } from "./ChatMessageList";
@@ -14,6 +15,9 @@ import { ChatInputArea } from "./ChatInputArea";
 import { CRSDraftDialog } from "./CRSDraftDialog";
 import { CRSGenerateDialog } from "./CRSGenerateDialog";
 import { PartialCRSConfirmModal } from "./PartialCRSConfirmModal";
+import { CRSPanel } from "./CRSPanel";
+import { Group, Panel, Separator } from "react-resizable-panels";
+import { GripVertical, Plus, MessageSquare, ChevronRight, ChevronLeft, FileText } from "lucide-react";
 import {
   useChatSocket,
   useChatMessages,
@@ -41,6 +45,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const [crsPattern, setCrsPattern] = useState<
     "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"
   >(chat.crs_pattern || "babok");
+  const [showDocument, setShowDocument] = useState(true);
+  const [isChatOnRight, setIsChatOnRight] = useState(false);
 
   // Get authentication token from cookies
   const accessToken = getAuthToken();
@@ -250,44 +256,126 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     setOpenGenerate(true);
   }, []);
 
+  const handleSwapSide = useCallback(() => {
+    setIsChatOnRight(prev => !prev);
+  }, []);
+
+  const documentPanel = (
+    <Panel defaultSize={35} minSize={30} className="flex-1 bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+      <div className="relative h-full">
+        <CRSPanel
+          latestCRS={latestCRS}
+          crsLoading={crsLoading}
+          crsError={crsError}
+          isGenerating={isGenerating}
+          chat={chat}
+          crsId={latestCRS?.id}
+          chatTranscript={generateChatTranscript()}
+          onGenerateCRS={() => setOpenGenerate(true)}
+          onViewCRS={() => setOpenDraft(true)}
+          canGenerateCRS={canGenerateCRS}
+          isRejected={isRejected}
+          isApproved={isApproved}
+        />
+      </div>
+    </Panel>
+  );
+
+  const chatPanel = (
+    <Panel defaultSize={65} minSize={34} className="flex h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative">
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
+        <ChatHeader
+          chat={chat}
+          currentUser={currentUser}
+          connectionState={connectionState}
+          returnTo={returnTo || "/dashboard"}
+          canGenerateCRS={canGenerateCRS}
+          crsId={latestCRS?.id}
+          chatTranscript={generateChatTranscript()}
+          onGenerateCRS={() => setOpenGenerate(true)}
+          onViewCRS={() => setOpenDraft(true)}
+          onToggleDocument={() => setShowDocument(prev => !prev)}
+          onSwapSide={handleSwapSide}
+          isRejected={isRejected}
+          isApproved={isApproved}
+          showDocument={showDocument}
+        />
+
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          <ChatMessageList
+            messages={messages}
+            isOwnMessage={isOwnMessage}
+            currentUserName={currentUser.full_name || "You"}
+            wsError={wsError}
+            isAiTyping={isAiTyping}
+            bottomRef={bottomRef}
+          />
+
+          {/* View Specification Floating Button when collapsed */}
+          {!showDocument && (
+            <div className={`absolute top-8 ${isChatOnRight ? 'left-8' : 'right-8'} z-50 pointer-events-none`}>
+              <motion.button
+                initial={{ x: isChatOnRight ? -20 : 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowDocument(true)}
+                className="pointer-events-auto flex items-center gap-2.5 px-4 py-2 bg-white/80 backdrop-blur-md text-gray-900 rounded-full shadow-lg border border-gray-100 hover:bg-white transition-all font-bold text-[10px] tracking-tight"
+              >
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                <span>View specification</span>
+              </motion.button>
+            </div>
+          )}
+        </div>
+
+        <ChatInputArea
+          input={input}
+          onInputChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onSend={handleSend}
+          isSending={isSending}
+          connectionState={connectionState}
+          textareaRef={textareaRef}
+          crsPattern={crsPattern}
+          onPatternChange={setCrsPattern}
+          latestCRS={latestCRS}
+        />
+      </div>
+    </Panel>
+  );
+
   return (
-    <div className="flex flex-col h-full bg-chat-bg">
-      <ChatHeader
-        chat={chat}
-        currentUser={currentUser}
-        connectionState={connectionState}
-        returnTo={returnTo}
-        canGenerateCRS={canGenerateCRS}
-        crsId={latestCRS?.id}
-        chatTranscript={generateChatTranscript()}
-        onGenerateCRS={() => setOpenGenerate(true)}
-        onViewCRS={() => setOpenDraft(true)}
-        isRejected={isRejected}
-        isApproved={isApproved}
-      />
+    <div className="flex w-full h-full bg-[#FAFBFC] overflow-hidden relative p-4 lg:p-6 transition-all">
+      <Group orientation="horizontal">
+        {isChatOnRight ? (
+          <>
+            {showDocument && (
+              <>
+                {documentPanel}
+                <Separator className="w-4 bg-transparent flex items-center justify-center cursor-col-resize group z-20">
+                  <div className="w-1.5 h-12 bg-gray-200 group-hover:bg-primary/40 rounded-full transition-all" />
+                </Separator>
+              </>
+            )}
+            {chatPanel}
+          </>
+        ) : (
+          <>
+            {chatPanel}
+            {showDocument && (
+              <>
+                <Separator className="w-4 bg-transparent flex items-center justify-center cursor-col-resize group z-20">
+                  <div className="w-1.5 h-12 bg-gray-200 group-hover:bg-primary/40 rounded-full transition-all" />
+                </Separator>
+                {documentPanel}
+              </>
+            )}
+          </>
+        )}
+      </Group>
 
-      <ChatMessageList
-        messages={messages}
-        isOwnMessage={isOwnMessage}
-        currentUserName={currentUser.full_name}
-        wsError={wsError}
-        isAiTyping={isAiTyping}
-        bottomRef={bottomRef}
-      />
-
-      <ChatInputArea
-        input={input}
-        onInputChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onSend={handleSend}
-        isSending={isSending}
-        connectionState={connectionState}
-        textareaRef={textareaRef}
-        crsPattern={crsPattern}
-        onPatternChange={setCrsPattern}
-        latestCRS={latestCRS}
-      />
-
+      {/* Dialogs - Kept for compatibility/fallback */}
       <CRSGenerateDialog
         open={openGenerate}
         onOpenChange={setOpenGenerate}

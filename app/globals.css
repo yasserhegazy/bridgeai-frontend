@@ -56,8 +56,9 @@
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.45 0.24 277);
+  /* Vibrante Purple #341BAB approximation */
+  --primary-foreground: oklch(0.98 0.01 277);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -196,5 +197,38 @@ body.app-layout {
 
   .hover-lift:hover {
     transform: translateY(-4px);
+  }
+
+  /* Custom Scrollbar */
+  .t-custom-scrollbar {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-radius: 10px !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .t-custom-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
+  }
+
+  .dark .t-custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1) !important;
   }
 }
