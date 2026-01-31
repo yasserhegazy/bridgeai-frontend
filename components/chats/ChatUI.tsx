@@ -273,6 +273,9 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           chatTranscript={generateChatTranscript()}
           onGenerateCRS={() => setOpenGenerate(true)}
           onViewCRS={() => setOpenDraft(true)}
+          onSubmitForReview={handleSubmitForReview}
+          onRegenerate={handleRegenerate}
+          onStatusUpdate={loadCRS}
           canGenerateCRS={canGenerateCRS}
           isRejected={isRejected}
           isApproved={isApproved}
