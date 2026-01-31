@@ -1,110 +1,152 @@
 "use client";
-
-import { useState } from "react";
-import Link from "next/link";
+import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, Play } from "lucide-react";
+import { Play, Sparkles, Users, Shield } from "lucide-react";
 
-export function Hero() {
+export const Hero = () => {
   const [showDemo, setShowDemo] = useState(false);
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-32">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_20%,oklch(0.208_0.042_265.755/0.15),transparent_50%)]" />
+    <section className="relative overflow-hidden min-h-screen flex flex-col items-center justify-center text-center hero-modern-bg pt-20 pb-20 px-4">
 
-      <div className="container mx-auto max-w-7xl px-6">
-        <div className="flex flex-col items-center text-center">
-          {/* AI Badge */}
-          <Badge
-            variant="secondary"
-            className="mb-6 gap-1.5 px-4 py-1.5 text-sm"
-          >
-            <Sparkles className="h-4 w-4" />
-            Powered by Advanced AI
-          </Badge>
+      {/* Animated Orbs Background */}
+      <div className="orb orb-violet w-[500px] h-[500px] top-[-10%] left-[-10%]" />
+      <div className="orb orb-cyan w-[400px] h-[400px] bottom-[10%] right-[-5%]" style={{ animationDelay: '-5s' }} />
+      <div className="orb orb-violet w-[300px] h-[300px] top-[40%] right-[20%]" style={{ animationDelay: '-10s', opacity: 0.2 }} />
 
-          {/* Logo */}
-          <div className="mb-6 animate-in fade-in duration-700">
-            <Image
-              src="/hero-transparent.png"
-              alt="BridgeAI"
-              width={120}
-              height={120}
-              className="h-28 w-auto drop-shadow-2xl md:h-32"
-              priority
-              style={{ backgroundColor: 'transparent' }}
-            />
-          </div>
+      {/* Badge */}
+      <motion.div
+        className="glass-modern px-5 py-2.5 rounded-full text-muted-foreground text-xs font-semibold tracking-wider mb-10 flex items-center gap-3 z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Sparkles className="w-4 h-4 text-violet-500" />
+        <span className="text-gradient-custom font-bold">NEW</span>
+        <span className="text-muted-foreground">AI-Powered Requirements • V2.0</span>
+      </motion.div>
 
-          {/* Headline */}
-          <h1 className="mb-6 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            Turn Conversations into{" "}
-            <span className="bg-linear-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent animate-in">
-              Professional Requirements
-            </span>{" "}
-            Documents
-          </h1>
-
-          {/* Subheadline */}
-          <p className="mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-            AI-powered CRS generation that bridges clients and Business
-            Analysts. Get structured requirements in minutes, not days.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col items-center gap-4 sm:flex-row animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <Link href="/auth/login">
-              <Button size="lg" className="text-base px-8 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105">
-                Start Your Free Project
-              </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 text-base hover:bg-muted transition-all duration-300 hover:scale-105"
-              onClick={() => setShowDemo(true)}
-            >
-              <Play className="h-4 w-4" />
-              Watch Demo
-            </Button>
-          </div>
-
-          {/* Trust Indicator */}
-          <p className="mt-6 text-sm text-muted-foreground">
-            No credit card required • Free forever plan available
-          </p>
-
-          {/* Screenshot Preview */}
-          <div className="mt-16 w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700">
-            <div className="group overflow-hidden rounded-xl border bg-card shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:shadow-primary/10">
-              <div className="aspect-video bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  Chat Interface Screenshot
-                </p>
-                {/* Placeholder - will be replaced with actual screenshot */}
-              </div>
-            </div>
-          </div>
+      {/* Hero Logo with Glow Effect */}
+      <motion.div
+        className="mb-10 relative z-10"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+      >
+        <div className="relative">
+          <Image
+            src="/hero-logo-wordmark.png"
+            alt="BridgeAI Wordmark Logo"
+            width={500}
+            height={200}
+            className="w-auto h-auto max-w-[340px] md:max-w-[440px] logo-animate"
+            priority
+          />
+          {/* Glow ring behind logo */}
+          <div className="absolute inset-0 -z-10 scale-110 blur-3xl opacity-30 bg-gradient-to-br from-violet-500 via-transparent to-cyan-500 rounded-full" />
         </div>
-      </div>
+      </motion.div>
 
-      {/* Demo Modal - Simple placeholder */}
+      {/* Headline */}
+      <motion.h1
+        className="mb-6 max-w-4xl text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl text-foreground leading-[1.05] z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.3 }}
+      >
+        Build Software <br />
+        <span className="text-gradient-custom">Without Ambiguity.</span>
+      </motion.h1>
+
+      {/* Subheadline */}
+      <motion.p
+        className="mb-10 max-w-2xl text-lg md:text-xl text-muted-foreground/90 z-10 leading-relaxed"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.4 }}
+      >
+        Transform vague ideas into professional requirements specifications in minutes.
+        Our AI agents clarify ambiguities before they become costly bugs.
+      </motion.p>
+
+      {/* CTAs */}
+      <motion.div
+        className="flex flex-col items-center gap-4 sm:flex-row z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.5 }}
+      >
+        <Link href="/auth/login">
+          <Button
+            size="lg"
+            className="h-14 px-10 text-lg rounded-full shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/40 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-violet-600 to-cyan-500 text-white border-0 font-semibold"
+          >
+            Start Your Project
+          </Button>
+        </Link>
+        <Button
+          size="lg"
+          variant="outline"
+          className="h-14 px-8 text-lg rounded-full gap-2 glass-modern hover:bg-primary/10 text-foreground transition-all duration-300 hover:scale-105"
+          onClick={() => setShowDemo(true)}
+        >
+          <Play className="h-5 w-5 fill-current" />
+          Watch Demo
+        </Button>
+      </motion.div>
+
+      {/* Trust Indicators */}
+      <motion.div
+        className="mt-16 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 text-sm text-muted-foreground z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.7, delay: 0.7 }}
+      >
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-violet-500" />
+          <span>Trusted by <strong className="text-foreground">500+</strong> Teams</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-cyan-500" />
+          <span><strong className="text-foreground">99.9%</strong> Uptime SLA</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-violet-500" />
+          <span><strong className="text-foreground">10k+</strong> CRS Generated</span>
+        </div>
+      </motion.div>
+
+      {/* Demo Modal */}
       {showDemo && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={() => setShowDemo(false)}
         >
-          <div className="relative max-w-4xl w-full mx-4">
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Demo Video Placeholder</p>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative max-w-5xl w-full glass-modern rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="aspect-video bg-black/50 flex items-center justify-center relative">
+              <button
+                onClick={() => setShowDemo(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              >
+                ✕
+              </button>
+              <p className="text-white/70">Demo Video Coming Soon</p>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </section>
   );
 }
+

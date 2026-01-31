@@ -56,14 +56,14 @@ export function Footer() {
             {statistics.map((stat, index) => (
               <FadeInSection key={index} delay={index * 100}>
                 <Card className="p-8 text-center hover:shadow-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/30">
-                <div className="mb-2 text-4xl font-bold text-primary">
-                  {stat.value}
-                </div>
-                <div className="mb-1 text-lg font-semibold">{stat.label}</div>
-                <div className="text-sm text-muted-foreground">
-                  {stat.description}
-                </div>
-              </Card>
+                  <div className="mb-2 text-4xl font-bold text-primary">
+                    {stat.value}
+                  </div>
+                  <div className="mb-1 text-lg font-semibold">{stat.label}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {stat.description}
+                  </div>
+                </Card>
               </FadeInSection>
             ))}
           </div>
@@ -97,16 +97,19 @@ export function Footer() {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
             {/* Logo & Description */}
             <div className="lg:col-span-2">
-              <Link href="/" className="mb-4 flex items-center gap-2 group">
-                <Image
-                  src="/logo.png"
-                  alt="BridgeAI"
-                  width={40}
-                  height={40}
-                  className="h-10 w-auto transition-transform duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: 'transparent' }}
-                />
-                <span className="text-xl font-bold">BridgeAI</span>
+              <Link href="/" className="mb-4 flex items-center gap-3 group">
+                <div className="relative">
+                  <Image
+                    src="/logo-icon-modern.png"
+                    alt="BridgeAI"
+                    width={40}
+                    height={40}
+                    className="h-10 w-auto transition-all duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: 'transparent' }}
+                  />
+                  <div className="absolute inset-0 -z-10 scale-150 blur-xl opacity-0 group-hover:opacity-40 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full transition-opacity duration-300" />
+                </div>
+                <span className="text-xl font-bold text-foreground">BridgeAI</span>
               </Link>
               <p className="mb-4 text-sm text-muted-foreground">
                 AI-powered requirements engineering platform that bridges
