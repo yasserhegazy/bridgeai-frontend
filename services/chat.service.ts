@@ -10,7 +10,7 @@ import { CRSPreviewOut } from "./crs.service";
 import { getAuthToken } from "@/services/token.service";
 import { ChatError, parseApiError } from "./errors.service";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Get CRS preview data for completeness check

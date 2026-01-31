@@ -100,7 +100,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const { sendMessage, isConnected } = useChatSocket({
     sessionId: chat.id,
     projectId: chat.project_id,
-    apiBase: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    apiBase: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
     token: accessToken || "",
     enabled: !!accessToken, // Only enable when token is available
     onMessage: handleMessage,
