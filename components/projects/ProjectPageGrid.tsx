@@ -36,8 +36,8 @@ export function ProjectPageGrid({
   const searchParams = useSearchParams?.();
   const [activeTab, setActiveTab] = useState<"dashboard" | "chats" | "settings">(
     initialTab ||
-      (searchParams?.get("tab") as "dashboard" | "chats" | "settings") ||
-      "dashboard"
+    (searchParams?.get("tab") as "dashboard" | "chats" | "settings") ||
+    "dashboard"
   );
   const [createChatTrigger, setCreateChatTrigger] = useState<number>(0);
 
@@ -48,6 +48,7 @@ export function ProjectPageGrid({
 
   const handleTabChange = useCallback((tab: "dashboard" | "chats" | "settings") => {
     setActiveTab(tab);
+    setCreateChatTrigger(0);
   }, []);
 
   // Filter tabs based on user role
@@ -75,11 +76,10 @@ export function ProjectPageGrid({
         {visibleTabs.map((tab) => (
           <button
             key={tab}
-            className={`px-4 py-2 font-semibold ${
-              activeTab === tab
+            className={`px-4 py-2 font-semibold ${activeTab === tab
                 ? "border-b-2 border-[#341bab] text-black"
                 : "text-gray-500 hover:text-black hover:cursor-pointer"
-            }`}
+              }`}
             onClick={() => handleTabChange(tab)}
           >
             {tabLabels[tab]}

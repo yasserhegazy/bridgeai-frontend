@@ -9,7 +9,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useProjectDetails, useFlashMessage } from "@/hooks";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil, Plus } from "lucide-react";
 
 interface SettingsTabProps {
   projectId: number;
@@ -71,61 +71,83 @@ export function SettingsTab({ projectId }: SettingsTabProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 bg-gray-50 p-6 min-h-screen">
-      <section className="bg-white border border-gray-200 rounded-xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Project Info</h2>
-          <Button
-            variant="primary"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={handleSaveChanges}
-            disabled={isUpdating}
-          >
-            {isUpdating ? "Saving..." : "Save Changes"}
-          </Button>
+    <div className="flex flex-col gap-6 bg-gray-50/50 min-h-[calc(100vh-100px)] p-1">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 py-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+            <Pencil className="w-6 h-6 text-primary" />
+            Project Settings
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Configure project name, description, and visibility.
+          </p>
         </div>
+        <Button
+          variant="primary"
+          size="lg"
+          className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none"
+          onClick={handleSaveChanges}
+          disabled={isUpdating}
+        >
+          {isUpdating ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Plus className="w-5 h-5 font-bold" />
+          )}
+          <span className="font-semibold">{isUpdating ? "Saving..." : "Save Changes"}</span>
+        </Button>
+      </div>
 
-        {/* Success Message */}
+      <div className="space-y-6 px-4 pb-10">
+        {/* Success/Error Alerts */}
         {flashMessage && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            {flashMessage.message}
+          <div className="animate-in fade-in slide-in-from-top-2">
+            <div className="bg-green-500/10 border border-green-500/20 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              {flashMessage.message}
+            </div>
           </div>
         )}
-
-        {/* Error Message */}
         {(localError || error) && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {localError || error}
+          <div className="animate-in fade-in slide-in-from-top-2">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              {localError || error}
+            </div>
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        {/* Main Settings Card */}
+        <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+            <label className="text-sm font-bold text-gray-900 ml-1 block mb-3">
+              Project Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab]"
+              placeholder="e.g. My Awesome Project"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 font-medium shadow-sm"
               disabled={isUpdating}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="text-sm font-bold text-gray-900 ml-1 block mb-3">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab] min-h-[100px]"
+              placeholder="Describe your project goals..."
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 font-medium shadow-sm min-h-[120px] resize-none"
               disabled={isUpdating}
             />
           </div>
-        </div>
-      </section>
+        </section>
+
+      </div>
     </div>
   );
 }
