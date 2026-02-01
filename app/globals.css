@@ -84,7 +84,8 @@
   --sidebar-ring: oklch(0.55 0.22 265);
   --chat-bg: oklch(0.98 0.01 260);
   --chat-input: oklch(0.95 0.02 260);
-  --chat-user: oklch(0.55 0.22 265);
+  --chat-user: oklch(0.93 0.032 265.755);
+  /* Light variant of primary */
 }
 
 .dark {
