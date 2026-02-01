@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
   Search,
@@ -11,56 +10,56 @@ import {
   UserCheck,
   CheckCircle2,
 } from "lucide-react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 
 const steps = [
   {
     number: 1,
     icon: MessageSquare,
-    title: "Client Chat",
+    title: "Project Initiation",
     description:
-      "Clients describe their software needs through natural conversation with the AI assistant.",
-    tech: "WebSocket Real-time",
+      "Clients describe their software vision through natural conversation with the Neural Extraction Engine.",
+    tech: "WS_INIT_SESSION",
   },
   {
     number: 2,
     icon: Search,
-    title: "AI Clarification",
+    title: "Semantic Analysis",
     description:
-      "Clarification agent detects ambiguities and asks targeted questions to ensure complete requirements.",
-    tech: "LangGraph Agent",
+      "Agentic Framework detects ambiguities and executes deep-reasoning loops to verify intent.",
+    tech: "AGENT_RESOLVE",
   },
   {
     number: 3,
     icon: FileEdit,
-    title: "Template Filler",
+    title: "Structural Extraction",
     description:
-      "AI extracts structured data and fills the CRS template with functional and non-functional requirements.",
-    tech: "Groq LLM (llama-3.3-70b)",
+      "Requirement models map conversation data into 15+ specialized CRS functional modules.",
+    tech: "DATA_MAPPING",
   },
   {
     number: 4,
     icon: FileCheck,
-    title: "CRS Generation",
+    title: "Auto-Templating",
     description:
-      "Professional CRS document is generated with version control and stored in the database.",
-    tech: "ChromaDB + MySQL",
+      "System populates industry-standard templates with prioritized requirements and technical constraints.",
+    tech: "SPEC_GENERATION",
   },
   {
     number: 5,
     icon: UserCheck,
-    title: "BA Review",
+    title: "Analyst Audit",
     description:
-      "Business Analyst reviews the structured CRS, adds comments, and provides feedback through the dashboard.",
-    tech: "Comment System",
+      "Human-in-the-loop verification where Business Analysts fine-tune and finalize generated specs.",
+    tech: "HITL_VALIDATION",
   },
   {
     number: 6,
     icon: CheckCircle2,
-    title: "Approval",
+    title: "Final Execution",
     description:
-      "BA approves or rejects the CRS. Approved documents can be exported as PDF or Markdown.",
-    tech: "Audit Trail",
+      "Approved CRS is committed to the immutable audit trail and exported as high-fidelity documents.",
+    tech: "AUDIT_COMMIT",
   },
 ];
 
@@ -71,108 +70,134 @@ export function Workflow() {
     offset: ["start center", "end center"],
   });
 
-  const scaleY = useSpring(scrollYProgress, {
+  const scrollLine = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   });
 
   return (
-    <section id="workflow" className="py-20 md:py-32 bg-muted/30 relative">
+    <section id="workflow" className="py-24 md:py-32 bg-white relative overflow-hidden">
       <div className="container mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mb-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary border border-primary/10 font-mono font-black text-[10px] tracking-[0.2em] uppercase mb-6"
+          >
+            Procedural Methodology
+          </motion.div>
           <motion.h2
-            className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl"
+            className="mb-8 text-3xl font-black tracking-tight sm:text-5xl md:text-6xl text-gray-900"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.8 }}
           >
-            How BridgeAI Works
+            The Automated <br />
+            <span className="text-primary italic">Transformation Line.</span>
           </motion.h2>
           <motion.p
-            className="mx-auto max-w-2xl text-lg text-muted-foreground"
+            className="mx-auto max-w-2xl text-lg text-muted-foreground font-medium leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            From conversation to approved CRS in six intelligent steps.
+            A high-precision sequence designed to eliminate technical debt
+            at the source. Intent matched to specification with zero friction.
           </motion.p>
         </div>
 
-        {/* Workflow Steps */}
-        <div ref={containerRef} className="relative">
-          {/* Vertical Line - Desktop */}
-          <div className="absolute left-1/2 top-4 bottom-4 hidden w-1 -translate-x-1/2 bg-muted-foreground/20 md:block rounded-full overflow-hidden">
+        {/* Global Timeline Layer */}
+        <div ref={containerRef} className="relative mt-20">
+
+          {/* Central 1px Thread Line */}
+          <div className="absolute left-[30px] md:left-1/2 top-0 bottom-0 w-[1px] -translate-x-1/2 bg-gray-100 z-0">
             <motion.div
-              className="w-full bg-gradient-to-b from-primary/50 via-primary to-primary/50"
-              style={{ height: "100%", scaleY, transformOrigin: "top" }}
+              className="absolute top-0 left-0 right-0 bg-primary origin-top h-full"
+              style={{ scaleY: scrollLine }}
             />
           </div>
 
-          {/* Steps */}
-          <div className="space-y-16">
+          {/* Cards Container */}
+          <div className="relative z-10 space-y-12 md:space-y-14">
             {steps.map((step, index) => (
               <motion.div
                 key={index}
-                className={`relative flex flex-col items-center gap-8 md:flex-row ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                className={`flex flex-col md:flex-row items-center relative ${index % 2 === 0 ? "md:justify-end" : "md:justify-start"
                   }`}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: 0.7 }}
               >
-                {/* Content Card */}
-                <Card className="w-full p-6 md:w-5/12 group hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-primary/30 relative overflow-hidden">
-                  <div className="mb-4 flex items-center gap-4 relative z-10">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110">
-                      <step.icon className="h-6 w-6" />
+                {/* Content Card - Instrument Grade */}
+                <Card className="w-full md:w-[42%] p-8 md:p-10 group hover:shadow-2xl transition-all duration-500 hover:border-primary/30 bg-white border-gray-100/80 rounded-3xl relative overflow-hidden">
+                  {/* Phase ID Marker */}
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="px-2.5 py-1 rounded-md bg-primary text-white font-mono font-black text-[10px] tracking-tighter">
+                        PHASE 0{step.number}
+                      </div>
+                      <span className="text-[10px] font-mono text-gray-400 font-bold uppercase tracking-widest">{step.tech}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-6">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-all duration-500">
+                      <step.icon className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold">{step.title}</h3>
-                      <Badge variant="secondary" className="mt-1 text-xs">
-                        {step.tech}
-                      </Badge>
+                      <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-3 group-hover:text-primary transition-colors">{step.title}</h3>
+                      <p className="text-muted-foreground text-base leading-relaxed font-medium">
+                        {step.description}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed relative z-10">
-                    {step.description}
-                  </p>
 
-                  {/* Screenshot Placeholder */}
-                  <div className="mt-6 aspect-video rounded-lg border bg-muted/50 flex items-center justify-center text-xs text-muted-foreground relative z-10 group-hover:bg-muted transition-colors duration-300">
-                    Step {step.number} Preview
+                  {/* Aesthetic Detail */}
+                  <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-[0.03] transition-opacity">
+                    <step.icon className="h-32 w-32 rotate-12" />
                   </div>
-
-                  {/* Card Glow Effect */}
-                  <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl transition-all duration-500 group-hover:bg-primary/10" />
                 </Card>
 
-                {/* Number Badge - Center */}
-                <motion.div
-                  className="absolute left-1/2 hidden h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-background bg-primary text-lg font-bold text-primary-foreground shadow-lg md:flex z-10"
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.4 }}
-                >
-                  {step.number}
-                </motion.div>
+                {/* Central Step Marker Node */}
+                <div className="absolute left-[30px] md:left-1/2 -translate-x-1/2 flex items-center justify-center">
+                  <div className="relative">
+                    <motion.div
+                      className="h-10 w-10 rounded-full bg-white border border-gray-100 shadow-xl flex items-center justify-center font-mono font-black text-xs text-primary z-20"
+                      whileInView={{ scale: [1, 1.1, 1] }}
+                      transition={{ repeat: Infinity, duration: 4 }}
+                    >
+                      {step.number}
+                    </motion.div>
 
-                {/* Mobile Number Badge */}
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-background bg-primary text-lg font-bold text-primary-foreground shadow-lg md:hidden">
-                  {step.number}
+                    {/* Horizontal Branch Connector (Desktop Only) */}
+                    <motion.div
+                      className={`hidden md:block absolute top-1/2 h-[1px] bg-primary/20 ${index % 2 === 0 ? 'left-full w-24' : 'right-full w-24'
+                        }`}
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      style={{ transformOrigin: index % 2 === 0 ? 'left' : 'right' }}
+                    />
+                  </div>
                 </div>
-
-                {/* Spacer for alternating layout */}
-                <div className="hidden w-5/12 md:block" />
               </motion.div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Background Style */}
+      <div className="absolute inset-0 bg-white -z-20" />
+      <div className="absolute top-0 left-0 w-full h-full opacity-0 group-hover:opacity-10 pointer-events-none"
+        style={{ backgroundImage: `radial-gradient(circle at 2px 2px, #f3f4f6 1px, transparent 0)`, backgroundSize: '32px 32px' }}
+      />
     </section>
   );
 }

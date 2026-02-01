@@ -15,19 +15,19 @@ const technologies = [
     logo: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg",
   },
   {
-    name: "LangGraph",
-    description: "Multi-agent AI",
-    icon: "🔗", // Placeholder - can be replaced with actual logo
+    name: "Agentic Framework",
+    description: "Multi-agent orchestration",
+    icon: "🔗",
   },
   {
-    name: "Groq",
-    description: "Fast LLM inference",
-    icon: "⚡", // Placeholder
+    name: "Inference Engine",
+    description: "Fast AI processing",
+    icon: "⚡",
   },
   {
-    name: "OpenAI",
-    description: "GPT-4 powered",
-    icon: "🤖", // Placeholder
+    name: "Reasoning Model",
+    description: "Deep requirement analysis",
+    icon: "🤖",
   },
   {
     name: "ChromaDB",
@@ -65,29 +65,29 @@ export function TechStack() {
           {technologies.map((tech, index) => (
             <FadeInSection key={index} delay={index * 50}>
               <div className="group flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:-translate-y-2">
-              {/* Logo or Icon */}
-              <div className="flex h-16 w-16 items-center justify-center grayscale transition-all group-hover:grayscale-0">
-                {tech.logo ? (
-                  <Image
-                    src={tech.logo}
-                    alt={tech.name}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 object-contain"
-                  />
-                ) : (
-                  <span className="text-4xl">{tech.icon}</span>
-                )}
-              </div>
+                {/* Logo or Icon */}
+                <div className="flex h-16 w-16 items-center justify-center grayscale transition-all group-hover:grayscale-0">
+                  {tech.logo ? (
+                    <Image
+                      src={tech.logo}
+                      alt={tech.name}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 object-contain"
+                    />
+                  ) : (
+                    <span className="text-4xl">{tech.icon}</span>
+                  )}
+                </div>
 
-              {/* Tech Name */}
-              <div className="text-center">
-                <p className="text-sm font-medium">{tech.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {tech.description}
-                </p>
+                {/* Tech Name */}
+                <div className="text-center">
+                  <p className="text-sm font-medium">{tech.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {tech.description}
+                  </p>
+                </div>
               </div>
-            </div>
             </FadeInSection>
           ))}
         </div>

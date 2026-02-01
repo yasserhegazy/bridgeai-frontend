@@ -18,36 +18,37 @@ export function LandingHeader() {
               height={40}
               className="h-10 w-auto transition-all duration-300 group-hover:scale-110"
               style={{ backgroundColor: 'transparent' }}
+              priority
             />
-            {/* Subtle glow on hover */}
-            <div className="absolute inset-0 -z-10 scale-150 blur-xl opacity-0 group-hover:opacity-40 bg-gradient-to-br from-violet-500 to-cyan-500 rounded-full transition-opacity duration-300" />
+            {/* Monochromatic glow on hover */}
+            <div className="absolute inset-0 -z-10 scale-150 blur-xl opacity-0 group-hover:opacity-40 bg-primary rounded-full transition-opacity duration-300" />
           </div>
-          <span className="text-xl font-bold text-foreground">BridgeAI</span>
+          <span className="text-xl font-bold tracking-tight text-foreground">BridgeAI</span>
         </Link>
 
         {/* Navigation Links */}
         <nav className="hidden items-center gap-8 md:flex">
           <Link
             href="#features"
-            className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground animated-underline"
+            className="text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-primary"
           >
             Features
           </Link>
           <Link
             href="#workflow"
-            className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground animated-underline"
+            className="text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-primary"
           >
             Workflow
           </Link>
           <Link
             href="#pricing"
-            className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground animated-underline"
+            className="text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-primary"
           >
             Pricing
           </Link>
           <Link
             href="#faq"
-            className="text-sm font-medium text-muted-foreground transition-all duration-300 hover:text-foreground animated-underline"
+            className="text-sm font-semibold text-muted-foreground transition-all duration-300 hover:text-primary"
           >
             FAQ
           </Link>
@@ -56,13 +57,13 @@ export function LandingHeader() {
         {/* CTA Buttons */}
         <div className="flex items-center gap-4">
           <Link href="/auth/login">
-            <Button variant="ghost" size="sm" className="transition-all duration-300 hover:scale-105 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="font-bold text-muted-foreground hover:text-foreground hover:bg-transparent">
               Sign In
             </Button>
           </Link>
           <Link href="/auth/register">
-            <Button size="sm" className="shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-violet-600 to-cyan-500 text-white border-0">
-              Get Started
+            <Button size="sm" className="shadow-lg shadow-primary/20 hover:shadow-xl shadow-primary/30 transition-all duration-300 hover:scale-105 bg-primary text-white border-0 font-bold px-5">
+              Get started
             </Button>
           </Link>
         </div>
@@ -70,4 +71,3 @@ export function LandingHeader() {
     </header>
   );
 }
-
