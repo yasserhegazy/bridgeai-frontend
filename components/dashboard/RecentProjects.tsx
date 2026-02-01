@@ -32,7 +32,7 @@ export const RecentProjects = memo(function RecentProjects({
         <h2 className="text-xl font-bold text-gray-900">Recent Projects</h2>
         <Link
           href={`/teams/${teamId}/projects`}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+          className="text-sm font-bold text-primary hover:text-primary/90 flex items-center gap-1 transition-colors hover:underline underline-offset-4"
         >
           View All
           <ArrowRight className="w-4 h-4" />

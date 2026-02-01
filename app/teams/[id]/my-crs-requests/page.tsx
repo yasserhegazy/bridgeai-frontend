@@ -5,10 +5,8 @@ import { useParams } from "next/navigation";
 import { FileCheck, Loader2 } from "lucide-react";
 import { MyCRSRequestsTable } from "@/components/my-crs-requests/MyCRSRequestsTable";
 import { CRSDetailsDialog } from "@/components/my-crs-requests/CRSDetailsDialog";
-import { useMyCRSRequests } from "@/hooks/crs/useMyCRSRequests";
-import { useProjects } from "@/hooks/projects/useProjects";
+import { useMyCRSRequests, useProjects, useTeamsList } from "@/hooks";
 import { CRSDTO, CRSStatus } from "@/dto/crs.dto";
-import { ProjectDTO } from "@/dto/projects.dto";
 
 export default function MyCRSRequestsPage() {
   const params = useParams();
@@ -18,22 +16,42 @@ export default function MyCRSRequestsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
+    projects,
+    isLoading: isProjectsLoading,
+    error: projectsError,
+    setActiveTeamId,
+  } = useProjects(teamId);
+
+  const {
     filteredRequests,
     isLoading: isCRSLoading,
     error: crsError,
     selectedStatus,
     setSelectedStatus,
+    selectedTeam,
+    setSelectedTeam,
+    selectedProject,
+    setSelectedProject,
+    searchTerm,
+    setSearchTerm,
     refreshRequests,
-  } = useMyCRSRequests(teamId);
+  } = useMyCRSRequests(teamId, projects);
 
   const {
-    projects,
-    isLoading: isProjectsLoading,
-    error: projectsError,
-  } = useProjects(teamId);
+    teams,
+    isLoading: isTeamsLoading,
+    error: teamsError
+  } = useTeamsList();
 
-  const isLoading = isCRSLoading || isProjectsLoading;
-  const error = crsError || projectsError;
+  const isLoading = isCRSLoading || isProjectsLoading || isTeamsLoading;
+  const error = crsError || projectsError || teamsError;
+
+  const handleTeamChange = useCallback((teamId: number | "all") => {
+    setSelectedTeam(teamId);
+    if (teamId !== "all") {
+      setActiveTeamId(teamId);
+    }
+  }, [setSelectedTeam, setActiveTeamId]);
 
   const handleFilterChange = useCallback(
     (newStatus: CRSStatus | "all") => {
@@ -52,15 +70,14 @@ export default function MyCRSRequestsPage() {
 
   const handleStatusUpdate = useCallback(async () => {
     const updatedRequests = await refreshRequests();
-    
-    // Update the selected CRS with the latest data if dialog is still open
+
     if (selectedCRS && updatedRequests) {
       const updatedCRS = updatedRequests.find((crs: CRSDTO) => crs.id === selectedCRS.id);
       if (updatedCRS) {
         setSelectedCRS(updatedCRS);
       }
     }
-    
+
     setSuccessMessage("CRS updated successfully");
     setTimeout(() => setSuccessMessage(null), 3000);
   }, [refreshRequests, selectedCRS]);
@@ -74,18 +91,18 @@ export default function MyCRSRequestsPage() {
   );
 
   return (
-    <div className="flex justify-center mt-14 px-6">
-      <div className="w-full max-w-7xl">
+    <div className="flex justify-center mt-14 px-6 sm:px-8">
+      <div className="w-full max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <FileCheck className="h-8 w-8 text-[#341bab]" />
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="flex items-center gap-3 mb-1">
+            <FileCheck className="h-[26px] w-[26px] text-primary" />
+            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
               My CRS Requests
             </h1>
           </div>
-          <p className="text-gray-600">
-            Track the progress of your Client Requirements Specification documents.
+          <p className="text-sm text-muted-foreground">
+            Track the progress of your client requirements specification documents.
           </p>
         </div>
 
@@ -111,13 +128,21 @@ export default function MyCRSRequestsPage() {
           </div>
         ) : (
           <>
-            {/* CRS Table */}
+            {/* crs table */}
             <MyCRSRequestsTable
               documents={filteredRequests}
               projects={projects}
+              teams={teams.map(t => ({ id: t.id, name: t.name }))}
               onViewDetails={handleViewDetails}
               statusFilter={selectedStatus}
               onFilterChange={handleFilterChange}
+              selectedTeam={selectedTeam}
+              onTeamChange={handleTeamChange}
+              selectedProject={selectedProject}
+              onProjectChange={setSelectedProject}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              currentTeamId={teamId}
             />
 
             {/* CRS Details Dialog */}

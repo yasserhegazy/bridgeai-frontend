@@ -42,12 +42,15 @@ export function FormSelect({
 }: FormSelectProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">
+      <label htmlFor={id} className="block text-sm font-semibold text-gray-700 ml-1 mb-2">
         {label}
       </label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger
-          className={cn("mt-1", error && "border-destructive")}
+          className={cn(
+            "h-12 border-gray-200 rounded-xl focus:ring-primary/20 transition-all text-sm font-medium shadow-sm",
+            error && "border-destructive"
+          )}
           aria-invalid={!!error}
         >
           <SelectValue placeholder={placeholder} />

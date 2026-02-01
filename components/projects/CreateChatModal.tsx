@@ -86,7 +86,7 @@ export function CreateChatModal({
               Chat Name
             </label>
             <Input
-              className="border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-12 px-4 text-gray-900 rounded-xl shadow-sm placeholder:text-gray-300"
+              className="border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-12 px-4 text-gray-900 rounded-xl shadow-sm placeholder:text-gray-400"
               value={chatName}
               onChange={(e) => setChatName(e.target.value)}
               placeholder="Enter a descriptive name..."

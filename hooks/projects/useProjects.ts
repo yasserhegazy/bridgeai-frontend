@@ -18,23 +18,26 @@ interface UseProjectsReturn {
   selectedStatus: string;
   setSelectedStatus: (status: string) => void;
   refreshProjects: () => Promise<void>;
+  setActiveTeamId: (teamId: number) => void;
 }
 
-export function useProjects(teamId: number): UseProjectsReturn {
+export function useProjects(initialTeamId: number): UseProjectsReturn {
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
+  const [activeTeamId, setActiveTeamId] = useState<number>(initialTeamId);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  const loadProjects = useCallback(async () => {
-    if (!teamId) return;
+  const loadProjects = useCallback(async (teamIdOverride?: number) => {
+    const targetTeamId = teamIdOverride || activeTeamId;
+    if (!targetTeamId) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await fetchTeamProjects(teamId);
+      const data = await fetchTeamProjects(targetTeamId);
       setProjects(data);
     } catch (err) {
       const errorMessage =
@@ -45,7 +48,7 @@ export function useProjects(teamId: number): UseProjectsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [teamId]);
+  }, [activeTeamId]);
 
   useEffect(() => {
     loadProjects();
@@ -77,5 +80,7 @@ export function useProjects(teamId: number): UseProjectsReturn {
     selectedStatus,
     setSelectedStatus,
     refreshProjects,
+    // Add specific method to change team if needed, though usually handled by parent
+    setActiveTeamId
   };
 }

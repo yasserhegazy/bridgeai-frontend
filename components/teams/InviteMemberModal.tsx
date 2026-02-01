@@ -7,13 +7,11 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Mail, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Mail, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FormField } from "@/components/auth/FormField";
 import { FormSelect, SelectOption } from "@/components/auth/FormSelect";
-import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { useInviteMember } from "@/hooks/teams/useInviteMember";
 import { useFormValidation } from "@/hooks/shared/useFormValidation";
 import { MemberRole } from "@/dto/teams.dto";
@@ -36,11 +34,11 @@ const ROLE_OPTIONS: SelectOption[] = [
   { value: "owner", label: "Owner" },
 ];
 
-export function InviteMemberModal({ 
-  teamId, 
+export function InviteMemberModal({
+  teamId,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
-  onInviteSent, 
+  onInviteSent,
   triggerClassName,
   triggerLabel = "Invite Member",
   triggerSize = "sm",
@@ -122,7 +120,7 @@ export function InviteMemberModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {!controlledOpen && (
         <DialogTrigger asChild>
-          <Button 
+          <Button
             size={triggerSize}
             variant={triggerVariant}
             className={cn(
@@ -135,73 +133,96 @@ export function InviteMemberModal({
           </Button>
         </DialogTrigger>
       )}
-      
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5" />
-            Invite Team Member
+
+      <DialogContent className="sm:max-w-[480px] bg-white border border-gray-100 shadow-2xl rounded-2xl p-8 outline-none">
+        <DialogHeader className="mb-8">
+          <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <Mail className="w-6 h-6 text-primary" />
+            Invite Member
           </DialogTitle>
         </DialogHeader>
 
         {success ? (
-          <div className="py-6 text-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="py-8 text-center animate-in fade-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <CheckCircle className="w-10 h-10 text-green-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Invitation Sent!
             </h3>
-            <p className="text-gray-600">
-              An invitation has been sent to <strong>{email}</strong>
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              They will receive an email with instructions to join the team.
+            <p className="text-gray-500 text-sm max-w-[240px] mx-auto">
+              An invitation has been sent to <span className="text-primary font-semibold">{email}</span>
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField
-              id="email"
-              label="Email Address"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              error={errors.email}
-              placeholder="Enter email address"
-              disabled={isLoading}
-              required
-            />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold text-gray-700 ml-1">
+                Email Address
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  disabled={isLoading}
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 text-sm font-medium"
+                  required
+                />
+              </div>
+              {errors.email && (
+                <p className="text-red-500 text-[10px] font-bold ml-1">{errors.email}</p>
+              )}
+            </div>
 
-            <FormSelect
-              id="role"
-              label="Role"
-              value={role}
-              onChange={(value) => setRole(value as MemberRole)}
-              options={ROLE_OPTIONS}
-              error={errors.role}
-              placeholder="Select a role"
-              disabled={isLoading}
-            />
+            <div className="space-y-3">
+              <FormSelect
+                label="Team Role"
+                id="role"
+                value={role}
+                onChange={(value) => setRole(value as MemberRole)}
+                options={ROLE_OPTIONS}
+                error={errors.role}
+                placeholder="Select a role"
+                disabled={isLoading}
+              />
+            </div>
 
-            {error && <ErrorAlert message={error} />}
+            {error && (
+              <div className="p-4 rounded-xl bg-red-50/50 border border-red-100 flex items-center gap-2 text-red-600 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p className="text-xs font-semibold">{error}</p>
+              </div>
+            )}
 
-            <div className="flex gap-2 pt-4">
+            <DialogFooter className="mt-10 sm:justify-end gap-3">
               <Button
                 type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setOpen(false)}
+                variant="ghost"
+                size="lg"
+                onClick={() => handleOpenChange(false)}
                 disabled={isLoading}
+                className="px-6 transition-all hover:scale-105 active:scale-95 font-semibold text-primary border-none hover:bg-primary/5"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-[#341BAB] hover:bg-[#271080]"
+                variant="primary"
+                size="lg"
                 disabled={isLoading}
+                className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none font-semibold text-white min-w-[160px]"
               >
-                {isLoading ? "Sending..." : "Send Invitation"}
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Mail className="w-5 h-5" />
+                )}
+                <span>{isLoading ? "Sending..." : "Send Invitation"}</span>
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         )}
       </DialogContent>

@@ -8,6 +8,7 @@
 
 import { memo } from "react";
 import { FolderPlus, Users, MessageSquare, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EmptyDashboardProps {
   onCreateProject: () => void;
@@ -18,9 +19,9 @@ export const EmptyDashboard = memo(function EmptyDashboard({
 }: EmptyDashboardProps) {
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-12 text-center shadow-lg">
+      <div className="bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/10 rounded-3xl p-12 text-center shadow-lg">
         {/* Icon */}
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-6 shadow-lg">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6 shadow-xl shadow-primary/20">
           <FolderPlus className="w-10 h-10 text-white" />
         </div>
 
@@ -28,7 +29,7 @@ export const EmptyDashboard = memo(function EmptyDashboard({
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
           Welcome to Your Team Dashboard!
         </h2>
-        
+
         {/* Description */}
         <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
           Get started by creating your first project. Projects help you organize
@@ -36,19 +37,21 @@ export const EmptyDashboard = memo(function EmptyDashboard({
         </p>
 
         {/* CTA Button */}
-        <button
+        <Button
+          variant="primary"
+          size="lg"
           onClick={onCreateProject}
-          className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+          className="inline-flex items-center gap-3 px-8 py-6 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <FolderPlus className="w-6 h-6" />
           <span>Create Your First Project</span>
-        </button>
+        </Button>
 
         {/* How It Works */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-              <FolderPlus className="w-6 h-6 text-blue-600" />
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg mb-4">
+              <FolderPlus className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">
               1. Create a Project
