@@ -14,6 +14,11 @@ export function GoogleAuthProvider({
         return <>{children}</>;
     }
 
+    // Diagnostic log for origin whitelisting
+    if (typeof window !== 'undefined') {
+        console.log("Google Auth initialized with origin:", window.location.origin);
+    }
+
     return (
         <GoogleOAuthProvider clientId={clientId}>{children}</GoogleOAuthProvider>
     );
