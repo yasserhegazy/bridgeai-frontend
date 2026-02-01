@@ -85,17 +85,17 @@ export function SettingsTab({ projectId }: SettingsTabProps) {
         </div>
         <Button
           variant="primary"
-          size="lg"
-          className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none"
+          size="default"
+          className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-6 border-none h-10"
           onClick={handleSaveChanges}
           disabled={isUpdating}
         >
           {isUpdating ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Plus className="w-5 h-5 font-bold" />
+            <Plus className="w-4 h-4 font-bold" />
           )}
-          <span className="font-semibold">{isUpdating ? "Saving..." : "Save Changes"}</span>
+          <span className="font-semibold text-sm">{isUpdating ? "Saving..." : "Save Changes"}</span>
         </Button>
       </div>
 

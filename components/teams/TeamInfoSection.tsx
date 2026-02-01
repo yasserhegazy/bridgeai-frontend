@@ -10,6 +10,8 @@ import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useTeamSettings } from "@/hooks/teams/useTeamSettings";
 
+import { Pencil, Save, Loader2 } from "lucide-react";
+
 interface TeamInfoSectionProps {
   teamId: string;
   teamName: string;
@@ -52,45 +54,61 @@ export function TeamInfoSection({
   }, [hasChanges, teamId, name, description, updateTeamInfo, onUpdate, onSuccess, onError]);
 
   return (
-    <section className="bg-white border border-gray-200 rounded-xl p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold mb-4">Team Info</h2>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+            <Pencil className="w-5 h-5 text-primary" />
+            Team Settings
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Configure team name and description.
+          </p>
+        </div>
         <Button
           variant="primary"
-          size="sm"
-          className="flex items-center gap-2"
+          size="default"
+          className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-6 border-none h-10"
           onClick={handleSave}
           disabled={isUpdating || !hasChanges}
         >
-          {isUpdating ? "Saving..." : "Save Changes"}
+          {isUpdating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          <span className="font-semibold text-sm">{isUpdating ? "Saving..." : "Save Changes"}</span>
         </Button>
       </div>
-      <div className="flex flex-col gap-4">
+
+      <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name
+          <label className="text-sm font-bold text-gray-900 ml-1 block mb-3">
+            Team Name
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab]"
+            placeholder="e.g. Engineering Team"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 font-medium shadow-sm"
             disabled={isUpdating}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="text-sm font-bold text-gray-900 ml-1 block mb-3">
             Description
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-[#341bab]"
-            rows={3}
+            placeholder="Describe your team's focus..."
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 font-medium shadow-sm min-h-[120px] resize-none"
+            rows={4}
             disabled={isUpdating}
           />
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
