@@ -59,24 +59,24 @@ export function PendingInvitationItem({
   }, [invitation.id, onCancel]);
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-yellow-400 text-white flex items-center justify-center font-semibold">
-          <Mail className="w-5 h-5" />
+    <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white hover:shadow-md border border-yellow-100 transition-all duration-200 group bg-yellow-50/20">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold shadow-sm group-hover:bg-yellow-500 group-hover:text-white transition-colors">
+          <Mail className="w-6 h-6" />
         </div>
-        <div className="flex flex-col">
-          <span className="font-medium text-black">{invitation.email}</span>
-          <div className="flex items-center gap-2 text-xs text-gray-600">
+        <div className="flex flex-col min-w-0">
+          <span className="font-bold text-gray-900 truncate">{invitation.email}</span>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
             <Clock className="w-3 h-3" />
-            <span>Invited {formattedCreatedAt}</span>
-            <span>•</span>
-            <span>Expires {formattedExpiresAt}</span>
+            <span className="uppercase tracking-tight">Invited {formattedCreatedAt}</span>
+            <span className="text-gray-200">•</span>
+            <span className="uppercase tracking-tight text-yellow-600/70">Expires {formattedExpiresAt}</span>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getRoleBadgeColor(
             invitation.role
           )}`}
         >
@@ -84,12 +84,12 @@ export function PendingInvitationItem({
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-gray-100">
+              <MoreHorizontal className="w-5 h-5 text-gray-400" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="text-red-600" onClick={handleCancel}>
+          <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-xl p-1">
+            <DropdownMenuItem className="text-red-600 rounded-lg text-sm font-medium py-2" onClick={handleCancel}>
               <UserX className="w-4 h-4 mr-2" />
               Cancel Invitation
             </DropdownMenuItem>

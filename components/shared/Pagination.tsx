@@ -9,6 +9,7 @@
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PaginationProps {
   currentPage: number;
@@ -77,7 +78,7 @@ export const Pagination = memo(function Pagination({
         size="sm"
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 transition-all hover:bg-primary/5 hover:text-primary hover:border-primary/30"
       >
         <ChevronLeft className="w-4 h-4" />
         Previous
@@ -98,7 +99,10 @@ export const Pagination = memo(function Pagination({
               variant={currentPage === page ? "primary" : "outline"}
               size="sm"
               onClick={() => onPageChange(page)}
-              className="min-w-[2.5rem]"
+              className={cn(
+                "min-w-[2.5rem] transition-all",
+                currentPage !== page && "hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+              )}
             >
               {page}
             </Button>
@@ -111,7 +115,7 @@ export const Pagination = memo(function Pagination({
         size="sm"
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 transition-all hover:bg-primary/5 hover:text-primary hover:border-primary/30"
       >
         Next
         <ChevronRight className="w-4 h-4" />

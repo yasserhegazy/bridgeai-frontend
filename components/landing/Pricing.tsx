@@ -21,7 +21,7 @@ const pricingTiers = [
       "Email support",
       "Community access",
     ],
-    cta: "Get Started",
+    cta: "Get started",
     href: "/auth/register",
     variant: "outline" as const,
     popular: false,
@@ -70,76 +70,74 @@ const pricingTiers = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-20 md:py-32 bg-muted/30">
+    <section id="pricing" className="py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto max-w-7xl px-6">
         {/* Section Header */}
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+        <div className="mb-12 text-center">
+          <h2 className="mb-3 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
             Simple, Transparent Pricing
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-base text-muted-foreground">
             Choose the plan that fits your team. No hidden fees, cancel anytime.
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid gap-8 lg:grid-cols-3 lg:gap-6">
+        <div className="grid gap-6 lg:grid-cols-3">
           {pricingTiers.map((tier, index) => (
             <FadeInSection key={index} delay={index * 150}>
               <Card
-                className={`relative p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${
-                  tier.popular
-                    ? "border-primary shadow-xl scale-105 lg:scale-110"
-                    : "hover:border-primary/30"
-                }`}
+                className={`relative p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl ${tier.popular
+                  ? "border-primary shadow-lg scale-102 lg:scale-105"
+                  : "hover:border-primary/30"
+                  }`}
               >
-              {/* Popular Badge */}
-              {tier.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  Most Popular
-                </Badge>
-              )}
-
-              {/* Tier Name */}
-              <h3 className="mb-2 text-2xl font-bold">{tier.name}</h3>
-
-              {/* Price */}
-              <div className="mb-4">
-                <span className="text-4xl font-bold">{tier.price}</span>
-                {tier.period && (
-                  <span className="text-muted-foreground"> / {tier.period}</span>
+                {/* Popular Badge */}
+                {tier.popular && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] py-0 px-2">
+                    Most Popular
+                  </Badge>
                 )}
-              </div>
 
-              {/* Description */}
-              <p className="mb-6 text-sm text-muted-foreground">
-                {tier.description}
-              </p>
+                {/* Tier Name */}
+                <h3 className="mb-1.5 text-xl font-bold">{tier.name}</h3>
 
-              {/* CTA Button */}
-              <Link href={tier.href} className="block mb-6">
-                <Button
-                  variant={tier.variant}
-                  className="w-full"
-                  size="lg"
-                >
-                  {tier.cta}
-                </Button>
-              </Link>
+                {/* Price */}
+                <div className="mb-3">
+                  <span className="text-3xl font-bold">{tier.price}</span>
+                  {tier.period && (
+                    <span className="text-xs text-muted-foreground"> / {tier.period}</span>
+                  )}
+                </div>
 
-              {/* Features List */}
-              <ul className="space-y-3">
-                {tier.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Check className="h-3.5 w-3.5" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                {/* Description */}
+                <p className="mb-5 text-xs font-medium text-muted-foreground">
+                  {tier.description}
+                </p>
+
+                {/* CTA Button */}
+                <Link href={tier.href} className="block mb-5">
+                  <Button
+                    variant={tier.variant}
+                    className="w-full h-9 text-sm font-bold"
+                  >
+                    {tier.cta}
+                  </Button>
+                </Link>
+
+                {/* Features List */}
+                <ul className="space-y-2.5">
+                  {tier.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start gap-2.5">
+                      <div className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Check className="h-3 w-3" />
+                      </div>
+                      <span className="text-[13px] font-medium text-muted-foreground">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </Card>
             </FadeInSection>
           ))}

@@ -25,19 +25,9 @@ const faqs = [
       "Yes! Professional and Enterprise plans allow custom CRS templates tailored to your organization's standards. You can define custom sections, modify field requirements, add industry-specific terminology, and create reusable templates for different project types. The Free plan uses our standard industry-compliant template.",
   },
   {
-    question: "Is my data secure?",
-    answer:
-      "Absolutely. BridgeAI employs enterprise-grade security including encrypted data transmission (TLS 1.3), bcrypt password hashing, JWT-based authentication, and secure database storage. We never share your project data with third parties. Enterprise plans include additional security features like SSO, SAML authentication, and on-premise deployment options.",
-  },
-  {
     question: "How does the BA approval workflow work?",
     answer:
       "After a client generates a CRS through conversation, it enters 'draft' status. The client can review and submit for approval, changing the status to 'under_review'. Business Analysts receive notifications and can access the CRS Dashboard to review structured requirements. BAs can add comments, request changes, and either approve or reject the CRS with detailed reasoning. All actions are tracked in the audit trail with timestamps and version history.",
-  },
-  {
-    question: "What AI models power BridgeAI?",
-    answer:
-      "BridgeAI uses a multi-agent architecture powered by LangGraph orchestration. We leverage Groq's llama-3.3-70b-versatile model for fast CRS extraction and template filling, OpenAI GPT-4 for creative suggestions, and ChromaDB with SentenceTransformer embeddings for semantic memory and context retention. This combination ensures both speed and quality in requirement generation.",
   },
   {
     question: "Can I export my CRS documents?",
@@ -63,17 +53,17 @@ export function FAQ() {
         {/* FAQ Accordion */}
         <FadeInSection>
           <Accordion type="single" collapsible className="w-full">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left text-lg font-semibold">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground leading-relaxed">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </FadeInSection>
 
         {/* Contact CTA */}

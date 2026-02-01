@@ -14,6 +14,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { Layout, MessageSquare, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DashboardTab } from "./DashboardTab";
 import { ChatsTab } from "./ChatsTab";
 import { SettingsTab } from "./SettingsTab";
@@ -36,8 +38,8 @@ export function ProjectPageGrid({
   const searchParams = useSearchParams?.();
   const [activeTab, setActiveTab] = useState<"dashboard" | "chats" | "settings">(
     initialTab ||
-      (searchParams?.get("tab") as "dashboard" | "chats" | "settings") ||
-      "dashboard"
+    (searchParams?.get("tab") as "dashboard" | "chats" | "settings") ||
+    "dashboard"
   );
   const [createChatTrigger, setCreateChatTrigger] = useState<number>(0);
 
@@ -48,43 +50,46 @@ export function ProjectPageGrid({
 
   const handleTabChange = useCallback((tab: "dashboard" | "chats" | "settings") => {
     setActiveTab(tab);
+    setCreateChatTrigger(0);
   }, []);
 
   // Filter tabs based on user role
-  const visibleTabs = useMemo(
-    () =>
-      (["dashboard", "chats", "settings"] as const).filter(
-        (tab) => tab !== "chats" || userRole === "Client"
-      ),
-    [userRole]
-  );
+  const visibleTabs = useMemo(() => {
+    const tabs = [
+      { id: "dashboard", label: "Dashboard", icon: Layout },
+      { id: "chats", label: "Chats", icon: MessageSquare },
+      { id: "settings", label: "Settings", icon: Settings },
+    ] as const;
 
-  const tabLabels = useMemo(
-    () => ({
-      dashboard: "Dashboard",
-      chats: "Chats",
-      settings: "Settings",
-    }),
-    []
-  );
+    return tabs.filter(
+      (tab) => tab.id !== "chats" || userRole === "Client"
+    );
+  }, [userRole]);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
-        {visibleTabs.map((tab) => (
-          <button
-            key={tab}
-            className={`px-4 py-2 font-semibold ${
-              activeTab === tab
-                ? "border-b-2 border-[#341bab] text-black"
-                : "text-gray-500 hover:text-black hover:cursor-pointer"
-            }`}
-            onClick={() => handleTabChange(tab)}
-          >
-            {tabLabels[tab]}
-          </button>
-        ))}
+        {visibleTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 font-semibold transition-all hover:cursor-pointer",
+                isActive
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-black"
+              )}
+              onClick={() => handleTabChange(tab.id as any)}
+            >
+              <Icon className={cn("w-4 h-4", isActive ? "text-primary" : "text-gray-500")} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}

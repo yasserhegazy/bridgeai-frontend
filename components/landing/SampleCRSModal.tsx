@@ -11,177 +11,225 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { FileText, CheckCircle2, ShieldCheck, Cpu, Database, Network } from "lucide-react";
 
 const sampleCRS = {
-  project_title: "E-Commerce Mobile Application",
+  project_title: "SmartTask: AI-Enabled Project Management",
   description:
-    "A modern mobile application for online shopping with integrated payment processing, inventory management, and customer relationship features.",
+    "A comprehensive project management solution designed for agile teams to organize, track, and manage their software development lifecycle with intelligent automation and real-time collaboration",
+  objectives: [
+    "Streamline task allocation and progress tracking?",
+    "Improve team velocity through automated sprint reports?",
+    "Provide a centralized source of truth for all project documentation?"
+  ],
   functional_requirements: [
     {
-      id: "FR-001",
+      id: "FR-01",
+      title: "Interactive Kanban Board",
       priority: "High",
-      description: "User registration and authentication with email and social login options",
+      description: "A drag-and-drop interface for managing tasks across different workflow stages (To Do, In Progress, Review, Done)?",
     },
     {
-      id: "FR-002",
-      priority: "High",
-      description: "Product catalog with search, filter, and category browsing capabilities",
-    },
-    {
-      id: "FR-003",
-      priority: "High",
-      description: "Shopping cart functionality with add, remove, and quantity adjustment",
-    },
-    {
-      id: "FR-004",
+      id: "FR-02",
+      title: "Automated Reporting",
       priority: "Medium",
-      description: "Secure payment processing supporting credit cards and digital wallets",
+      description: "Weekly generation of burndown charts and velocity reports for stakeholders?",
     },
     {
-      id: "FR-005",
+      id: "FR-03",
+      title: "Role-Based Access",
+      priority: "High",
+      description: "Granular permission settings for Developers, Project Managers, and External Clients?",
+    },
+    {
+      id: "FR-04",
+      title: "Real-time Notifications",
+      priority: "Low",
+      description: "Push and email notifications for task assignments, mentions, and deadline approaching?",
+    },
+    {
+      id: "FR-05",
+      title: "AI Workload Prediction",
       priority: "Medium",
-      description: "Order tracking and history for customers",
+      description: "Predict potential bottlenecks based on historical team velocity and current sprint load?",
+    },
+    {
+      id: "FR-06",
+      title: "Automated Documentation",
+      priority: "High",
+      description: "Generate technical documentation and release notes automatically from task descriptions?",
     },
   ],
-  non_functional_requirements: {
-    performance: "App should load within 2 seconds on 4G networks",
-    security: "PCI DSS compliance for payment processing, encrypted data transmission",
-    scalability: "Support 10,000 concurrent users with 99.9% uptime",
-  },
-  stakeholders: ["Product Owner", "Development Team", "End Users (Shoppers)", "Payment Gateway Provider"],
-  target_users: "Online shoppers aged 18-45, primarily mobile-first consumers",
-  constraints: {
-    budget: "$150,000",
-    timeline: "6 months for MVP launch",
-    technical: "Must integrate with existing inventory management system",
-  },
-  success_metrics: ["100,000 app downloads in first 3 months", "Average session duration > 5 minutes", "Conversion rate > 3%"],
+  non_functional_requirements: [
+    { label: "Performance", value: "Dashboard load time should be under 1.5 seconds?" },
+    { label: "Security", value: "SOC-2 compliant data encryption and 2FA authentication?" },
+    { label: "Scalability", value: "Support up to 10,000 concurrent users?" },
+    { label: "Reliability", value: "99.9% uptime during business hours?" }
+  ],
+  stakeholders: ["Project Managers", "Software Engineers", "Product Owners", "QA Analysts", "Stakeholders"],
+  constraints: "Must be accessible via web and mobile browsers; budget capped at $50k",
+  tech_stack: [
+    { area: "Frontend", stack: "Next.js 14, TailwindCSS, Framer Motion" },
+    { area: "Backend", stack: "Python FastAPI, PostgreSQL, Redis" },
+    { area: "AI Layer", stack: "OpenAI GPT-4, Vector Embeddings" }
+  ]
 };
 
 export function SampleCRSModal() {
   const [open, setOpen] = useState(false);
 
-  const handleExport = () => {
-    // Placeholder for export functionality
-    alert("Sample CRS export feature - would download PDF here");
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 hover:bg-muted transition-all duration-300 hover:scale-105">
+        <Button variant="outline" className="gap-2 h-11 px-6 rounded-lg font-semibold hover:border-primary transition-colors">
           <FileText className="h-4 w-4" />
           View Sample CRS
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Sample CRS Document</span>
-            <Button size="sm" variant="outline" className="gap-2 hover:bg-muted transition-all duration-300" onClick={handleExport}>
-              <Download className="h-4 w-4" />
-              Export PDF
-            </Button>
-          </DialogTitle>
-          <DialogDescription>
-            Example of a complete Customer Requirements Specification generated by BridgeAI
-          </DialogDescription>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[70vh] pr-4">
-          <div className="space-y-6">
-            {/* Project Title */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Project Title</h3>
-              <p className="text-muted-foreground">{sampleCRS.project_title}</p>
+      <DialogContent className="max-w-5xl h-[85vh] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white">
+        {/* Header - No Shrink */}
+        <div className="p-8 border-b bg-gray-50 flex items-center justify-between shrink-0">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-widest">
+                Sample Output
+              </Badge>
+              <div className="h-[1px] w-8 bg-gray-200" />
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Document ID: ST-2024-X1</span>
             </div>
+            <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
+              {sampleCRS.project_title}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium">
+              Comprehensive Requirement Specification Workflow
+            </DialogDescription>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+        </div>
 
-            {/* Description */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{sampleCRS.description}</p>
-            </div>
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+          <div className="max-w-4xl mx-auto space-y-12 pb-12">
 
-            {/* Functional Requirements */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Functional Requirements</h3>
-              <div className="space-y-3">
-                {sampleCRS.functional_requirements.map((req, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline">{req.id}</Badge>
-                      <Badge
-                        variant={req.priority === "High" ? "default" : "secondary"}
-                      >
-                        {req.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{req.description}</p>
+            {/* Overview Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-1 bg-primary rounded-full" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Project Archetype & Vision</h3>
+              </div>
+              <p className="text-gray-600 leading-relaxed text-base font-medium">
+                {sampleCRS.description}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                {sampleCRS.objectives.map((obj, i) => (
+                  <div key={i} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex gap-3 group hover:border-primary/20 transition-colors">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-sm font-semibold text-gray-700 leading-snug">{obj}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Non-Functional Requirements */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Non-Functional Requirements</h3>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-medium text-sm mb-1">Performance</h4>
-                  <p className="text-sm text-muted-foreground">{sampleCRS.non_functional_requirements.performance}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-1">Security</h4>
-                  <p className="text-sm text-muted-foreground">{sampleCRS.non_functional_requirements.security}</p>
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-1">Scalability</h4>
-                  <p className="text-sm text-muted-foreground">{sampleCRS.non_functional_requirements.scalability}</p>
-                </div>
+            {/* Technical Context Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-1 bg-primary rounded-full" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Engineered Tech Stack</h3>
               </div>
-            </div>
-
-            {/* Stakeholders */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Stakeholders</h3>
-              <div className="flex flex-wrap gap-2">
-                {sampleCRS.stakeholders.map((stakeholder, index) => (
-                  <Badge key={index} variant="secondary">
-                    {stakeholder}
-                  </Badge>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {sampleCRS.tech_stack.map((item, i) => (
+                  <div key={i} className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                    <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">{item.area}</div>
+                    <div className="text-sm font-bold text-gray-800">{item.stack}</div>
+                  </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Target Users */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Target Users</h3>
-              <p className="text-muted-foreground">{sampleCRS.target_users}</p>
-            </div>
-
-            {/* Constraints */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Constraints</h3>
-              <div className="space-y-2">
-                <p className="text-sm"><span className="font-medium">Budget:</span> {sampleCRS.constraints.budget}</p>
-                <p className="text-sm"><span className="font-medium">Timeline:</span> {sampleCRS.constraints.timeline}</p>
-                <p className="text-sm"><span className="font-medium">Technical:</span> {sampleCRS.constraints.technical}</p>
+            {/* Functional Hierarchy Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-1 bg-primary rounded-full" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Functional Capability Matrix</h3>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sampleCRS.functional_requirements.map((req, index) => (
+                  <div key={index} className="p-6 border border-gray-100 rounded-2xl flex flex-col gap-4 hover:shadow-lg transition-all bg-white relative group">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">{req.id}</span>
+                        <h4 className="font-black text-gray-900 tracking-tight">{req.title}</h4>
+                      </div>
+                      <Badge variant="outline" className={`text-[9px] font-black uppercase ${req.priority === 'High' ? 'border-red-100 text-red-500 bg-red-50' : 'border-gray-200'
+                        }`}>
+                        {req.priority}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                      {req.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Non-Functional & Constraints Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+              <section className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-6 w-1 bg-primary rounded-full" />
+                  <h3 className="text-base font-black uppercase tracking-tight text-gray-900">Quality Safeguards</h3>
+                </div>
+                <div className="space-y-4">
+                  {sampleCRS.non_functional_requirements.map((nfr, i) => (
+                    <div key={i} className="flex flex-col gap-1.5 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-widest">{nfr.label}</span>
+                      <p className="text-sm font-bold text-gray-700">{nfr.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-6 w-1 bg-primary rounded-full" />
+                  <h3 className="text-base font-black uppercase tracking-tight text-gray-900">Operational Scope</h3>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Primary Stakeholders</span>
+                    <div className="flex flex-wrap gap-2">
+                      {sampleCRS.stakeholders.map((s, i) => (
+                        <Badge key={i} variant="secondary" className="bg-white border border-gray-200 text-gray-600 font-bold text-[10px]">
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Global Constraints</span>
+                    <p className="text-sm font-bold text-gray-700 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200">
+                      {sampleCRS.constraints}
+                    </p>
+                  </div>
+                </div>
+              </section>
             </div>
 
-            {/* Success Metrics */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Success Metrics</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {sampleCRS.success_metrics.map((metric, index) => (
-                  <li key={index} className="text-sm text-muted-foreground">{metric}</li>
-                ))}
-              </ul>
-            </div>
           </div>
-        </ScrollArea>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-4 border-t bg-gray-50 flex items-center justify-between text-[10px] font-black text-gray-400 shrink-0">
+          <div className="flex items-center gap-4">
+            <span>BRIDGEAI // CRS_ENGINE_v4.2</span>
+            <div className="h-3 w-[1px] bg-gray-300" />
+            <span>ENCRYPTION: AES-256</span>
+          </div>
+          <span>CERTIFIED SPECIFICATION // 2024</span>
+        </div>
       </DialogContent>
     </Dialog>
   );

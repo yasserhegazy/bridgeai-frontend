@@ -42,7 +42,7 @@ export function TeamSettingsGrid({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-12">
       {/* Flash Message */}
       {flashMessage && (
         <FlashMessage
@@ -73,4 +73,3 @@ export function TeamSettingsGrid({
   );
 }
 
-             

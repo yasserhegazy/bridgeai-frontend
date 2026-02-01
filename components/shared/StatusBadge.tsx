@@ -1,8 +1,8 @@
 export function StatusBadge({ status }: { status: string }) {
   const statusStyles: { [key: string]: { text: string; bg: string } } = {
     Active: { text: "text-green-700", bg: "bg-green-100" },
-    Completed: { text: "text-indigo-700", bg: "bg-indigo-100" },
-    Pending: { text: "text-yellow-600", bg: "bg-yellow-100" },
+    Completed: { text: "text-primary", bg: "bg-primary/10" },
+    Pending: { text: "text-secondary", bg: "bg-secondary/10" },
     Approved: { text: "text-green-800", bg: "bg-green-200" },
     Rejected: { text: "text-red-800", bg: "bg-red-200" },
     Inactive: { text: "text-red-700", bg: "bg-red-100" },

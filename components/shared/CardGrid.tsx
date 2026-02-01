@@ -53,17 +53,17 @@ const GridCard = memo(function GridCard<T extends CardItem>({
 
   return (
     <Card
-      className="relative flex flex-col h-full p-6 rounded-2xl hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-200 hover:border-blue-400 bg-white hover:scale-[1.02] overflow-hidden"
+      className="relative flex flex-col h-full p-6 rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-200 hover:border-primary/20 bg-white hover-lift overflow-hidden"
       onClick={handleClick}
     >
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 to-purple-50/0 group-hover:from-blue-50/50 group-hover:to-purple-50/30 transition-all duration-300 pointer-events-none" />
-      
+      {/* Subtle overlay on hover */}
+      <div className="absolute inset-0 bg-primary/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
       {/* Content wrapper */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Header: Name + Status */}
         <div className="flex items-start justify-between gap-3 mb-4">
-          <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight flex-1">
+          <h2 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors leading-tight flex-1">
             {item.name}
           </h2>
           <StatusBadge status={item.status} />
@@ -108,7 +108,7 @@ const GridCard = memo(function GridCard<T extends CardItem>({
                   <span className="text-xs text-gray-400 italic">No members</span>
                 )}
               </div>
-              
+
               <div onClick={(e) => e.stopPropagation()}>
                 <TeamActionsMenu
                   teamId={item.id}

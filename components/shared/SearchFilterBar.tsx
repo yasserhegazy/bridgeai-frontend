@@ -23,8 +23,8 @@ export function SearchFilterBar({
   actions,
 }: SearchFilterBarProps) {
   return (
-    <div className="flex items-center bg-[#fafafb] p-4 justify-between mb-7 gap-3 rounded">
-      <div className="flex items-center gap-2 flex-1 max-w-sm">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex items-center gap-3 flex-1 w-full md:max-w-xl">
         <SearchBar
           placeholder={searchPlaceholder}
           value={searchValue}
@@ -32,7 +32,7 @@ export function SearchFilterBar({
         />
         {filters}
       </div>
-      {actions && <div>{actions}</div>}
+      {actions && <div className="flex shrink-0">{actions}</div>}
     </div>
   );
 }

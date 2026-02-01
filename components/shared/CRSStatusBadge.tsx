@@ -18,8 +18,8 @@ export function CRSStatusBadge({ status }: CRSStatusBadgeProps) {
     },
     under_review: {
       label: "Under Review",
-      textColor: "text-blue-700",
-      bgColor: "bg-blue-100",
+      textColor: "text-primary",
+      bgColor: "bg-primary/10",
     },
     approved: {
       label: "Validated",

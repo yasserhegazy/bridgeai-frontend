@@ -15,6 +15,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useTeamMembers } from "@/hooks/teams/useTeamMembers";
 import { useTeamInvitations } from "@/hooks/teams/useTeamInvitations";
+import { Button } from "@/components/ui/button";
+import { Users, UserPlus, Loader2 } from "lucide-react";
 
 interface TeamMembersSectionProps {
   teamId: string;
@@ -50,8 +52,6 @@ export function TeamMembersSection({
     refreshInvitations,
     cancelInvitation,
   } = useTeamInvitations(teamId);
-
-  const isLoading = membersLoading || invitationsLoading;
 
   const handleInviteSent = useCallback(() => {
     refreshMembers();
@@ -123,65 +123,82 @@ export function TeamMembersSection({
 
   return (
     <>
-      <section className="bg-white border border-gray-200 rounded-xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Team Members</h2>
-          <InviteMemberModal teamId={teamId} onInviteSent={handleInviteSent} />
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Team Members
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Manage members and pending invitations.
+            </p>
+          </div>
+          <InviteMemberModal
+            teamId={teamId}
+            onInviteSent={handleInviteSent}
+            triggerLabel="Invite Member"
+            triggerSize="default"
+            triggerVariant="primary"
+            triggerClassName="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 px-6 border-none h-10 font-semibold text-sm"
+          />
         </div>
 
-        {/* Current Members */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">
-            Members ({members.length})
-          </h3>
-          {membersLoading ? (
-            <LoadingSpinner className="py-4" />
-          ) : members.length === 0 ? (
-            <EmptyState message="No members yet" />
-          ) : (
-            <div className="space-y-3">
-              {members.map((member) => (
-                <TeamMemberItem
-                  key={member.id}
-                  member={member}
-                  onChangeRole={handleChangeRole}
-                  onRemove={handleRemoveMember}
-                />
-              ))}
+        <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-8">
+          {/* Current Members */}
+          <div>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <label className="text-sm font-bold text-gray-900">
+                Current Members ({members.length})
+              </label>
             </div>
-          )}
-        </div>
-
-        {/* Pending Invitations */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-sm font-medium text-gray-500">
-              Pending Invitations ({pendingInvitations.length})
-            </h3>
-            {invitationsLoading && <LoadingSpinner size="sm" />}
+            {membersLoading ? (
+              <LoadingSpinner className="py-4" />
+            ) : members.length === 0 ? (
+              <EmptyState message="No members yet" />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {members.map((member) => (
+                  <TeamMemberItem
+                    key={member.id}
+                    member={member}
+                    onChangeRole={handleChangeRole}
+                    onRemove={handleRemoveMember}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {pendingInvitations.length === 0 ? (
-            <EmptyState
-              message={
-                invitationsLoading
-                  ? "Loading invitations..."
-                  : "No pending invitations"
-              }
-            />
-          ) : (
-            <div className="space-y-3">
-              {pendingInvitations.map((invitation) => (
-                <PendingInvitationItem
-                  key={invitation.id}
-                  invitation={invitation}
-                  onCancel={handleCancelInvitation}
-                />
-              ))}
+          {/* Pending Invitations */}
+          <div className="pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                Pending Invitations ({pendingInvitations.length})
+                {invitationsLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+              </label>
             </div>
-          )}
-        </div>
-      </section>
+
+            {pendingInvitations.length === 0 ? (
+              <div className="bg-gray-50/50 rounded-xl p-8 text-center border border-dashed border-gray-200">
+                <p className="text-sm text-muted-foreground italic">
+                  {invitationsLoading ? "Loading invitations..." : "No pending invitations"}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pendingInvitations.map((invitation) => (
+                  <PendingInvitationItem
+                    key={invitation.id}
+                    invitation={invitation}
+                    onCancel={handleCancelInvitation}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {/* Role Change Dialog */}
       {roleChangeState && (

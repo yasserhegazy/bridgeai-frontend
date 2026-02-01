@@ -110,24 +110,24 @@ export function CRSDetailsDialog({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
-            {/* Error Message */}
+            {/* error message */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
                 {error}
               </div>
             )}
 
-            {/* Rejection Alert */}
+            {/* rejection alert */}
             {currentCrs.status === "rejected" && currentCrs.rejection_reason && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-red-900 mb-2">
-                      CRS Rejected - Action Required
+                      CRS rejected - action required
                     </h3>
                     <p className="text-sm text-red-800 mb-3">
-                      <strong>Business Analyst Feedback:</strong>
+                      <strong>Business analyst feedback:</strong>
                     </p>
                     <div className="bg-white border border-red-200 rounded p-3">
                       <p className="text-sm text-gray-800 whitespace-pre-wrap">
@@ -150,7 +150,7 @@ export function CRSDetailsDialog({
               </div>
             )}
 
-            {/* Approval Notice */}
+            {/* approval notice */}
             {currentCrs.status === "approved" && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
@@ -161,10 +161,10 @@ export function CRSDetailsDialog({
                   </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-green-900 mb-1">
-                      CRS Approved
+                      CRS approved
                     </h3>
                     <p className="text-sm text-green-800">
-                      Your requirements have been validated and approved by the Business Analyst.
+                      Your requirements have been validated and approved by the business analyst.
                     </p>
                     {currentCrs.reviewed_at && (
                       <p className="text-xs text-green-700 mt-2">
@@ -182,24 +182,24 @@ export function CRSDetailsDialog({
               </div>
             )}
 
-            {/* Under Review Notice */}
+            {/* under review notice */}
             {currentCrs.status === "under_review" && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Loader2 className="w-5 h-5 text-blue-600 animate-spin shrink-0" />
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                      Under Review
+                      Under review
                     </h3>
                     <p className="text-sm text-blue-800">
-                      Your CRS is currently being reviewed by a Business Analyst. You will be notified once the review is complete.
+                      Your CRS is currently being reviewed by a business analyst. You will be notified once the review is complete.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Metadata */}
+            {/* metadata */}
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="p-3 bg-gray-100 rounded-lg">
                 <p className="text-xs font-semibold text-gray-600">Version</p>
@@ -223,10 +223,10 @@ export function CRSDetailsDialog({
               </div>
             </div>
 
-            {/* Summary Points */}
+            {/* summary points */}
             {currentCrs.summary_points && currentCrs.summary_points.length > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
-                <h3 className="text-sm font-semibold text-gray-800 mb-2">Key Points</h3>
+                <h3 className="text-sm font-semibold text-gray-800 mb-2">Key points</h3>
                 <ul className="list-disc list-inside space-y-1">
                   {currentCrs.summary_points.map((point, idx) => (
                     <li key={idx} className="text-sm text-gray-700">{point}</li>
@@ -235,14 +235,14 @@ export function CRSDetailsDialog({
               </div>
             )}
 
-            {/* CRS Content */}
+            {/* crs content */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
               <CRSContentDisplay content={currentCrs.content} />
             </div>
           </div>
         )}
 
-        {/* Actions - Hide when editing as Editor defines its own actions */}
+        {/* actions - hide when editing as editor defines its own actions */}
         {!isEditing && (
           <div className="mt-6 flex items-center justify-between gap-4 pt-5 border-t border-gray-200">
             <div className="flex gap-2">
@@ -258,7 +258,7 @@ export function CRSDetailsDialog({
               {canEdit && (
                 <Button onClick={() => setIsEditing(true)} variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
                   <Edit className="w-4 h-4 mr-2" />
-                  Edit Content
+                  Edit content
                 </Button>
               )}
 
@@ -277,7 +277,7 @@ export function CRSDetailsDialog({
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Resubmit for Review
+                      Resubmit for review
                     </>
                   )}
                 </Button>

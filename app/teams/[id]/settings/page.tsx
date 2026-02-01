@@ -52,16 +52,9 @@ export default function TeamSettingsPage({ params }: TeamSettingsPageProps) {
   }
 
   return (
-    <div className="flex justify-center mt-14 px-6 sm:px-8">
+    <div className="min-h-screen bg-gray-50/50 pt-20 pb-14 px-6 sm:px-8 flex justify-center">
       <div className="w-full max-w-6xl">
-        {/* Header */}
-        <PageHeader
-          title="Team Settings"
-          description="Manage your team information and members."
-        />
-
-        {/* Main content */}
-        <main className="flex-1 mt-8 mb-14 overflow-auto">
+        <main className="flex-1 overflow-auto">
           <TeamSettingsGrid
             teamId={resolvedParams.id}
             teamName={team.name}

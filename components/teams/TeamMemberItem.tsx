@@ -60,19 +60,19 @@ export function TeamMemberItem({
   }, [member.id, displayName, onRemove]);
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#341bab] text-white flex items-center justify-center font-semibold">
+    <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white hover:shadow-md border border-gray-100 transition-all duration-200 group bg-gray-50/30">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
           {initial}
         </div>
-        <div className="flex flex-col">
-          <span className="font-medium text-black">{displayName}</span>
-          <span className="text-sm text-gray-600">{member.user.email}</span>
+        <div className="flex flex-col min-w-0">
+          <span className="font-bold text-gray-900 truncate">{displayName}</span>
+          <span className="text-xs font-medium text-gray-500 truncate">{member.user.email}</span>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getRoleBadgeColor(
             member.role
           )}`}
         >
@@ -80,15 +80,15 @@ export function TeamMemberItem({
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-gray-100">
+              <MoreHorizontal className="w-5 h-5 text-gray-400" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleChangeRole}>
+          <DropdownMenuContent align="end" className="rounded-xl border-gray-100 shadow-xl p-1">
+            <DropdownMenuItem onClick={handleChangeRole} className="rounded-lg text-sm font-medium py-2">
               Change Role
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={handleRemove}>
+            <DropdownMenuItem className="text-red-600 rounded-lg text-sm font-medium py-2" onClick={handleRemove}>
               <UserX className="w-4 h-4 mr-2" />
               Remove Member
             </DropdownMenuItem>

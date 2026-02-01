@@ -9,11 +9,15 @@ import { fetchMyCRSRequests } from "../../services/crs.service";
 import { CRSError } from "../../services/errors.service";
 import { CRSDTO, CRSStatus } from "../../dto/crs.dto";
 
+import { ProjectDTO } from "../../dto/projects.dto";
+
 interface UseMyCRSRequestsReturn {
   crsRequests: CRSDTO[];
   filteredRequests: CRSDTO[];
   isLoading: boolean;
   error: string | null;
+  selectedTeam: number | "all";
+  setSelectedTeam: (teamId: number | "all") => void;
   selectedProject: number | "all";
   setSelectedProject: (projectId: number | "all") => void;
   selectedStatus: CRSStatus | "all";
@@ -23,24 +27,27 @@ interface UseMyCRSRequestsReturn {
   refreshRequests: () => Promise<CRSDTO[] | null>;
 }
 
-export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
+export function useMyCRSRequests(initialTeamId: number, projects: ProjectDTO[] = []): UseMyCRSRequestsReturn {
   const [crsRequests, setCRSRequests] = useState<CRSDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<number | "all">(initialTeamId);
   const [selectedProject, setSelectedProject] = useState<number | "all">("all");
   const [selectedStatus, setSelectedStatus] = useState<CRSStatus | "all">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   const loadCRSRequests = useCallback(async (): Promise<CRSDTO[] | null> => {
-    if (!teamId) return null;
+    if (selectedTeam === "all" && !initialTeamId) return null;
 
     setIsLoading(true);
     setError(null);
 
     try {
+      const activeTeamId = selectedTeam === "all" ? initialTeamId : selectedTeam;
       const projectId = selectedProject === "all" ? undefined : selectedProject;
       const status = selectedStatus === "all" ? undefined : selectedStatus;
-      const data = await fetchMyCRSRequests(teamId, projectId, status);
+
+      const data = await fetchMyCRSRequests(activeTeamId, projectId, status);
       setCRSRequests(data);
       return data;
     } catch (err) {
@@ -51,7 +58,7 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [teamId, selectedProject, selectedStatus]);
+  }, [selectedTeam, selectedProject, selectedStatus, initialTeamId]);
 
   useEffect(() => {
     loadCRSRequests();
@@ -60,14 +67,20 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
   const filteredRequests = useMemo(() => {
     if (!searchTerm) return crsRequests;
 
+    const term = searchTerm.toLowerCase();
     return crsRequests.filter((request) => {
-      const matchesSearch =
-        request.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Find project name from passed projects list if missing in request
+      const fallbackProject = projects.find(p => p.id === request.project_id);
+      const projectName = (request.project_name || fallbackProject?.name || "").toLowerCase();
 
-      return matchesSearch;
+      const matchesProject = projectName.includes(term);
+      const matchesClient = request.client_name?.toLowerCase().includes(term);
+      const matchesVersion = `v${request.version}`.toLowerCase().includes(term);
+      const matchesId = request.id.toString().includes(term);
+
+      return matchesProject || matchesClient || matchesVersion || matchesId;
     });
-  }, [crsRequests, searchTerm]);
+  }, [crsRequests, searchTerm, projects]);
 
   const refreshRequests = useCallback(async (): Promise<CRSDTO[] | null> => {
     return await loadCRSRequests();
@@ -78,6 +91,8 @@ export function useMyCRSRequests(teamId: number): UseMyCRSRequestsReturn {
     filteredRequests,
     isLoading,
     error,
+    selectedTeam,
+    setSelectedTeam,
     selectedProject,
     setSelectedProject,
     selectedStatus,
