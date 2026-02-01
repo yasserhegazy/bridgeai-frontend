@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Pencil, Loader2, AlertCircle } from "lucide-react";
 
 interface RenameChatModalProps {
   open: boolean;
@@ -36,6 +37,12 @@ export function RenameChatModal({
   const [name, setName] = useState(chatName);
   const [isSaving, setIsSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName(chatName);
+    }
+  }, [open, chatName]);
 
   const handleSubmit = useCallback(async () => {
     const trimmed = name.trim();
@@ -61,41 +68,57 @@ export function RenameChatModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Rename chat</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[480px] bg-white border border-gray-100 shadow-2xl rounded-2xl p-8 outline-none">
+        <DialogHeader className="mb-8">
+          <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">Rename Chat</DialogTitle>
+          <DialogDescription className="text-gray-500 text-sm mt-1">
             Give this chat a clear, descriptive name.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Chat name
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 ml-1 mb-3">
+              Chat Name
+            </label>
             <Input
-              className="mt-1"
+              className="border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-12 px-4 text-gray-900 rounded-xl shadow-sm placeholder:text-gray-300"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Client kickoff discussion"
+              placeholder="Enter a descriptive name..."
             />
-          </label>
+          </div>
 
           {(validationError || error) && (
-            <p className="text-sm text-red-600">{validationError || error}</p>
+            <div className="flex items-center gap-2 text-red-500 text-xs font-medium animate-in fade-in slide-in-from-top-1 ml-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>{validationError || error}</span>
+            </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="default" size="default" onClick={handleClose}>
+        <DialogFooter className="mt-10 sm:justify-end gap-3">
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={handleClose}
+            className="px-6 transition-all hover:scale-105 active:scale-95 font-semibold text-primary border-none hover:bg-primary/5"
+          >
             Cancel
           </Button>
           <Button
             variant="primary"
-            size="default"
+            size="lg"
             onClick={handleSubmit}
             disabled={isSaving}
+            className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none font-semibold text-white"
           >
-            {isSaving ? "Saving..." : "Update chat"}
+            {isSaving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Pencil className="w-5 h-5" />
+            )}
+            <span>{isSaving ? "Saving..." : "Update Name"}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

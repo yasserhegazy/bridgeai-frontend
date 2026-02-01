@@ -147,7 +147,7 @@ export function DashboardTab({
       {stats.crs.latest && (
         <section className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <FileText className="w-5 h-5 text-blue-600" />
+            <FileText className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold text-gray-900">
               Latest CRS Document
             </h2>

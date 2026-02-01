@@ -17,7 +17,7 @@ export function SearchBar({
         placeholder={placeholder}
         value={value || ""}
         onChange={(e) => onChange?.(e.target.value)}
-        className="w-full pl-10 bg-white border-b border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#341BAB]"
+        className="w-full pl-10 bg-white border-b border-gray-300 focus:outline-none"
       />
     </div>
   );
