@@ -76,15 +76,33 @@ export function ChatsTab({ projectId, teamId, createChatTrigger }: ChatsTabProps
     [chats, search]
   );
 
+  const handleChatClick = useCallback(
+    (id: number) => {
+      try {
+        sessionStorage.setItem("chatReturnTo", `/projects/${projectId}/chats`);
+        // Store team ID for sidebar navigation
+        if (teamId) {
+          setCurrentTeamId(teamId);
+        }
+      } catch {
+        // ignore sessionStorage errors
+      }
+      router.push(`/chats/${id}?projectId=${projectId}`);
+    },
+    [projectId, teamId, router]
+  );
+
   const handleCreateChat = useCallback(
     async (name: string, pattern: CRSPattern) => {
       const created = await createNewChat({ name, crs_pattern: pattern });
       if (created) {
         showSuccess("Chat created successfully");
         setCreateModalOpen(false);
+        // Redirect to the new chat
+        handleChatClick(created.id);
       }
     },
-    [createNewChat, showSuccess]
+    [createNewChat, showSuccess, handleChatClick]
   );
 
   const handleRenameChat = useCallback(
@@ -109,22 +127,6 @@ export function ChatsTab({ projectId, teamId, createChatTrigger }: ChatsTabProps
       setSelectedChat(null);
     }
   }, [selectedChat, removeChat, showSuccess]);
-
-  const handleChatClick = useCallback(
-    (id: number) => {
-      try {
-        sessionStorage.setItem("chatReturnTo", `/projects/${projectId}/chats`);
-        // Store team ID for sidebar navigation
-        if (teamId) {
-          setCurrentTeamId(teamId);
-        }
-      } catch {
-        // ignore sessionStorage errors
-      }
-      router.push(`/chats/${id}?projectId=${projectId}`);
-    },
-    [projectId, teamId, router]
-  );
 
   const openRenameModal = useCallback((chat: ChatSummaryDTO) => {
     setSelectedChat(chat);
