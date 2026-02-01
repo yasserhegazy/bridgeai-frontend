@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { CRSDTO } from "@/dto";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { CRSContentEditor } from "@/components/shared/CRSContentEditor";
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ConnectionState, ChatSessionDTO, CurrentUserDTO } from "@/dto";
 import { ExportButton } from "@/components/shared/ExportButton";
+import { toast } from "sonner";
 
 interface CRSPanelProps {
     latestCRS: CRSDTO | null;
@@ -60,6 +61,28 @@ export function CRSPanel({
     const [showComments, setShowComments] = useState(false);
     const [contentError, setContentError] = useState<string | null>(null);
     const [showInsights, setShowInsights] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const previousVersionRef = useRef<number | undefined>(latestCRS?.edit_version);
+
+    // Detect CRS updates and show visual feedback
+    useEffect(() => {
+        if (latestCRS?.edit_version && previousVersionRef.current !== undefined) {
+            if (latestCRS.edit_version !== previousVersionRef.current) {
+                setIsUpdating(true);
+                
+                // Show prominent toast notification
+                toast.success("📝 Document Updated!", {
+                    description: `CRS version ${latestCRS.edit_version} - New information added`,
+                    duration: 4000,
+                });
+                
+                // Reset updating state after animation
+                const timer = setTimeout(() => setIsUpdating(false), 3000);
+                return () => clearTimeout(timer);
+            }
+        }
+        previousVersionRef.current = latestCRS?.edit_version;
+    }, [latestCRS?.edit_version]);
 
     const parsedContent = useMemo(() => {
         if (!latestCRS?.content) return null;
@@ -76,8 +99,19 @@ export function CRSPanel({
     const handleSaveContent = async (newContent: string) => {
         if (!latestCRS) return;
 
+        // Optimistic update - show immediately
+        const optimisticCRS = {
+            ...latestCRS,
+            content: newContent,
+            edit_version: (latestCRS.edit_version || 0) + 1,
+        };
+        const previousCRS = latestCRS;
+
         try {
             setContentError(null);
+            // Show optimistic update temporarily
+            setIsUpdating(true);
+            
             await updateCRSContent(
                 latestCRS.id,
                 newContent,
@@ -85,12 +119,21 @@ export function CRSPanel({
             );
             setIsEditing(false);
             if (onStatusUpdate) onStatusUpdate();
+            
+            toast.success("Changes saved successfully!");
         } catch (err) {
+            // Revert optimistic update on error
             if (err instanceof CRSError) {
                 setContentError(err.message);
+                toast.error("Failed to save changes", {
+                    description: err.message
+                });
             } else {
                 setContentError("Failed to save changes. Please try again.");
+                toast.error("Failed to save changes");
             }
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -107,8 +150,21 @@ export function CRSPanel({
                     <div>
                         <h2 className="text-lg font-bold text-gray-900 leading-tight tracking-tight">Project Specification</h2>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <span className="flex h-1.5 w-1.5 rounded-full bg-green-500" />
-                            <p className="text-[10px] text-gray-500 font-bold tracking-tight">Live document</p>
+                            <motion.span 
+                                className="flex h-1.5 w-1.5 rounded-full bg-green-500"
+                                animate={{
+                                    scale: [1, 1.3, 1],
+                                    opacity: [1, 0.7, 1]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                            <p className="text-[10px] text-gray-500 font-bold tracking-tight">
+                                {isGenerating ? "Building..." : isUpdating ? "Updating..." : "LIVE"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -204,49 +260,73 @@ export function CRSPanel({
                 <motion.div layout className="flex-1 overflow-y-auto scroll-smooth t-custom-scrollbar">
                     {/* Recent Insights Area */}
                     <AnimatePresence>
-                        {recentInsights && showInsights && (
+                        {recentInsights && recentInsights.summary_points.length > 0 && showInsights && (
                             <motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: "auto", opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="bg-amber-50/50 border-b border-amber-100 overflow-hidden shrink-0"
+                                className="bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200 overflow-hidden shrink-0"
                             >
                                 <div className="p-8 max-w-4xl mx-auto space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                                                <Sparkles className="w-4 h-4 text-amber-600" />
+                                        <div className="flex items-center gap-3">
+                                            <motion.div 
+                                                animate={{ 
+                                                    rotate: [0, 10, -10, 10, 0],
+                                                    scale: [1, 1.1, 1]
+                                                }}
+                                                transition={{ duration: 2, repeat: Infinity }}
+                                                className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg"
+                                            >
+                                                <Sparkles className="w-5 h-5 text-white" />
+                                            </motion.div>
+                                            <div>
+                                                <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">AI Extraction Insights</h3>
+                                                <p className="text-[10px] text-amber-700 font-medium">Live requirements analysis</p>
                                             </div>
-                                            <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">AI Extraction Insights</h3>
                                         </div>
                                         <button
                                             onClick={() => setShowInsights(false)}
-                                            className="text-amber-700/50 hover:text-amber-700 transition-colors"
+                                            className="text-amber-700/50 hover:text-amber-700 transition-colors p-2 hover:bg-amber-100 rounded-lg"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
                                     </div>
 
                                     {recentInsights.quality_summary && (
-                                        <p className="text-sm text-amber-800 font-medium leading-relaxed italic border-l-2 border-amber-200 pl-4 py-1">
+                                        <motion.p 
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            className="text-sm text-amber-900 font-semibold leading-relaxed italic border-l-4 border-amber-400 pl-4 py-2 bg-white/50 rounded-r-lg"
+                                        >
                                             "{recentInsights.quality_summary}"
-                                        </p>
+                                        </motion.p>
                                     )}
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {recentInsights.summary_points.map((point, idx) => (
                                             <motion.div
                                                 key={idx}
                                                 initial={{ x: -10, opacity: 0 }}
                                                 animate={{ x: 0, opacity: 1 }}
                                                 transition={{ delay: idx * 0.1 }}
-                                                className="flex items-start gap-3 bg-white/60 p-3 rounded-xl border border-amber-100/50 shadow-sm"
+                                                className="flex items-start gap-3 bg-white p-4 rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow"
                                             >
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                                                <span className="text-xs text-amber-900 font-bold leading-tight">{point}</span>
+                                                <div className="w-2 h-2 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mt-1.5 shrink-0 shadow-sm" />
+                                                <span className="text-xs text-amber-900 font-bold leading-tight flex-1">{point}</span>
                                             </motion.div>
                                         ))}
                                     </div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="pt-4 border-t border-amber-200 flex items-center justify-center gap-2 text-amber-800"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="text-xs font-bold">Full document below ↓</span>
+                                    </motion.div>
                                 </div>
                             </motion.div>
                         )}
@@ -311,12 +391,52 @@ export function CRSPanel({
                                     </motion.div>
                                 ) : latestCRS ? (
                                     <motion.div
-                                        key="content"
+                                        key={`content-${latestCRS.edit_version || latestCRS.version}`}
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
                                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                        className="prose prose-slate prose-sm md:prose-base max-w-none"
+                                        className="prose prose-slate prose-sm md:prose-base max-w-none relative"
                                     >
+                                        {/* Live Update Indicator */}
+                                        <AnimatePresence>
+                                            {isUpdating && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                                                    className="fixed top-24 right-8 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3"
+                                                >
+                                                    <motion.div
+                                                        animate={{
+                                                            rotate: 360,
+                                                            scale: [1, 1.2, 1]
+                                                        }}
+                                                        transition={{
+                                                            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                                                            scale: { duration: 1, repeat: Infinity }
+                                                        }}
+                                                    >
+                                                        <Sparkles className="w-5 h-5" />
+                                                    </motion.div>
+                                                    <div>
+                                                        <div className="font-black text-sm">Document Updated!</div>
+                                                        <div className="text-xs font-medium opacity-90">v{latestCRS.edit_version}</div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Updating Highlight Effect */}
+                                        {isUpdating && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: [0, 0.1, 0] }}
+                                                transition={{ duration: 2, repeat: 1 }}
+                                                className="absolute inset-0 bg-green-400 pointer-events-none rounded-3xl"
+                                            />
+                                        )}
+
                                         {/* Error Display */}
                                         {contentError && (
                                             <div className="mb-10 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700 text-sm font-medium">
@@ -329,6 +449,30 @@ export function CRSPanel({
                                         <div className="mb-16 relative">
                                             <div className="absolute -left-16 top-0 bottom-0 w-1 bg-primary/10 rounded-full hidden lg:block" />
 
+                                            {/* Update Timestamp Indicator */}
+                                            {isUpdating && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl flex items-center gap-3"
+                                                >
+                                                    <motion.div
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                                        className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center"
+                                                    >
+                                                        <Sparkles className="w-4 h-4 text-green-600" />
+                                                    </motion.div>
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-bold text-green-900">Document Just Updated</div>
+                                                        <div className="text-xs text-green-700 font-medium">New requirements extracted from conversation</div>
+                                                    </div>
+                                                    <div className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-lg">
+                                                        LIVE
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-bold tracking-tight rounded-md border border-primary/10">
@@ -337,6 +481,15 @@ export function CRSPanel({
                                                     <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold tracking-tight rounded-md border border-green-100 uppercase tracking-widest">
                                                         {latestCRS.status}
                                                     </div>
+                                                    <motion.div 
+                                                        key={latestCRS.edit_version}
+                                                        initial={{ scale: 1.2, backgroundColor: "rgb(34, 197, 94)" }}
+                                                        animate={{ scale: 1, backgroundColor: "rgb(243, 244, 246)" }}
+                                                        transition={{ duration: 0.5 }}
+                                                        className="px-3 py-1 bg-gray-50 text-gray-600 text-[10px] font-bold tracking-tight rounded-md border border-gray-200"
+                                                    >
+                                                        v{latestCRS.edit_version || latestCRS.version}
+                                                    </motion.div>
                                                 </div>
 
                                                 <h1 className="text-5xl font-black text-gray-900 tracking-tighter !mt-2 !mb-6 leading-[0.95]">
@@ -397,16 +550,6 @@ export function CRSPanel({
                                                     Your requirements will appear here as we talk. Start by describing your vision to the AI assistant.
                                                 </p>
                                             </div>
-
-                                            {canGenerateCRS && (
-                                                <Button
-                                                    onClick={onGenerateCRS}
-                                                    className="bg-primary text-white hover:bg-primary-dark rounded-2xl px-10 py-7 font-black text-sm tracking-tight shadow-xl shadow-primary/20 group transition-all"
-                                                >
-                                                    <Sparkles className="w-5 h-5 mr-3 group-hover:animate-pulse" />
-                                                    Generate first draft
-                                                </Button>
-                                            )}
                                         </div>
                                     </motion.div>
                                 )}

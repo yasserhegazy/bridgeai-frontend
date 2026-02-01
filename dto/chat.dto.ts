@@ -50,11 +50,37 @@ export interface WebSocketMessageData {
   status?: string; // e.g. "thinking", "drafting", "idle"
   is_generating?: boolean;
   crs?: {
+    // Action type (backward compatible - defaults to full update if not specified)
+    action?: "updated";
+    
+    // JSON Patch operations (RFC 6902) - hybrid approach
+    patch?: Array<{
+      op: "add" | "remove" | "replace" | "move" | "copy" | "test";
+      path: string;
+      value?: any;
+      from?: string;
+    }>;
+    
+    // Full document (always included for backward compatibility and fallback)
+    content?: string;
+    
+    // CRS metadata
     is_complete?: boolean;
     crs_document_id?: number;
     version?: number;
+    edit_version?: number;
+    status?: string;
     summary_points?: string[];
     quality_summary?: string;
+    updated_at?: string;
+    
+    // Performance metrics (optional, for monitoring)
+    _metrics?: {
+      patch_operations?: number;
+      patch_size_bytes?: number;
+      full_size_bytes?: number;
+      size_reduction_percent?: number;
+    };
   };
 }
 

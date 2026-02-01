@@ -133,6 +133,7 @@ export function useChatCRS({
 
   return {
     latestCRS,
+    setLatestCRS, // Exposed for real-time WebSocket updates
     crsLoading,
     crsError,
     isGenerating,

@@ -1,6 +1,7 @@
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import "./globals.css";
 import { geistSans } from "@/fonts";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "BridgeAI",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LayoutWrapper>
           {children}
         </LayoutWrapper>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

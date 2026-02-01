@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ConnectionState, ChatSessionDTO, CurrentUserDTO } from "@/dto";
 import { ExportButton } from "@/components/shared/ExportButton"; // We'll keep it for the functionality but wrap it or use its logic
-import { PreviewCRSButton } from "@/components/chats/PreviewCRSButton";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -68,7 +67,7 @@ export function ChatHeader({
   };
 
   return (
-    <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 z-[60]">
+    <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 z-60">
       {/* Session Info */}
       <div className="flex items-center gap-4">
         <Button
@@ -81,7 +80,7 @@ export function ChatHeader({
         </Button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/10">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/10">
             <Bot className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -119,25 +118,10 @@ export function ChatHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-gray-100 backdrop-blur-xl bg-white/95">
             <div className="px-3 py-2 text-[10px] font-bold text-gray-400 tracking-tight border-b border-gray-50 mb-1">
-              Management
+              Session controls
             </div>
 
             <div className="flex flex-col gap-0.5 mt-1">
-              <DropdownMenuItem asChild>
-                <div className="p-0">
-                  <PreviewCRSButton
-                    sessionId={chat.id}
-                    sessionStatus={chat.status}
-                    variant="ghost"
-                    className="w-full justify-start text-xs h-10 px-3 rounded-xl font-bold hover:bg-primary/5 hover:text-primary border-none shadow-none transition-all"
-                  />
-                </div>
-              </DropdownMenuItem>
-
-              <div className="px-3 py-1.5 text-[10px] font-bold text-gray-400 tracking-tight mb-1">
-                Session controls
-              </div>
-
               <DropdownMenuItem
                 onClick={onToggleDocument}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 focus:bg-gray-50 transition-all cursor-pointer"
@@ -154,14 +138,6 @@ export function ChatHeader({
               >
                 <Layout className="w-4 h-4 text-gray-400 group-focus:text-gray-900 transition-colors" />
                 Swap panel side
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onClick={() => { }} // Logic for hide chat removed as it is main content
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 focus:bg-red-50 focus:text-red-700 transition-all cursor-pointer opacity-20 pointer-events-none"
-              >
-                <PanelRightClose className="w-4 h-4" />
-                Collapse chat
               </DropdownMenuItem>
             </div>
           </DropdownMenuContent>

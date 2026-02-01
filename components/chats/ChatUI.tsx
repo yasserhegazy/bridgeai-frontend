@@ -9,6 +9,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/hooks/shared/useModalEnhanced";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInputArea } from "./ChatInputArea";
@@ -16,6 +17,7 @@ import { CRSDraftDialog } from "./CRSDraftDialog";
 import { CRSGenerateDialog } from "./CRSGenerateDialog";
 import { PartialCRSConfirmModal } from "./PartialCRSConfirmModal";
 import { CRSPanel } from "./CRSPanel";
+import { CRSPerformanceMonitor } from "./CRSPerformanceMonitor";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { GripVertical, Plus, MessageSquare, ChevronRight, ChevronLeft, FileText } from "lucide-react";
 import {
@@ -26,6 +28,7 @@ import {
   useChatScroll,
   useChatState,
 } from "@/hooks";
+import { useCRSPatchApplicator } from "@/hooks/chats/useCRSPatchApplicator";
 import { ChatSessionDTO, CurrentUserDTO, SendMessagePayload } from "@/dto";
 import { getAuthToken } from "@/services/token.service";
 import { useToast } from "@/components/ui/use-toast";
@@ -38,9 +41,12 @@ interface ChatUIProps {
 export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [openDraft, setOpenDraft] = useState(false);
-  const [openGenerate, setOpenGenerate] = useState(false);
-  const [openPartialConfirm, setOpenPartialConfirm] = useState(false);
+  
+  // Managed modals with collision prevention
+  const draftModal = useModal(false, { id: "crs-draft-dialog", priority: 2 });
+  const generateModal = useModal(false, { id: "crs-generate-dialog", priority: 1 });
+  const partialConfirmModal = useModal(false, { id: "partial-crs-confirm", priority: 3 });
+  
   const [returnTo, setReturnTo] = useState<string | undefined>(undefined);
   const [crsPattern, setCrsPattern] = useState<
     "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"
@@ -65,6 +71,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   // Initialize CRS management
   const {
     latestCRS,
+    setLatestCRS,
     crsLoading,
     crsError,
     isGenerating,
@@ -85,6 +92,9 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     projectId: chat.project_id,
     crsPattern,
   });
+
+  // Initialize CRS patch applicator
+  const { applyPatchToCRS, getMetrics } = useCRSPatchApplicator();
 
   // Initialize messages management
   const { messages, isOwnMessage, addMessage, addPendingMessage, markPendingAsFailed } =
@@ -108,6 +118,65 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             });
           }
         },
+        onCRSUpdate: (crsData: any) => {
+          console.log('[ChatUI] CRS Update received:', crsData);
+          
+          // Hybrid approach: try patch first, fallback to full document
+          const { updatedCRS, metrics } = applyPatchToCRS(
+            latestCRS,
+            crsData.patch,
+            crsData.content,
+            {
+              id: crsData.crs_document_id,
+              crs_document_id: crsData.crs_document_id,
+              project_id: chat.project_id,
+              chat_session_id: chat.id,
+              status: crsData.status || 'draft',
+              pattern: crsPattern,
+              version: crsData.version || 1,
+              edit_version: crsData.edit_version || 1,
+              summary_points: crsData.summary_points || [],
+              created_at: crsData.updated_at || new Date().toISOString(),
+              updated_at: crsData.updated_at || new Date().toISOString(),
+              created_by: null,
+              _metrics: crsData._metrics,
+            }
+          );
+
+          if (updatedCRS) {
+            console.log('[ChatUI] Setting CRS state:', updatedCRS);
+            setLatestCRS(updatedCRS);
+            
+            // Log performance metrics
+            if (crsData._metrics) {
+              console.log('[CRS Performance]', {
+                backend: crsData._metrics,
+                frontend: {
+                  applicationTimeMs: metrics.applicationTimeMs,
+                  success: metrics.success,
+                  usedPatch: !metrics.fallbackToFull
+                }
+              });
+              
+              // Emit performance event for monitoring
+              const perfEvent = new CustomEvent('crs-performance-metric', {
+                detail: metrics
+              });
+              window.dispatchEvent(perfEvent);
+            }
+          } else {
+            console.warn('[ChatUI] Failed to create/update CRS from WebSocket data');
+          }
+          
+          // Always update insights when available
+          if (crsData.summary_points || crsData.quality_summary) {
+            console.log('[ChatUI] Setting insights:', { summary_points: crsData.summary_points, quality_summary: crsData.quality_summary });
+            setRecentInsights({
+              summary_points: crsData.summary_points || [],
+              quality_summary: crsData.quality_summary
+            });
+          }
+        },
         onCRSComplete: loadCRS,
         onStatusUpdate: (status, isGenerating) => {
           setIsGenerating(isGenerating);
@@ -115,7 +184,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         }
       });
     },
-    [handleWebSocketMessage, addMessage, loadCRS, setIsGenerating, setRecentInsights, showAiTyping]
+    [handleWebSocketMessage, addMessage, loadCRS, setLatestCRS, setIsGenerating, setRecentInsights, showAiTyping, chat.id, chat.project_id]
   );
 
   // Initialize WebSocket connection
@@ -175,10 +244,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   // Reload CRS when opening draft dialog
   useEffect(() => {
-    if (openDraft && chat.id) {
+    if (draftModal.isOpen && chat.id) {
       loadCRS();
     }
-  }, [openDraft, chat.id, loadCRS]);
+  }, [draftModal.isOpen, chat.id, loadCRS]);
 
   // Generate chat transcript
   const generateChatTranscript = useCallback((): string => {
@@ -206,8 +275,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       const preview = await fetchPreview();
 
       if (preview.completeness_percentage < 100) {
-        setOpenGenerate(false);
-        setOpenPartialConfirm(true);
+        generateModal.closeModal();
+        partialConfirmModal.openModal();
       } else {
         await confirmGenerateCRS(preview);
       }
@@ -218,15 +287,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         variant: "destructive",
       });
     }
-  }, [fetchPreview]);
+  }, [fetchPreview, generateModal, partialConfirmModal, toast]);
 
   const confirmGenerateCRS = useCallback(
     async (preview: any) => {
       try {
         const { crs, isPartial } = await generateCRS(preview);
-        setOpenPartialConfirm(false);
-        setOpenGenerate(false);
-        setOpenDraft(true);
+        partialConfirmModal.closeModal();
+        generateModal.closeModal();
+        draftModal.openModal();
 
         toast({
           title: "Success",
@@ -242,18 +311,18 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         });
       }
     },
-    [generateCRS]
+    [generateCRS, partialConfirmModal, generateModal, draftModal, toast]
   );
 
   const handleContinueClarification = useCallback(() => {
-    setOpenPartialConfirm(false);
+    partialConfirmModal.closeModal();
     setPreviewData(null);
-  }, [setPreviewData]);
+  }, [setPreviewData, partialConfirmModal]);
 
   const handleSubmitForReview = useCallback(async () => {
     try {
       await submitForReview();
-      setOpenDraft(false);
+      draftModal.closeModal();
       toast({
         title: "Success",
         description: "CRS submitted successfully! Your document is now under review by the Business Analyst. You can continue chatting while waiting for the review.",
@@ -265,12 +334,12 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         variant: "destructive",
       });
     }
-  }, [submitForReview]);
+  }, [submitForReview, draftModal, toast]);
 
   const handleRegenerate = useCallback(() => {
-    setOpenDraft(false);
-    setOpenGenerate(true);
-  }, []);
+    draftModal.closeModal();
+    generateModal.openModal();
+  }, [draftModal, generateModal]);
 
   const handleSwapSide = useCallback(() => {
     setIsChatOnRight(prev => !prev);
@@ -287,8 +356,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           chat={chat}
           crsId={latestCRS?.id}
           chatTranscript={generateChatTranscript()}
-          onGenerateCRS={() => setOpenGenerate(true)}
-          onViewCRS={() => setOpenDraft(true)}
+          onGenerateCRS={() => generateModal.openModal()}
+          onViewCRS={() => draftModal.openModal()}
           onSubmitForReview={handleSubmitForReview}
           onRegenerate={handleRegenerate}
           onStatusUpdate={loadCRS}
@@ -312,8 +381,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           canGenerateCRS={canGenerateCRS}
           crsId={latestCRS?.id}
           chatTranscript={generateChatTranscript()}
-          onGenerateCRS={() => setOpenGenerate(true)}
-          onViewCRS={() => setOpenDraft(true)}
+          onGenerateCRS={() => generateModal.openModal()}
+          onViewCRS={() => draftModal.openModal()}
           onToggleDocument={() => setShowDocument(prev => !prev)}
           onSwapSide={handleSwapSide}
           isRejected={isRejected}
@@ -395,18 +464,18 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         )}
       </Group>
 
-      {/* Dialogs - Kept for compatibility/fallback */}
+      {/* Dialogs - Managed by ModalManager */}
       <CRSGenerateDialog
-        open={openGenerate}
-        onOpenChange={setOpenGenerate}
+        open={generateModal.isOpen}
+        onOpenChange={(open) => !open && generateModal.closeModal()}
         onGenerate={handleGenerateCRS}
         isGenerating={isGenerating}
         crsPattern={crsPattern}
       />
 
       <CRSDraftDialog
-        open={openDraft}
-        onOpenChange={setOpenDraft}
+        open={draftModal.isOpen}
+        onOpenChange={(open) => !open && draftModal.closeModal()}
         latestCRS={latestCRS}
         crsLoading={crsLoading}
         crsError={crsError}
@@ -417,8 +486,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
       {previewData && (
         <PartialCRSConfirmModal
-          open={openPartialConfirm}
-          onOpenChange={setOpenPartialConfirm}
+          open={partialConfirmModal.isOpen}
+          onOpenChange={(open) => !open && partialConfirmModal.closeModal()}
           completenessPercentage={previewData.completeness_percentage}
           missingRequiredFields={previewData.missing_required_fields}
           weakFields={previewData.weak_fields}
@@ -427,6 +496,9 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           isGenerating={isGenerating}
         />
       )}
+
+      {/* Performance Monitor (enable in development) */}
+      <CRSPerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
     </div>
   );
 }

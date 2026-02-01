@@ -25,6 +25,7 @@ export function useChatState() {
   const handleWebSocketMessage = useCallback((data: WebSocketMessageData, handlers: {
     onMessage: (msg: WebSocketMessageData) => void;
     onCRSComplete?: () => void;
+    onCRSUpdate?: (crsData: any) => void;
     onStatusUpdate?: (status: string, isGenerating: boolean) => void;
   }) => {
     if (data?.error || data?.type === "error") {
@@ -40,7 +41,12 @@ export function useChatState() {
       return;
     }
 
-    // Handle CRS completion
+    // Handle real-time CRS updates (new progressive update mechanism)
+    if (data?.crs?.action === "updated" && handlers.onCRSUpdate) {
+      handlers.onCRSUpdate(data.crs);
+    }
+
+    // Handle CRS completion (legacy fallback)
     if (data?.crs?.is_complete && handlers.onCRSComplete) {
       handlers.onCRSComplete();
     }
