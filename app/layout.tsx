@@ -1,4 +1,5 @@
 import { LayoutWrapper } from "@/components/LayoutWrapper";
+import { GoogleAuthProvider } from "@/components/providers/GoogleAuthProvider";
 import "./globals.css";
 import { geistSans } from "@/fonts";
 
@@ -19,9 +20,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/logo.png" type="image/png" />
       </head>
       <body className={`h-screen flex flex-col ${geistSans.className}`}>
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+        <GoogleAuthProvider>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </GoogleAuthProvider>
       </body>
     </html>
   );

@@ -92,6 +92,39 @@ export async function loginUser(
 }
 
 /**
+ * Login with Google token
+ */
+export async function loginWithGoogle(
+  token: string
+): Promise<LoginResponseDTO> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = parseApiError(errorData, response.status);
+      throw new AuthenticationError(errorMessage, response.status, errorData);
+    }
+
+    const data: LoginResponseDTO = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    throw new AuthenticationError(
+      error instanceof Error ? error.message : "Network error occurred"
+    );
+  }
+}
+
+/**
  * Register a new user
  */
 export async function registerUser(
