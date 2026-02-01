@@ -14,7 +14,8 @@ export interface ChatSessionDTO {
   status: "active" | "closed" | "completed";
   started_at: string;
   ended_at?: string | null;
-  crs_pattern?: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";  messages?: ChatMessageDTO[];}
+  crs_pattern?: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"; messages?: ChatMessageDTO[];
+}
 
 export interface ChatMessageDTO {
   id: number;
@@ -38,6 +39,7 @@ export interface SendMessagePayload {
 }
 
 export interface WebSocketMessageData {
+  type?: "message" | "status" | "error";
   id?: number;
   session_id?: number;
   sender_type?: SenderType;
@@ -45,8 +47,14 @@ export interface WebSocketMessageData {
   content?: string;
   timestamp?: string;
   error?: string;
+  status?: string; // e.g. "thinking", "drafting", "idle"
+  is_generating?: boolean;
   crs?: {
     is_complete?: boolean;
+    crs_document_id?: number;
+    version?: number;
+    summary_points?: string[];
+    quality_summary?: string;
   };
 }
 

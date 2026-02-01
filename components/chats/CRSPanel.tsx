@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CRSDTO } from "@/dto";
 import { CRSContentDisplay } from "@/components/shared/CRSContentDisplay";
 import { CRSContentEditor } from "@/components/shared/CRSContentEditor";
@@ -31,6 +31,10 @@ interface CRSPanelProps {
     isApproved?: boolean;
     chatTranscript?: string;
     crsId?: number;
+    recentInsights?: {
+        summary_points: string[];
+        quality_summary?: string;
+    } | null;
 }
 
 export function CRSPanel({
@@ -44,6 +48,7 @@ export function CRSPanel({
     onSubmitForReview,
     onRegenerate,
     onStatusUpdate,
+    recentInsights,
     canGenerateCRS,
     isRejected,
     isApproved,
@@ -54,6 +59,19 @@ export function CRSPanel({
     const [isEditing, setIsEditing] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [contentError, setContentError] = useState<string | null>(null);
+    const [showInsights, setShowInsights] = useState(true);
+
+    const parsedContent = useMemo(() => {
+        if (!latestCRS?.content) return null;
+        try {
+            return typeof latestCRS.content === 'string'
+                ? JSON.parse(latestCRS.content)
+                : latestCRS.content;
+        } catch (e) {
+            console.error("Failed to parse CRS content", e);
+            return null;
+        }
+    }, [latestCRS?.content]);
 
     const handleSaveContent = async (newContent: string) => {
         if (!latestCRS) return;
@@ -96,6 +114,20 @@ export function CRSPanel({
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Insights Toggle */}
+                    {recentInsights && (
+                        <Button
+                            onClick={() => setShowInsights(!showInsights)}
+                            variant="ghost"
+                            size="sm"
+                            className={`h-9 gap-2 rounded-xl px-4 font-bold text-[10px] tracking-tight transition-all ${showInsights ? "bg-amber-50 text-amber-700 hover:bg-amber-100" : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                                }`}
+                        >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                            Insights {showInsights ? "ON" : "OFF"}
+                        </Button>
+                    )}
+
                     {latestCRS && !isEditing && (
                         <>
                             {canEdit && (
@@ -170,6 +202,55 @@ export function CRSPanel({
             {/* Document Content and Comments area */}
             <div className="flex-1 flex overflow-hidden bg-gray-50/30 relative">
                 <motion.div layout className="flex-1 overflow-y-auto scroll-smooth t-custom-scrollbar">
+                    {/* Recent Insights Area */}
+                    <AnimatePresence>
+                        {recentInsights && showInsights && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-amber-50/50 border-b border-amber-100 overflow-hidden shrink-0"
+                            >
+                                <div className="p-8 max-w-4xl mx-auto space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                                                <Sparkles className="w-4 h-4 text-amber-600" />
+                                            </div>
+                                            <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">AI Extraction Insights</h3>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowInsights(false)}
+                                            className="text-amber-700/50 hover:text-amber-700 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    {recentInsights.quality_summary && (
+                                        <p className="text-sm text-amber-800 font-medium leading-relaxed italic border-l-2 border-amber-200 pl-4 py-1">
+                                            "{recentInsights.quality_summary}"
+                                        </p>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {recentInsights.summary_points.map((point, idx) => (
+                                            <motion.div
+                                                key={idx}
+                                                initial={{ x: -10, opacity: 0 }}
+                                                animate={{ x: 0, opacity: 1 }}
+                                                transition={{ delay: idx * 0.1 }}
+                                                className="flex items-start gap-3 bg-white/60 p-3 rounded-xl border border-amber-100/50 shadow-sm"
+                                            >
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                                <span className="text-xs text-amber-900 font-bold leading-tight">{point}</span>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -259,7 +340,7 @@ export function CRSPanel({
                                                 </div>
 
                                                 <h1 className="text-5xl font-black text-gray-900 tracking-tighter !mt-2 !mb-6 leading-[0.95]">
-                                                    {latestCRS.content?.project_details?.name || "Software Requirements"}
+                                                    {parsedContent?.project_title || "Software Requirements"}
                                                 </h1>
 
                                                 <div className="flex items-center gap-6 border-t border-gray-100 pt-6">

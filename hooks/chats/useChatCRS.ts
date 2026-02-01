@@ -126,12 +126,20 @@ export function useChatCRS({
   const isApproved = latestCRS?.status === "approved";
   const isRejected = latestCRS?.status === "rejected";
 
+  const [recentInsights, setRecentInsights] = useState<{
+    summary_points: string[];
+    quality_summary?: string;
+  } | null>(null);
+
   return {
     latestCRS,
     crsLoading,
     crsError,
     isGenerating,
+    setIsGenerating,
     previewData,
+    recentInsights,
+    setRecentInsights,
     loadCRS,
     fetchPreview,
     generateCRS,

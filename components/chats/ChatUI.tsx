@@ -68,7 +68,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     crsLoading,
     crsError,
     isGenerating,
+    setIsGenerating,
+    setRecentInsights,
     previewData,
+    recentInsights,
     loadCRS,
     fetchPreview,
     generateCRS,
@@ -95,11 +98,24 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const handleMessage = useCallback(
     (data: any) => {
       handleWebSocketMessage(data, {
-        onMessage: (msg) => addMessage(msg as any),
+        onMessage: (msg: any) => {
+          addMessage(msg);
+          // Update insights from message metadata if present
+          if (msg.crs?.summary_points?.length || msg.crs?.quality_summary) {
+            setRecentInsights({
+              summary_points: msg.crs.summary_points || [],
+              quality_summary: msg.crs.quality_summary
+            });
+          }
+        },
         onCRSComplete: loadCRS,
+        onStatusUpdate: (status, isGenerating) => {
+          setIsGenerating(isGenerating);
+          if (isGenerating) showAiTyping();
+        }
       });
     },
-    [handleWebSocketMessage, addMessage, loadCRS]
+    [handleWebSocketMessage, addMessage, loadCRS, setIsGenerating, setRecentInsights, showAiTyping]
   );
 
   // Initialize WebSocket connection
@@ -276,6 +292,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           onSubmitForReview={handleSubmitForReview}
           onRegenerate={handleRegenerate}
           onStatusUpdate={loadCRS}
+          recentInsights={recentInsights}
           canGenerateCRS={canGenerateCRS}
           isRejected={isRejected}
           isApproved={isApproved}
