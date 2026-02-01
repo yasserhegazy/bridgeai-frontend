@@ -83,7 +83,7 @@
   --sidebar-ring: #341BAB;
   --chat-bg: oklch(0.98 0.01 260);
   --chat-input: oklch(0.95 0.02 260);
-  --chat-user: #341BAB;
+  --chat-user: oklch(0.93 0.032 265.755);
 }
 
 .dark {
@@ -120,7 +120,7 @@
   --sidebar-ring: #8080F2;
   --chat-bg: oklch(0.1 0.05 265);
   --chat-input: oklch(0.15 0.05 265);
-  --chat-user: var(--primary);
+  --chat-user: oklch(0.93 0.032 265.755);
 }
 
 @layer base {

@@ -114,7 +114,7 @@ export function DashboardTab({
                 {stats.recent_chats.slice(0, 3).map((chat) => (
                   <Link
                     key={chat.id}
-                    href={`/chats/${chat.id}`}
+                    href={`/chats/${chat.id}?projectId=${projectId}`}
                     className="group relative bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover-lift flex flex-col justify-center min-h-[125px]"
                   >
                     <div className="flex items-center justify-between gap-3 mb-3">
