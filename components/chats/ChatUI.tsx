@@ -29,6 +29,7 @@ import {
   useChatState,
 } from "@/hooks";
 import { useCRSPatchApplicator } from "@/hooks/chats/useCRSPatchApplicator";
+import { useCRSStream } from "@/hooks/chats/useCRSStream";
 import { ChatSessionDTO, CurrentUserDTO, SendMessagePayload } from "@/dto";
 import { getAuthToken } from "@/services/token.service";
 import { useToast } from "@/components/ui/use-toast";
@@ -95,6 +96,108 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   // Initialize CRS patch applicator
   const { applyPatchToCRS, getMetrics } = useCRSPatchApplicator();
+  
+  // Initialize real-time CRS streaming (SSE)
+  const {
+    status: crsStreamStatus,
+    progress: crsProgress,
+    currentStep: crsStep,
+    error: crsStreamError,
+    retryCount: crsRetryCount,
+    isGenerating: isCRSGenerating,
+  } = useCRSStream({
+    sessionId: chat.id,
+    enabled: true,
+    onProgress: (event) => {
+      console.log("[CRS Stream] Progress:", event);
+      
+      // Update CRS template in real-time
+      if (event.crs_template) {
+        const updatedCRS = {
+          id: latestCRS?.id || event.crs_document_id || 0,
+          project_id: chat.project_id,
+          chat_session_id: chat.id,
+          status: (event.is_complete ? 'draft' : 'draft') as 'draft',
+          pattern: crsPattern,
+          version: latestCRS?.version || 1,
+          edit_version: latestCRS?.edit_version || 1,
+          content: typeof event.crs_template === 'string' ? event.crs_template : JSON.stringify(event.crs_template),
+          summary_points: event.summary_points || latestCRS?.summary_points || [],
+          created_at: latestCRS?.created_at || new Date().toISOString(),
+          updated_at: event.timestamp || new Date().toISOString(),
+          created_by: latestCRS?.created_by || null,
+        };
+        
+        setLatestCRS(updatedCRS);
+      }
+      
+      // Update insights
+      if (event.summary_points || event.overall_summary) {
+        setRecentInsights({
+          summary_points: event.summary_points || [],
+          quality_summary: event.overall_summary || undefined,
+        });
+      }
+      
+      // Show progress toast for major steps
+      if (event.step && event.message) {
+        toast({
+          title: "CRS Generation Progress",
+          description: `${event.step}: ${event.message}`,
+          duration: 2000,
+        });
+      }
+    },
+    onComplete: (event) => {
+      console.log("[CRS Stream] Complete:", event);
+      
+      // Reload CRS from database to get the persisted version
+      if (event.crs_document_id) {
+        loadCRS();
+      } else {
+        // Fallback: Update local state if no document ID
+        if (event.crs_template) {
+          const finalCRS = {
+            id: event.crs_document_id || latestCRS?.id || 0,
+            project_id: chat.project_id,
+            chat_session_id: chat.id,
+            status: 'draft' as const,
+            pattern: crsPattern,
+            version: latestCRS?.version || 1,
+            edit_version: latestCRS?.edit_version || 1,
+            content: typeof event.crs_template === 'string' ? event.crs_template : JSON.stringify(event.crs_template),
+            summary_points: event.summary_points || [],
+            created_at: latestCRS?.created_at || new Date().toISOString(),
+            updated_at: event.timestamp || new Date().toISOString(),
+            created_by: latestCRS?.created_by || null,
+          };
+          
+          setLatestCRS(finalCRS);
+        }
+      }
+      
+      // Show completion notification
+      if (event.is_complete) {
+        toast({
+          title: "CRS Generation Complete",
+          description: "Your Computer Requirements Specification is ready for review.",
+          duration: 5000,
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("[CRS Stream] Error:", error);
+      toast({
+        title: "CRS Generation Error",
+        description: error,
+        variant: "destructive",
+        duration: 5000,
+      });
+    },
+    onUpdate: (crsTemplate) => {
+      // Real-time template updates handled in onProgress
+    },
+  });
 
   // Initialize messages management
   const { messages, isOwnMessage, addMessage, addPendingMessage, markPendingAsFailed } =
@@ -352,7 +455,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           latestCRS={latestCRS}
           crsLoading={crsLoading}
           crsError={crsError}
-          isGenerating={isGenerating}
+          isGenerating={isGenerating || isCRSGenerating}
           chat={chat}
           crsId={latestCRS?.id}
           chatTranscript={generateChatTranscript()}
@@ -365,6 +468,12 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           canGenerateCRS={canGenerateCRS}
           isRejected={isRejected}
           isApproved={isApproved}
+          // Real-time streaming status
+          streamStatus={crsStreamStatus}
+          streamProgress={crsProgress}
+          streamStep={crsStep}
+          streamError={crsStreamError}
+          streamRetryCount={crsRetryCount}
         />
       </div>
     </Panel>
