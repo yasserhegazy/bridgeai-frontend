@@ -76,3 +76,5 @@ export { useChatCRS } from "./chats/useChatCRS";
 export { useChatInput } from "./chats/useChatInput";
 export { useChatScroll } from "./chats/useChatScroll";
 export { useChatState } from "./chats/useChatState";
+export { useCRSStream } from "./chats/useCRSStream";
+export type { CRSStreamEvent, CRSStreamStatus } from "./chats/useCRSStream";
