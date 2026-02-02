@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
 import { FormField } from "@/components/auth/FormField";
@@ -58,6 +59,15 @@ export default function LoginPage() {
             required
             disabled={isLoading}
           />
+
+          <div className="flex justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-primary hover:underline hover:text-primary/80"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {error && <ErrorAlert message={error} />}
