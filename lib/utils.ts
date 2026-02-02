@@ -21,6 +21,11 @@ export function getRoleBasedRedirectPath(role: string): string {
  * @returns Cookie value or null if not found
  */
 export function getCookie(name: string): string | null {
+  // Check if running in browser (not SSR)
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
