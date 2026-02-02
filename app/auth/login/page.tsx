@@ -88,9 +88,11 @@ export default function LoginPage() {
                 }
               }}
               onError={() => {
-                console.log('Login Failed');
+                console.error('Google Login Failed');
               }}
-              useOneTap
+              useOneTap={false}
+              auto_select={false}
+              context="signin"
             />
           ) : (
             <div className="text-xs text-muted-foreground text-center p-2 border rounded bg-muted/50">
