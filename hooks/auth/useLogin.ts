@@ -21,6 +21,7 @@ interface UseLoginReturn {
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequestDTO) => Promise<void>;
+  loginWithGoogle: (token: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -67,10 +68,39 @@ export function useLogin(): UseLoginReturn {
     setError(null);
   }, []);
 
+  const loginWithGoogle = useCallback(
+    async (token: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await import("../../services/auth.service").then((m) =>
+          m.loginWithGoogle(token)
+        );
+
+        storeAuthToken(response.access_token);
+        storeUserRole(response.role as "client" | "ba");
+        notifyAuthStateChange();
+
+        const redirectPath = getRoleBasedRedirectPath(response.role);
+        router.push(redirectPath);
+      } catch (err) {
+        if (err instanceof AuthenticationError) {
+          setError(err.message);
+        } else {
+          setError("An unexpected error occurred during Google login");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router]
+  );
+
   return {
     isLoading,
     error,
     login,
+    loginWithGoogle,
     clearError,
   };
 }

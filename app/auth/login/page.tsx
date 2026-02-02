@@ -13,12 +13,13 @@ import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
 import { FormField } from "@/components/auth/FormField";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { useLogin } from "@/hooks/auth/useLogin";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { isLoading, error, login } = useLogin();
+  const { isLoading, error, login, loginWithGoogle } = useLogin();
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -64,6 +65,41 @@ export default function LoginPage() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-center w-full">
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
+            process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID_HERE" &&
+            process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_CLIENT_ID" ? (
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                if (credentialResponse.credential) {
+                  loginWithGoogle(credentialResponse.credential);
+                }
+              }}
+              onError={() => {
+                console.error('Google Login Failed');
+              }}
+              useOneTap={false}
+              auto_select={false}
+              context="signin"
+            />
+          ) : (
+            <div className="text-xs text-muted-foreground text-center p-2 border rounded bg-muted/50">
+              Google Login disabled (Client ID not configured)
+            </div>
+          )}
+        </div>
 
         <div className="mt-4 text-center text-sm">
           <span className="text-muted-foreground">Don&apos;t have an account? </span>
