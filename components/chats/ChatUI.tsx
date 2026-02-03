@@ -363,11 +363,12 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     async (payload: SendMessagePayload, pendingLocal: any) => {
       if (!isConnected()) {
         handleError("Not connected. Please wait for the chat to reconnect.");
-        markPendingAsFailed(pendingLocal._localId);
         return;
       }
 
-      const pending = addPendingMessage(payload.content, payload.sender_type);
+      // Add the pending message from useChatInput to the messages list
+      // This is the optimistic UI update
+      addMessage(pendingLocal);
       showAiTyping();
       
       // Resume CRS generation if it was paused
@@ -380,10 +381,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         sendMessage(payload);
       } catch (err) {
         handleError(err instanceof Error ? err.message : "Failed to send message");
-        markPendingAsFailed(pending._localId!);
+        markPendingAsFailed(pendingLocal._localId);
       }
     },
-    [isConnected, sendMessage, addPendingMessage, markPendingAsFailed, handleError, showAiTyping, isCRSPaused, resumeGeneration]
+    [isConnected, sendMessage, addMessage, markPendingAsFailed, handleError, showAiTyping, isCRSPaused, resumeGeneration]
   );
 
   // Initialize chat input

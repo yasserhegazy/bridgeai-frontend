@@ -28,7 +28,7 @@ export function useChatMessages({
   // Add incoming message from WebSocket
   const addMessage = useCallback((incoming: ChatMessageDTO) => {
     setMessages((prev) => {
-      // Avoid duplicates
+      // Avoid duplicates by ID
       const exactIdx = prev.findIndex((m) => m.id === incoming.id);
       if (exactIdx >= 0) {
         const updated = [...prev];
@@ -37,12 +37,12 @@ export function useChatMessages({
       }
 
       // Replace matching pending local message
+      // Match by content and sender_type (ignore sender_id as pending has 0)
       const pendingIdx = prev.findIndex(
         (m) =>
           m.pending &&
           m.sender_type === incoming.sender_type &&
-          m.content === incoming.content &&
-          (m.sender_id ?? currentUserId) === (incoming.sender_id ?? currentUserId)
+          m.content === incoming.content
       );
 
       if (pendingIdx >= 0) {
