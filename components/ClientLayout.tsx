@@ -16,7 +16,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     const parts = pathname.split("/");
     const idIndex = parts.indexOf("teams") + 1;
     const teamIdFromUrl = idIndex > 0 && idIndex < parts.length ? parts[idIndex] : "";
-    
+
     // Use URL team ID first, fallback to stored team ID
     const currentTeamId = teamIdFromUrl || getCurrentTeamId() || "";
 
@@ -27,7 +27,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         }
     }, [teamIdFromUrl]);
 
-    const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications";
+    const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications" || pathname === "/profile";
 
     return (
         <NotificationProvider>
@@ -40,8 +40,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             {/* Content area with sidebar + main */}
             <div className="flex flex-1 overflow-hidden">
                 {!hideSidebar && (
-                    <Sidebar 
-                        currentTeamId={currentTeamId} 
+                    <Sidebar
+                        currentTeamId={currentTeamId}
                         isCollapsed={isCollapsed}
                         onToggle={() => setIsCollapsed(!isCollapsed)}
                     />
