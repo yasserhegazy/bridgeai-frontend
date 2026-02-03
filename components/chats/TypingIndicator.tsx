@@ -15,7 +15,7 @@ export function TypingIndicator() {
       exit={{ opacity: 0, y: -10 }}
       className="flex items-start gap-3"
     >
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold">
         AI
       </div>
       <div className="bg-gray-200 rounded-2xl px-4 py-3 max-w-[70%]">

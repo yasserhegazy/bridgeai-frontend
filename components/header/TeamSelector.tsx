@@ -8,6 +8,7 @@ import {
   Search,
   Plus,
   Settings,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -123,8 +124,8 @@ export function TeamSelector({
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#341BAB]"></div>
+            <div className="flex justify-center items-center py-12 flex-1">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredTeams.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-gray-500">
@@ -216,9 +217,8 @@ function TeamItem({
     <li>
       <div
         onClick={onClick}
-        className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors duration-200 ${
-          isActive ? "bg-[#edeaff]" : "hover:bg-[#f5f3ff]"
-        }`}
+        className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors duration-200 ${isActive ? "bg-[#edeaff]" : "hover:bg-[#f5f3ff]"
+          }`}
       >
         <div className="flex items-center gap-2 text-sm sm:text-[15px] font-medium text-gray-700 hover:text-[#341BAB]">
           <Users className="w-4 h-4 text-gray-500 shrink-0" /> {name}
