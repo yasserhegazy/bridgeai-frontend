@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { COLORS } from "@/constants";
 import { CurrentUserDTO } from "@/dto/auth.dto";
+import { getAvatarUrl } from "@/services/profile.service";
 
 interface UserMenuProps {
   user: CurrentUserDTO | null;
@@ -35,17 +36,33 @@ function getUserInitials(fullName?: string): string {
 }
 
 export function UserMenu({ user, onLogout, onProfileClick }: UserMenuProps) {
+  const avatarUrl = getAvatarUrl(user?.avatar_url);
+  // Add cache buster using a simple hash of the avatar URL to force reload
+  // For Google avatars, use as-is since they have their own versioning
+  const displayUrl = avatarUrl && user?.avatar_url && !user.avatar_url.startsWith("http") 
+    ? `${avatarUrl}?v=${user.avatar_url.split('/').pop()}` 
+    : avatarUrl;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          className="rounded-full w-8 h-8 flex items-center justify-center p-0 cursor-pointer hover:opacity-80 transition-opacity"
-          style={{ backgroundColor: COLORS.primary, color: COLORS.textLight }}
+          className="rounded-full w-8 h-8 flex items-center justify-center p-0 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
+          style={{ backgroundColor: displayUrl ? "transparent" : COLORS.primary, color: COLORS.textLight }}
           onClick={onProfileClick}
         >
-          <span className="font-semibold text-sm">
-            {getUserInitials(user?.full_name)}
-          </span>
+          {displayUrl ? (
+            <img
+              src={displayUrl}
+              alt={user?.full_name || "User avatar"}
+              key={user?.avatar_url}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <span className="font-semibold text-sm">
+              {getUserInitials(user?.full_name)}
+            </span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

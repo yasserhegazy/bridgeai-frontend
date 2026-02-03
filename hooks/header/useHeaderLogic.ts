@@ -78,8 +78,17 @@ export function useHeaderLogic(
   }, [initialTeamId, pathname]);
 
   // Data fetching
-  const { user: currentUser } = useCurrentUser(!!isAuthenticated);
+  const { user: currentUser, refresh: refreshUser } = useCurrentUser(!!isAuthenticated);
   const { teams, isLoading: loadingTeams } = useTeamsList(!!isAuthenticated);
+
+  // Listen for avatar updates and refresh user data
+  useEffect(() => {
+    const handleAvatarUpdate = () => {
+      refreshUser();
+    };
+    window.addEventListener("avatar-updated", handleAvatarUpdate);
+    return () => window.removeEventListener("avatar-updated", handleAvatarUpdate);
+  }, [refreshUser]);
 
   // Derived state
   const currentTeamName =

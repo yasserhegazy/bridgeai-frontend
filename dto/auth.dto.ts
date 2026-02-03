@@ -33,6 +33,7 @@ export interface CurrentUserDTO {
   id: number;
   email: string;
   full_name: string;
+  avatar_url?: string | null;
   role: string;
   created_at: string;
 }
