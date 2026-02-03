@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CardGrid } from "@/components/shared/CardGrid";
 import { CreateTeamModal } from "@/components/teams/CreateTeamModal";
+import { EmptyTeams } from "@/components/teams/EmptyTeams";
 import { TeamsFilters } from "@/components/teams/TeamsFilters";
 import { Pagination } from "@/components/shared/Pagination";
 import { useTeamsList, useModal } from "@/hooks";
@@ -27,6 +28,7 @@ export default function TeamsList() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
+    teams,
     filteredTeams,
     isLoading,
     error,
@@ -108,8 +110,12 @@ export default function TeamsList() {
       {/* Error State */}
       {error && !isLoading && <ErrorState message={error} />}
 
-      {/* Empty State */}
-      {!isLoading && !error && filteredTeams.length === 0 && (
+      {/* Empty States */}
+      {!isLoading && !error && teams.length === 0 && (
+        <EmptyTeams onCreateTeam={openModal} />
+      )}
+
+      {!isLoading && !error && teams.length > 0 && filteredTeams.length === 0 && (
         <EmptyState message="No teams found matching your filters." />
       )}
 
