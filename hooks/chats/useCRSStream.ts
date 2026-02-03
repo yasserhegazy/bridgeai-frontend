@@ -39,6 +39,7 @@ export type CRSStreamEvent = {
 };
 
 export type CRSStreamStatus = "idle" | "connecting" | "connected" | "error" | "closed";
+export type CRSGenerationState = "idle" | "generating" | "paused" | "complete";
 
 interface UseCRSStreamOptions {
   sessionId: number | null;
@@ -62,11 +63,15 @@ export function useCRSStream({
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
+  const [generationState, setGenerationState] = useState<CRSGenerationState>("idle");
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
+  const lastUpdateTimeRef = useRef<number>(Date.now());
+  const autoPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 5;
+  const AUTO_PAUSE_DELAY = 5000; // 5 seconds of inactivity
 
   // Connect/disconnect when sessionId or enabled changes
   useEffect(() => {
@@ -104,6 +109,8 @@ export function useCRSStream({
             setProgress(0);
             setCurrentStep("Started");
             setRetryCount(0);
+            setGenerationState("generating");
+            lastUpdateTimeRef.current = Date.now();
             break;
 
           case "crs_progress":
@@ -117,8 +124,23 @@ export function useCRSStream({
               setCurrentStep(data.message);
             }
 
-            // Update CRS template if provided
-            if (data.crs_template && onUpdate) {
+            // Track activity and reset auto-pause timer
+            lastUpdateTimeRef.current = Date.now();
+            setGenerationState("generating");
+            
+            // Clear existing auto-pause timeout
+            if (autoPauseTimeoutRef.current) {
+              clearTimeout(autoPauseTimeoutRef.current);
+            }
+            
+            // Set new auto-pause timeout
+            autoPauseTimeoutRef.current = setTimeout(() => {
+              console.log('[CRS Stream] Auto-pausing due to inactivity');
+              setGenerationState("paused");
+            }, AUTO_PAUSE_DELAY);
+
+            // Update CRS template if provided (only when not paused)
+            if (data.crs_template && onUpdate && generationState !== "paused") {
               onUpdate(data.crs_template);
             }
 
@@ -132,6 +154,12 @@ export function useCRSStream({
           case "crs_updated":
             setProgress(100);
             setCurrentStep(data.is_complete ? "Complete" : "Updated");
+            setGenerationState("complete");
+            
+            // Clear auto-pause timeout
+            if (autoPauseTimeoutRef.current) {
+              clearTimeout(autoPauseTimeoutRef.current);
+            }
 
             // Update final CRS template
             if (data.crs_template && onUpdate) {
@@ -215,6 +243,10 @@ export function useCRSStream({
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
+      if (autoPauseTimeoutRef.current) {
+        clearTimeout(autoPauseTimeoutRef.current);
+        autoPauseTimeoutRef.current = null;
+      }
     };
   }, [sessionId, enabled]); // Only re-run when sessionId or enabled changes
 
@@ -223,6 +255,12 @@ export function useCRSStream({
     reconnectAttemptsRef.current = 0;
     setStatus("idle"); // Trigger useEffect to reconnect
   }, []);
+  
+  const resumeGeneration = useCallback(() => {
+    console.log('[CRS Stream] Resuming generation');
+    setGenerationState("generating");
+    lastUpdateTimeRef.current = Date.now();
+  }, []);
 
   return {
     status,
@@ -230,8 +268,11 @@ export function useCRSStream({
     currentStep,
     error,
     retryCount,
+    generationState,
     reconnect,
+    resumeGeneration,
     isConnected: status === "connected",
-    isGenerating: progress > 0 && progress < 100,
+    isGenerating: progress > 0 && progress < 100 && generationState !== "paused",
+    isPaused: generationState === "paused",
   };
 }
