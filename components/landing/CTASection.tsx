@@ -13,8 +13,6 @@ export function CTASection() {
       <div className="absolute inset-0 hero-modern-bg opacity-30" />
 
       {/* Decorative Orbs - Monochromatic */}
-      <div className="orb orb-violet w-[400px] h-[400px] top-[10%] left-[5%]" style={{ opacity: 0.15 }} />
-      <div className="orb orb-secondary w-[300px] h-[300px] bottom-[20%] right-[10%]" style={{ animationDelay: '-7s', opacity: 0.15 }} />
 
       <div className="container mx-auto max-w-5xl px-6 text-center relative z-10">
         <FadeInSection>

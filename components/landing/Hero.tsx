@@ -10,21 +10,8 @@ export const Hero = () => {
     <section className="relative overflow-hidden min-h-[90vh] flex flex-col items-center justify-center text-center hero-modern-bg pt-32 pb-20 px-4">
 
       {/* Animated Orbs Background - Monochromatic violet palette */}
-      <div className="orb orb-violet w-[500px] h-[500px] top-[-10%] left-[-10%]" />
-      <div className="orb orb-secondary w-[400px] h-[400px] bottom-[10%] right-[-5%]" style={{ animationDelay: '-5s' }} />
-      <div className="orb orb-violet w-[300px] h-[300px] top-[40%] right-[20%]" style={{ animationDelay: '-10s', opacity: 0.2 }} />
 
       {/* Badge */}
-      <motion.div
-        className="glass-modern px-5 py-2.5 rounded-full text-muted-foreground text-xs font-semibold tracking-wider mb-8 flex items-center gap-3 z-10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Sparkles className="w-4 h-4 text-primary" />
-        <span className="text-gradient-custom font-bold">V2.0</span>
-        <span className="text-muted-foreground uppercase">Precision-Driven AI Requirements</span>
-      </motion.div>
 
       {/* Headline */}
       <motion.h1
