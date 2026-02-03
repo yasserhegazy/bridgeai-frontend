@@ -100,11 +100,16 @@ export function CRSPanel({
     const [showInsights, setShowInsights] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const previousVersionRef = useRef<number | undefined>(latestCRS?.edit_version);
+    const [lockedSections, setLockedSections] = useState<Set<string>>(new Set());
+    const VERSION_DELTA_THRESHOLD = 2; // Only show animations for changes ≥2 versions
 
-    // Detect CRS updates and show visual feedback
+    // Detect CRS updates and show visual feedback (only for significant changes)
     useEffect(() => {
         if (latestCRS?.edit_version && previousVersionRef.current !== undefined) {
-            if (latestCRS.edit_version !== previousVersionRef.current) {
+            const versionDelta = latestCRS.edit_version - previousVersionRef.current;
+            
+            // Only show update notification if not editing and version changed significantly
+            if (versionDelta >= VERSION_DELTA_THRESHOLD && !isEditing) {
                 setIsUpdating(true);
 
                 // Show prominent toast notification
@@ -119,7 +124,7 @@ export function CRSPanel({
             }
         }
         previousVersionRef.current = latestCRS?.edit_version;
-    }, [latestCRS?.edit_version]);
+    }, [latestCRS?.edit_version, isEditing]);
 
     const parsedContent = useMemo(() => {
         const rawContent = latestCRS?.content;
@@ -145,6 +150,20 @@ export function CRSPanel({
 
         return contentObj;
     }, [latestCRS?.content, isGenerating]);
+    
+    // Lock document updates when editing to prevent conflicts
+    const handleStartEditing = () => {
+        setIsEditing(true);
+        // Lock all sections while in edit mode
+        setLockedSections(new Set(['*'])); // '*' means all sections locked
+        console.log('[CRSPanel] Edit mode enabled - updates locked');
+    };
+    
+    const handleCancelEditing = () => {
+        setIsEditing(false);
+        setLockedSections(new Set());
+        console.log('[CRSPanel] Edit mode disabled - updates unlocked');
+    };
 
     const handleSaveContent = async (newContent: string) => {
         if (!latestCRS) return;
@@ -167,7 +186,12 @@ export function CRSPanel({
                 newContent,
                 latestCRS.edit_version || 0
             );
+            
+            // Exit edit mode and unlock sections
             setIsEditing(false);
+            setLockedSections(new Set());
+            console.log('[CRSPanel] Save complete - updates unlocked');
+            
             if (onStatusUpdate) onStatusUpdate();
 
             toast.success("Changes saved successfully!");
@@ -238,7 +262,7 @@ export function CRSPanel({
                         <>
                             {canEdit && (
                                 <Button
-                                    onClick={() => setIsEditing(true)}
+                                    onClick={handleStartEditing}
                                     variant="ghost"
                                     size="sm"
                                     className="h-9 gap-2 rounded-xl px-4 text-gray-600 hover:text-primary hover:bg-primary/5 font-bold text-[10px] tracking-tight transition-all"
@@ -471,7 +495,7 @@ export function CRSPanel({
                                         <CRSContentEditor
                                             initialContent={latestCRS.content}
                                             onSave={handleSaveContent}
-                                            onCancel={() => setIsEditing(false)}
+                                            onCancel={handleCancelEditing}
                                             onUpdate={(newData) => {
                                                 // We could potentially update a local state here for live preview
                                                 // but since we are replacing the view with the editor, 

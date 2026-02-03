@@ -99,6 +99,38 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   // Initialize CRS patch applicator
   const { applyPatchToCRS, getMetrics } = useCRSPatchApplicator();
 
+  // Debounced CRS update to reduce re-renders
+  const pendingCRSUpdateRef = useRef<any>(null);
+  const crsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const DEBOUNCE_DELAY = 300; // ms
+  
+  const debouncedSetCRS = useCallback((updateFn: (prev: any) => any) => {
+    // Cancel pending update
+    if (crsUpdateTimeoutRef.current) {
+      clearTimeout(crsUpdateTimeoutRef.current);
+    }
+    
+    // Store the update function
+    pendingCRSUpdateRef.current = updateFn;
+    
+    // Schedule update
+    crsUpdateTimeoutRef.current = setTimeout(() => {
+      if (pendingCRSUpdateRef.current) {
+        setLatestCRS(pendingCRSUpdateRef.current);
+        pendingCRSUpdateRef.current = null;
+      }
+    }, DEBOUNCE_DELAY);
+  }, [setLatestCRS]);
+  
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (crsUpdateTimeoutRef.current) {
+        clearTimeout(crsUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Initialize real-time CRS streaming (SSE)
   const {
     status: crsStreamStatus,
@@ -107,12 +139,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     error: crsStreamError,
     retryCount: crsRetryCount,
     isGenerating: isCRSGenerating,
+    generationState: crsGenerationState,
+    resumeGeneration,
+    isPaused: isCRSPaused,
   } = useCRSStream({
     sessionId: chat.id,
     enabled: true,
     onUpdate: (partialTemplate) => {
-      // High-frequency update for streaming "Ghost Writing"
-      setLatestCRS((prev: any) => {
+      // Debounced update for streaming "Ghost Writing"
+      debouncedSetCRS((prev: any) => {
         const nextContent = typeof partialTemplate === 'string'
           ? partialTemplate
           : JSON.stringify(partialTemplate);
@@ -334,6 +369,12 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
       const pending = addPendingMessage(payload.content, payload.sender_type);
       showAiTyping();
+      
+      // Resume CRS generation if it was paused
+      if (isCRSPaused && resumeGeneration) {
+        console.log('[ChatUI] Resuming CRS generation on new message');
+        resumeGeneration();
+      }
 
       try {
         sendMessage(payload);
@@ -342,7 +383,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         markPendingAsFailed(pending._localId!);
       }
     },
-    [isConnected, sendMessage, addPendingMessage, markPendingAsFailed, handleError, showAiTyping]
+    [isConnected, sendMessage, addPendingMessage, markPendingAsFailed, handleError, showAiTyping, isCRSPaused, resumeGeneration]
   );
 
   // Initialize chat input
