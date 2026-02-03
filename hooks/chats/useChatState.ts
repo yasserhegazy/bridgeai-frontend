@@ -25,28 +25,41 @@ export function useChatState() {
   const handleWebSocketMessage = useCallback((data: WebSocketMessageData, handlers: {
     onMessage: (msg: WebSocketMessageData) => void;
     onCRSComplete?: () => void;
+    onCRSUpdate?: (crsData: any) => void;
+    onStatusUpdate?: (status: string, isGenerating: boolean) => void;
   }) => {
-    if (data?.error) {
-      setWsError(data.error);
+    if (data?.error || data?.type === "error") {
+      setWsError(data.error || "An unknown error occurred");
+      setIsAiTyping(false);
+      if (handlers.onStatusUpdate) handlers.onStatusUpdate("idle", false);
       return;
     }
 
-    // Handle CRS completion
+    // Handle status updates
+    if (data?.type === "status" && handlers.onStatusUpdate) {
+      handlers.onStatusUpdate(data.status || "idle", !!data.is_generating);
+      return;
+    }
+
+    // Handle real-time CRS updates (new progressive update mechanism)
+    if (data?.crs?.action === "updated" && handlers.onCRSUpdate) {
+      handlers.onCRSUpdate(data.crs);
+    }
+
+    // Handle CRS completion (legacy fallback)
     if (data?.crs?.is_complete && handlers.onCRSComplete) {
       handlers.onCRSComplete();
     }
 
-    // Validate message format
-    if (typeof data?.id !== "number" || !data.content) {
-      return;
+    // Validate message format for standard messages
+    if (data?.type === "message" || (typeof data?.id === "number" && data.content)) {
+      // Hide typing indicator and reset drafting pulse when AI responds
+      if (data.sender_type === "ai") {
+        setIsAiTyping(false);
+        if (handlers.onStatusUpdate) handlers.onStatusUpdate("idle", false);
+      }
+      handlers.onMessage(data);
     }
-
-    // Hide typing indicator when AI responds
-    if (data.sender_type === "ai") {
-      setIsAiTyping(false);
-    }
-
-    handlers.onMessage(data);
   }, []);
 
   const showAiTyping = useCallback(() => {

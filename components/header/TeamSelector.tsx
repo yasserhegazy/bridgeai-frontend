@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Users,
   ChevronDown,
@@ -32,6 +32,41 @@ export function TeamSelector({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  // Close dropdown on escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
 
   const filteredTeams = teams.filter((team) =>
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -46,7 +81,7 @@ export function TeamSelector({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center justify-between h-12 px-4 w-70 hover:bg-gray-100 cursor-pointer transition-colors"
@@ -65,7 +100,7 @@ export function TeamSelector({
       </button>
 
       {open && (
-        <div className="absolute top-8 left-0 w-90 mt-4 bg-white shadow-md border rounded-lg p-4 z-50 min-h-[400px] flex flex-col">
+        <div className="absolute top-full left-0 w-90 mt-2 bg-white shadow-xl border rounded-lg p-4 z-[100] min-h-[400px] flex flex-col">
           {/* Top bar */}
           <div className="flex items-center gap-2 mb-5">
             <div className="relative flex-1">

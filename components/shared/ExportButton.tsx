@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,8 @@ interface ExportButtonProps {
   content: string;
   filename?: string;
   crsId?: number;
+  variant?: "default" | "outline" | "ghost";
+  className?: string;
 }
 
 export function ExportButton({
@@ -24,6 +27,8 @@ export function ExportButton({
   content,
   filename = "export",
   crsId,
+  variant = "outline",
+  className,
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,21 +65,21 @@ export function ExportButton({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
+            variant={variant}
             size="sm"
             disabled={isExporting || !content}
-            className="gap-2"
+            className={cn("gap-3", className)}
           >
             {isExporting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Download className="h-4 w-4" />
             )}
-            Export
+            {variant === "ghost" ? "Export Document" : "Export"}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

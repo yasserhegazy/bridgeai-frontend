@@ -80,7 +80,8 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
+      {/* Main Review Dialog */}
+      <Dialog open={open && !showRejectDialog} onOpenChange={onClose}>
         <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
           <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
             <DialogTitle className="flex items-center justify-between">

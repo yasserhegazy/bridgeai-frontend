@@ -7,7 +7,7 @@
 
 import { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import { motion } from "framer-motion";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, AlertCircle } from "lucide-react";
 import { ConnectionState, CRSDTO } from "@/dto";
 
 interface ChatInputAreaProps {
@@ -41,80 +41,100 @@ export function ChatInputArea({
   const canSend = input.trim() && !isDisabled;
 
   return (
-    <div className="p-4 bg-gradient-to-t from-chat-bg via-chat-bg to-transparent">
+    <div className="px-8 py-8 bg-white border-t border-gray-100 z-10 transition-all">
       {isUnderReview && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
-          <div className="font-semibold mb-1">CRS Under Review</div>
-          <div className="text-xs">
-            Your CRS is currently being reviewed by the BA. You can continue chatting while waiting
-            for follow-up questions or new features.
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="mb-6 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl text-blue-900 shadow-sm overflow-hidden"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+              <span className="text-blue-600 font-black text-lg italic">i</span>
+            </div>
+            <div>
+              <div className="font-bold text-sm tracking-tight">Active Review Phase</div>
+              <div className="text-xs text-blue-800/60 mt-1 leading-relaxed font-medium">
+                The current specification is with the Business Analyst. You can continue detailing your requirements below.
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {isRejected && latestCRS?.rejection_reason && (
-        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
-          <div className="font-semibold mb-1">Your CRS was rejected</div>
-          <div className="text-xs">Feedback: {latestCRS.rejection_reason}</div>
-          <div className="text-xs mt-2">
-            Please review the feedback and regenerate an improved version.
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="mb-6 p-5 bg-red-50/50 border border-red-100 rounded-2xl text-red-900 shadow-sm overflow-hidden"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-red-900 tracking-tight">Revision Necessary</div>
+              <div className="text-xs text-red-800/60 mt-1 whitespace-pre-wrap font-medium leading-relaxed">{latestCRS.rejection_reason}</div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full max-w-4xl mx-auto"
-      >
-        <div className="relative bg-chat-input rounded-2xl border border-border shadow-lg shadow-primary/5 transition-shadow duration-200 focus-within:shadow-xl focus-within:shadow-primary/10 focus-within:border-primary/20">
+      <div className="w-full max-w-[1200px] mx-auto relative group">
+        <div className="flex items-center gap-2 bg-gray-50/80 rounded-[32px] border border-gray-200/60 p-2 transition-all duration-500 focus-within:bg-white focus-within:border-primary/40 focus-within:shadow-[0_20px_50px_-12px_rgba(32,32,32,0.1)]">
           <textarea
             ref={textareaRef}
             value={input}
             onChange={onInputChange}
             onKeyDown={onKeyDown}
-            placeholder="Message..."
+            placeholder="Type your requirements or feedback..."
             disabled={isDisabled}
             rows={1}
-            className="w-full resize-none bg-transparent px-5 py-4 pr-14 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 min-h-[56px] max-h-[200px]"
+            className="flex-1 resize-none bg-transparent px-6 py-4 text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:opacity-50 min-h-[56px] max-h-[200px] text-base leading-snug t-custom-scrollbar font-medium"
           />
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onSend}
-            disabled={!canSend}
-            className={`absolute right-3 h-10 w-10 flex items-center justify-center rounded-xl text-white transition-all duration-200 ${canSend ? "bg-[rgb(52,27,171)] hover:bg-[rgb(52,27,171)]/90 shadow-md shadow-purple-200" : "bg-primary/10 text-primary/40 cursor-not-allowed"}`}
-            style={{ bottom: "12px", top: "auto" }}
-            aria-label="Send message"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </motion.button>
+          <div className="flex items-center pr-2">
+            <motion.button
+              whileHover={canSend ? { scale: 1.05, y: -2 } : {}}
+              whileTap={canSend ? { scale: 0.95 } : {}}
+              onClick={onSend}
+              disabled={!canSend}
+              className={`h-11 w-11 flex items-center justify-center rounded-2xl text-white transition-all duration-300 shadow-xl ${canSend
+                ? "bg-primary hover:bg-primary-dark shadow-primary/30"
+                : "bg-gray-200 text-gray-400 shadow-none cursor-not-allowed opacity-50"
+                }`}
+              aria-label="Send message"
+            >
+              <ArrowUp className="w-5 h-5 stroke-[3]" />
+            </motion.button>
+          </div>
         </div>
 
-        <div className="flex justify-between items-center px-2 mt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="opacity-70">Pattern:</span>
-            <select
-              value={crsPattern}
-              onChange={(e) =>
-                onPatternChange(
-                  e.target.value as "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"
-                )
-              }
-              className="bg-transparent font-medium hover:text-foreground focus:outline-none cursor-pointer transition-colors"
-              title="Select the requirements pattern for AI interpretation"
-            >
-              <option value="babok">BABOK</option>
-              <option value="ieee_830">IEEE 830</option>
-              <option value="iso_iec_ieee_29148">ISO 29148</option>
-              <option value="agile_user_stories">Agile Stories</option>
-            </select>
+        <div className="flex justify-between items-center px-6 mt-5">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] hover:bg-white hover:border-primary/20 transition-all cursor-pointer group/pattern relative">
+              <span className="opacity-50">Pattern:</span>
+              <select
+                value={crsPattern}
+                onChange={(e) =>
+                  onPatternChange(
+                    e.target.value as "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"
+                  )
+                }
+                className="bg-transparent text-primary focus:outline-none cursor-pointer font-black"
+              >
+                <option value="babok">BABOK Professional</option>
+                <option value="ieee_830">IEEE 830 Classic</option>
+                <option value="iso_iec_ieee_29148">ISO 29148 Global</option>
+                <option value="agile_user_stories">Agile User Stories</option>
+              </select>
+            </div>
           </div>
-          <p>Press Enter to send, Shift + Enter for new line</p>
+          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest bg-gray-50/50 px-4 py-1.5 rounded-full border border-gray-100/30">
+            Shift + Enter for new line
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -92,7 +92,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   }
 
   return (
-    <div className="w-full h-[calc(100vh-3.5rem)] mt-14 bg-background">
+    <div className="w-full h-full">
       <ChatUI chat={chat} currentUser={currentUser} />
     </div>
   );

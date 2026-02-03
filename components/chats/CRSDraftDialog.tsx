@@ -51,10 +51,17 @@ export function CRSDraftDialog({
   const [contentError, setContentError] = useState<string | null>(null);
   const [currentCrs, setCurrentCrs] = useState<CRSDTO | null>(latestCRS);
   const [isCommentsCollapsed, setIsCommentsCollapsed] = useState(false);
+  const [reactiveCrsData, setReactiveCrsData] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'doc' | 'json'>('doc');
 
-  // Sync currentCrs with latestCRS when dialog opens or latestCRS changes
+  // Sync currentCrs and reactiveCrsData with latestCRS when dialog opens or latestCRS changes
   if (open && latestCRS && (currentCrs?.id !== latestCRS.id || currentCrs?.version !== latestCRS.version)) {
     setCurrentCrs(latestCRS);
+    try {
+      setReactiveCrsData(JSON.parse(latestCRS.content));
+    } catch {
+      setReactiveCrsData(null);
+    }
   }
 
   const handleSaveContent = async (newContent: string) => {
@@ -70,6 +77,7 @@ export function CRSDraftDialog({
 
       // Update local view with response from server
       setCurrentCrs(updatedCRS);
+      setReactiveCrsData(JSON.parse(updatedCRS.content));
       setIsEditing(false);
 
       // Notify parent to refresh data
@@ -83,6 +91,10 @@ export function CRSDraftDialog({
         setContentError("Failed to save changes. Please try again.");
       }
     }
+  };
+
+  const handleLiveUpdate = (newData: any) => {
+    setReactiveCrsData(newData);
   };
 
   const canEdit = currentCrs?.status !== "approved";
@@ -100,6 +112,26 @@ export function CRSDraftDialog({
           <DialogTitle className="flex items-center justify-between">
             <span className="text-xl">CRS Document</span>
             <div className="flex items-center gap-3 pr-8">
+              {currentCrs && (
+                <div className="flex bg-gray-100 p-1 rounded-lg mr-2">
+                  <Button
+                    variant={viewMode === 'doc' ? 'primary' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    onClick={() => setViewMode('doc')}
+                  >
+                    Document
+                  </Button>
+                  <Button
+                    variant={viewMode === 'json' ? 'primary' : 'ghost'}
+                    size="sm"
+                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    onClick={() => setViewMode('json')}
+                  >
+                    JSON Source
+                  </Button>
+                </div>
+              )}
               {currentCrs && <CRSStatusBadge status={currentCrs.status} />}
               {currentCrs && (
                 <Button
@@ -134,15 +166,32 @@ export function CRSDraftDialog({
                 </p>
               </div>
             ) : isEditing ? (
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <CRSContentEditor
-                  initialContent={currentCrs.content}
-                  onSave={handleSaveContent}
-                  onCancel={() => {
-                    setIsEditing(false);
-                    setContentError(null);
-                  }}
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                  <CRSContentEditor
+                    initialContent={currentCrs.content}
+                    onSave={handleSaveContent}
+                    onUpdate={handleLiveUpdate}
+                    onCancel={() => {
+                      setIsEditing(false);
+                      setContentError(null);
+                      // Reset reactive data to original content
+                      try {
+                        setReactiveCrsData(JSON.parse(currentCrs.content));
+                      } catch {
+                        setReactiveCrsData(null);
+                      }
+                    }}
+                  />
+                </div>
+                {/* Live Preview during editing */}
+                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm overflow-y-auto hidden lg:block">
+                  <div className="mb-4 pb-2 border-b flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Live Preview</h4>
+                    <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Reactive Sync Active</span>
+                  </div>
+                  <CRSContentDisplay crsData={reactiveCrsData} />
+                </div>
               </div>
             ) : (
               <>
@@ -209,7 +258,13 @@ export function CRSDraftDialog({
 
                 {/* Structured CRS Content */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm min-h-[400px]">
-                  <CRSContentDisplay content={currentCrs.content} />
+                  {viewMode === 'json' ? (
+                    <div className="bg-gray-900 text-green-400 p-6 rounded-lg font-mono text-xs overflow-auto h-full min-h-[500px]">
+                      <pre>{JSON.stringify(reactiveCrsData, null, 2)}</pre>
+                    </div>
+                  ) : (
+                    <CRSContentDisplay crsData={reactiveCrsData} />
+                  )}
                 </div>
               </>
             )}
