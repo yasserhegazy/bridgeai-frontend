@@ -6,16 +6,16 @@
 
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CurrentUserDTO } from "@/dto/auth.dto";
 import { COLORS } from "@/constants";
-import { uploadAvatar, deleteAvatar, ProfileError } from "@/services/profile.service";
+import { uploadAvatar, deleteAvatar, ProfileError, getAvatarUrl } from "@/services/profile.service";
 import { getCookie } from "@/lib/utils";
 import { Camera, Trash2, Loader2 } from "lucide-react";
 
 interface ProfileAvatarProps {
     user: CurrentUserDTO;
-    onAvatarUpdate: () => void;
+    onAvatarUpdate: () => Promise<void>;
 }
 
 function getUserInitials(fullName?: string): string {
@@ -34,22 +34,48 @@ function getUserInitials(fullName?: string): string {
     return firstInitial + lastInitial;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-
 export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [imageKey, setImageKey] = useState(Date.now());
+    const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
+    // Force image reload when avatar_url changes
+    useEffect(() => {
+        setImageKey(Date.now());
+        setImageLoadFailed(false);
+    }, [user.avatar_url]);
 
     const isGoogleUser = user.avatar_url?.startsWith("http");
     const hasCustomAvatar = user.avatar_url && !isGoogleUser;
 
-    const getAvatarUrl = () => {
-        if (previewUrl) return previewUrl;
-        if (user.avatar_url?.startsWith("http")) return user.avatar_url;
-        if (user.avatar_url) return `${API_BASE_URL}/${user.avatar_url}`;
-        return null;
+    // Use preview if available, otherwise use the helper function
+    const avatarUrl = previewUrl || getAvatarUrl(user.avatar_url);
+
+    // Add cache buster ONLY for local avatars, not for Google avatars
+    const displayUrl = avatarUrl && !previewUrl && !isGoogleUser
+        ? `${avatarUrl}?t=${imageKey}`
+        : avatarUrl;
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        console.error('[Avatar Error]', {
+            src: displayUrl,
+            userAvatarUrl: user.avatar_url,
+            isGoogleUser
+        });
+        setImageLoadFailed(true);
+        // Don't show error for Google avatars as they might have CORS restrictions
+        if (!isGoogleUser) {
+            setError('Failed to load avatar image');
+        }
+    };
+
+    const handleImageLoad = () => {
+        // Image loaded successfully - clear any previous errors
+        setError(null);
+        setImageLoadFailed(false);
     };
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,9 +111,14 @@ export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
                 throw new Error("Not authenticated");
             }
 
-            await uploadAvatar(token, file);
-            onAvatarUpdate(); // Refresh user data
-            setPreviewUrl(null);
+            const result = await uploadAvatar(token, file);
+            // Wait for user data to refresh before clearing preview
+            await onAvatarUpdate(); // Refresh user data
+            setPreviewUrl(null); // Clear preview after refresh completes
+            // Notify other components (like header) to refresh user data
+            window.dispatchEvent(new CustomEvent("avatar-updated"));
+            // Force page reload to ensure fresh data
+            window.location.reload();
         } catch (err) {
             setError(
                 err instanceof ProfileError ? err.message : "Failed to upload avatar"
@@ -115,7 +146,9 @@ export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
             }
 
             await deleteAvatar(token);
-            onAvatarUpdate(); // Refresh user data
+            await onAvatarUpdate(); // Refresh user data
+            // Notify other components (like header) to refresh user data
+            window.dispatchEvent(new CustomEvent("avatar-updated"));
         } catch (err) {
             setError(
                 err instanceof ProfileError ? err.message : "Failed to delete avatar"
@@ -125,21 +158,24 @@ export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
         }
     };
 
-    const avatarUrl = getAvatarUrl();
 
     return (
         <div className="flex flex-col items-center gap-4 p-6">
             {/* Avatar */}
-            <div className="relative group">
-                {avatarUrl ? (
+            <div className="relative group w-24 h-24">
+                {displayUrl && !imageLoadFailed ? (
                     <img
-                        src={avatarUrl}
+                        src={displayUrl}
                         alt={user.full_name}
-                        className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                        key={user.avatar_url}
+                        onLoad={handleImageLoad}
+                        onError={handleImageError}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full rounded-full object-cover border-4 border-white shadow-lg relative z-0"
                     />
                 ) : (
                     <div
-                        className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg border-4 border-white"
+                        className="w-full h-full rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg border-4 border-white"
                         style={{ backgroundColor: COLORS.primary }}
                     >
                         {getUserInitials(user.full_name)}
@@ -148,7 +184,8 @@ export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
 
                 {/* Upload/Delete Overlay */}
                 {!isGoogleUser && (
-                    <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-2">
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center gap-2 z-10 
+                        bg-black/0 group-hover:bg-black/50 transition-all duration-300">
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
@@ -173,15 +210,15 @@ export function ProfileAvatar({ user, onAvatarUpdate }: ProfileAvatarProps) {
                         )}
                     </div>
                 )}
-
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                />
             </div>
+
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
 
             {/* User Info */}
             <div className="text-center">

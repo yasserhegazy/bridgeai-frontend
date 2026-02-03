@@ -14,6 +14,20 @@ import { CurrentUserDTO } from "@/dto/auth.dto";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 /**
+ * Get the full avatar URL from the avatar_url field
+ * Handles both Google avatars (full URLs) and local avatars (relative paths)
+ * @param avatarUrl - The avatar_url from user object
+ * @returns Full URL to the avatar image or null
+ */
+export function getAvatarUrl(avatarUrl: string | null | undefined): string | null {
+    if (!avatarUrl) return null;
+    // Google avatars and other external URLs start with http/https
+    if (avatarUrl.startsWith("http")) return avatarUrl;
+    // Local avatars need backend URL prepended
+    return `${API_BASE_URL}/${avatarUrl}`;
+}
+
+/**
  * Custom error class for profile errors
  */
 export class ProfileError extends Error {

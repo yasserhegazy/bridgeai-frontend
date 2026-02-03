@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { COLORS } from "@/constants";
 import { CurrentUserDTO } from "@/dto/auth.dto";
+import { getAvatarUrl } from "@/services/profile.service";
 
 interface UserMenuProps {
   user: CurrentUserDTO | null;
@@ -34,31 +35,27 @@ function getUserInitials(fullName?: string): string {
   return firstInitial + lastInitial;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-
 export function UserMenu({ user, onLogout, onProfileClick }: UserMenuProps) {
-  const getAvatarUrl = () => {
-    if (!user?.avatar_url) return null;
-    // Google avatars start with http
-    if (user.avatar_url.startsWith("http")) return user.avatar_url;
-    // Local avatars need backend URL prepended
-    return `${API_BASE_URL}/${user.avatar_url}`;
-  };
-
-  const avatarUrl = getAvatarUrl();
+  const avatarUrl = getAvatarUrl(user?.avatar_url);
+  // Add cache buster using a simple hash of the avatar URL to force reload
+  // For Google avatars, use as-is since they have their own versioning
+  const displayUrl = avatarUrl && user?.avatar_url && !user.avatar_url.startsWith("http") 
+    ? `${avatarUrl}?v=${user.avatar_url.split('/').pop()}` 
+    : avatarUrl;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           className="rounded-full w-8 h-8 flex items-center justify-center p-0 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
-          style={{ backgroundColor: avatarUrl ? "transparent" : COLORS.primary, color: COLORS.textLight }}
+          style={{ backgroundColor: displayUrl ? "transparent" : COLORS.primary, color: COLORS.textLight }}
           onClick={onProfileClick}
         >
-          {avatarUrl ? (
+          {displayUrl ? (
             <img
-              src={avatarUrl}
+              src={displayUrl}
               alt={user?.full_name || "User avatar"}
+              key={user?.avatar_url}
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
