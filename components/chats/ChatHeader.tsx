@@ -104,8 +104,20 @@ export function ChatHeader({
         </div>
       </div>
 
-      {/* Actions Dropdown */}
+      {/* Actions & Document Toggle */}
       <div className="flex items-center gap-3">
+        {!showDocument && (
+          <Button
+            onClick={onToggleDocument}
+            variant="default"
+            size="sm"
+            className="h-9 gap-2.5 rounded-xl px-4 bg-primary hover:bg-primary-dark text-white font-bold text-[10px] tracking-tight shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>View specification</span>
+          </Button>
+        )}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

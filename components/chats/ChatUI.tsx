@@ -17,7 +17,6 @@ import { CRSDraftDialog } from "./CRSDraftDialog";
 import { CRSGenerateDialog } from "./CRSGenerateDialog";
 import { PartialCRSConfirmModal } from "./PartialCRSConfirmModal";
 import { CRSPanel } from "./CRSPanel";
-import { CRSPerformanceMonitor } from "./CRSPerformanceMonitor";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { GripVertical, Plus, MessageSquare, ChevronRight, ChevronLeft, FileText } from "lucide-react";
 import {
@@ -103,16 +102,16 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const pendingCRSUpdateRef = useRef<any>(null);
   const crsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const DEBOUNCE_DELAY = 300; // ms
-  
+
   const debouncedSetCRS = useCallback((updateFn: (prev: any) => any) => {
     // Cancel pending update
     if (crsUpdateTimeoutRef.current) {
       clearTimeout(crsUpdateTimeoutRef.current);
     }
-    
+
     // Store the update function
     pendingCRSUpdateRef.current = updateFn;
-    
+
     // Schedule update
     crsUpdateTimeoutRef.current = setTimeout(() => {
       if (pendingCRSUpdateRef.current) {
@@ -121,7 +120,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       }
     }, DEBOUNCE_DELAY);
   }, [setLatestCRS]);
-  
+
   // Cleanup debounce timeout on unmount
   useEffect(() => {
     return () => {
@@ -306,23 +305,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             console.log('[ChatUI] Setting CRS state:', updatedCRS);
             setLatestCRS(updatedCRS);
 
-            // Log performance metrics
-            if (crsData._metrics) {
-              console.log('[CRS Performance]', {
-                backend: crsData._metrics,
-                frontend: {
-                  applicationTimeMs: metrics.applicationTimeMs,
-                  success: metrics.success,
-                  usedPatch: !metrics.fallbackToFull
-                }
-              });
-
-              // Emit performance event for monitoring
-              const perfEvent = new CustomEvent('crs-performance-metric', {
-                detail: metrics
-              });
-              window.dispatchEvent(perfEvent);
-            }
           } else {
             console.warn('[ChatUI] Failed to create/update CRS from WebSocket data');
           }
@@ -370,7 +352,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       // This is the optimistic UI update
       addMessage(pendingLocal);
       showAiTyping();
-      
+
       // Resume CRS generation if it was paused
       if (isCRSPaused && resumeGeneration) {
         console.log('[ChatUI] Resuming CRS generation on new message');
@@ -572,22 +554,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             bottomRef={bottomRef}
           />
 
-          {/* View Specification Floating Button when collapsed */}
-          {!showDocument && (
-            <div className={`absolute top-8 ${isChatOnRight ? 'left-8' : 'right-8'} z-50 pointer-events-none`}>
-              <motion.button
-                initial={{ x: isChatOnRight ? -20 : 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowDocument(true)}
-                className="pointer-events-auto flex items-center gap-2.5 px-4 py-2 bg-white/80 backdrop-blur-md text-gray-900 rounded-full shadow-lg border border-gray-100 hover:bg-white transition-all font-bold text-[10px] tracking-tight"
-              >
-                <FileText className="w-3.5 h-3.5 text-primary" />
-                <span>View specification</span>
-              </motion.button>
-            </div>
-          )}
         </div>
 
         <ChatInputArea
@@ -668,9 +634,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           isGenerating={isGenerating}
         />
       )}
-
-      {/* Performance Monitor (enable in development) */}
-      <CRSPerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
     </div>
   );
 }

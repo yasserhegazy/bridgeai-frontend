@@ -74,7 +74,7 @@ export function CommentsSection({ crsId, className, onCommentAdded }: CommentsSe
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
                 <div className="flex items-center gap-2 text-gray-800">
-                    <div className="p-1.5 bg-blue-100 rounded-md text-blue-600">
+                    <div className="p-1.5 bg-primary/10 rounded-md text-primary">
                         <MessageSquare className="w-4 h-4" />
                     </div>
                     <h3 className="font-semibold text-sm">Review Comments</h3>
@@ -109,7 +109,7 @@ export function CommentsSection({ crsId, className, onCommentAdded }: CommentsSe
                         <div key={comment.id} className="flex gap-3 group animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Avatar */}
                             <div className="flex-shrink-0 pt-1">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm ring-2 ring-white">
+                                <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-primary/80 flex items-center justify-center text-white shadow-sm ring-2 ring-white">
                                     <span className="text-xs font-bold uppercase">{comment.author_name.charAt(0)}</span>
                                 </div>
                             </div>
@@ -119,7 +119,7 @@ export function CommentsSection({ crsId, className, onCommentAdded }: CommentsSe
                                     <span className="text-sm font-semibold text-gray-900 truncate">{comment.author_name}</span>
                                     <span className="text-[10px] text-gray-400 font-medium">{formatDate(comment.created_at)}</span>
                                 </div>
-                                <div className="p-3.5 bg-white rounded-2xl rounded-tl-none border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] text-sm text-gray-700 leading-relaxed break-words group-hover:border-blue-100 group-hover:shadow-blue-50/50 transition-all">
+                                <div className="p-3.5 bg-white rounded-2xl rounded-tl-none border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] text-sm text-gray-700 leading-relaxed break-words group-hover:border-primary/20 group-hover:shadow-primary/5 transition-all">
                                     {comment.content}
                                 </div>
                             </div>
@@ -135,14 +135,15 @@ export function CommentsSection({ crsId, className, onCommentAdded }: CommentsSe
                         placeholder="Write a comment..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        className="min-h-[80px] w-full text-sm resize-none pr-4 pb-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl"
+                        className="min-h-[80px] w-full text-sm resize-none pr-4 pb-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-xl"
                         disabled={submitting}
                     />
                     <div className="absolute bottom-3 right-3">
                         <Button
                             type="submit"
                             size="sm"
-                            className="h-8 px-3 bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all rounded-lg text-xs font-medium"
+                            variant="primary"
+                            className="h-8 px-4 rounded-lg text-xs font-black tracking-tight"
                             disabled={submitting || !newComment.trim()}
                         >
                             {submitting ? (

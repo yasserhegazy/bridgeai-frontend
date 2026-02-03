@@ -155,7 +155,7 @@ export function NotificationPanel() {
           filteredNotifications.map(notification => (
             <div
               key={notification.id}
-              className={`p-4 rounded-lg border ${!notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
+              className={`p-4 rounded-xl border ${!notification.is_read ? 'bg-primary/5 border-primary/10' : 'bg-white border-gray-100'
                 }`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -164,7 +164,7 @@ export function NotificationPanel() {
                     {getStatusIcon(notification)}
                     <h3 className="font-semibold">{notification.title}</h3>
                     {!notification.is_read && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{notification.message}</p>

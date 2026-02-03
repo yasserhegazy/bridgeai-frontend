@@ -21,7 +21,7 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
             case "rejected":
                 return <XCircle className="w-5 h-5 text-red-500" />;
             case "created":
-                return <FileText className="w-5 h-5 text-blue-500" />;
+                return <FileText className="w-5 h-5 text-primary" />;
             case "updated":
             case "version_update":
                 return <Edit className="w-5 h-5 text-orange-500" />;

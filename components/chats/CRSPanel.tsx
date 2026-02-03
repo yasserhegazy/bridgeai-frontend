@@ -107,7 +107,7 @@ export function CRSPanel({
     useEffect(() => {
         if (latestCRS?.edit_version && previousVersionRef.current !== undefined) {
             const versionDelta = latestCRS.edit_version - previousVersionRef.current;
-            
+
             // Only show update notification if not editing and version changed significantly
             if (versionDelta >= VERSION_DELTA_THRESHOLD && !isEditing) {
                 setIsUpdating(true);
@@ -150,7 +150,7 @@ export function CRSPanel({
 
         return contentObj;
     }, [latestCRS?.content, isGenerating]);
-    
+
     // Lock document updates when editing to prevent conflicts
     const handleStartEditing = () => {
         setIsEditing(true);
@@ -158,7 +158,7 @@ export function CRSPanel({
         setLockedSections(new Set(['*'])); // '*' means all sections locked
         console.log('[CRSPanel] Edit mode enabled - updates locked');
     };
-    
+
     const handleCancelEditing = () => {
         setIsEditing(false);
         setLockedSections(new Set());
@@ -186,12 +186,12 @@ export function CRSPanel({
                 newContent,
                 latestCRS.edit_version || 0
             );
-            
+
             // Exit edit mode and unlock sections
             setIsEditing(false);
             setLockedSections(new Set());
             console.log('[CRSPanel] Save complete - updates unlocked');
-            
+
             if (onStatusUpdate) onStatusUpdate();
 
             toast.success("Changes saved successfully!");
@@ -272,16 +272,18 @@ export function CRSPanel({
                                 </Button>
                             )}
 
-                            <Button
-                                onClick={() => setShowComments(!showComments)}
-                                variant="ghost"
-                                size="sm"
-                                className={`h-9 gap-2 rounded-xl px-4 font-bold text-[10px] tracking-tight transition-all ${showComments ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-primary hover:bg-primary/5"
-                                    }`}
-                            >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Comments
-                            </Button>
+                            {latestCRS.status !== "draft" && (
+                                <Button
+                                    onClick={() => setShowComments(!showComments)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-9 gap-2 rounded-xl px-4 font-bold text-[10px] tracking-tight transition-all ${showComments ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                                        }`}
+                                >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    Comments
+                                </Button>
+                            )}
 
                             {latestCRS.status === "draft" && onSubmitForReview && (
                                 <Button
@@ -316,40 +318,6 @@ export function CRSPanel({
                         className="h-10 gap-3 rounded-xl px-5 border-gray-100 hover:bg-gray-50 text-gray-900 font-bold text-[10px] tracking-tight transition-all shadow-sm active:scale-95"
                     />
 
-                    {isGenerating && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl border border-amber-100/50 shadow-sm transition-all"
-                        >
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-bold tracking-tight">
-                                    {streamStep || "AI drafting..."}
-                                </span>
-                                {streamProgress > 0 && (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-1 bg-amber-200 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-amber-500"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${streamProgress}%` }}
-                                                transition={{ duration: 0.3 }}
-                                            />
-                                        </div>
-                                        <span className="text-[8px] font-medium text-amber-600">
-                                            {streamProgress}%
-                                        </span>
-                                    </div>
-                                )}
-                                {streamRetryCount > 0 && (
-                                    <span className="text-[8px] text-amber-600">
-                                        Retry attempt {streamRetryCount}
-                                    </span>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
 
                     {streamError && !isGenerating && (
                         <motion.div
@@ -699,7 +667,7 @@ export function CRSPanel({
 
                 {/* Inline Comments Section */}
                 <AnimatePresence>
-                    {showComments && latestCRS && (
+                    {showComments && latestCRS && latestCRS.status !== "draft" && (
                         <motion.div
                             initial={{ x: "100%", opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
