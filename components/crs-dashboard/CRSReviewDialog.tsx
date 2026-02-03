@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, FileText } from "lucide-react";
 import { CRSExportButton } from "@/components/shared/CRSExportButton";
 import { CRSAuditButton } from "@/components/shared/CRSAuditButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
 import { useCRSStatusUpdate } from "@/hooks/crs/useCRSStatusUpdate";
+import { cn } from "@/lib/utils";
 
 type PatternKey = CRSPattern | "unknown";
 
@@ -82,13 +83,14 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
     <>
       {/* Main Review Dialog */}
       <Dialog open={open && !showRejectDialog} onOpenChange={onClose}>
-        <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-          <DialogHeader className="px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
-            <DialogTitle className="flex items-center justify-between">
-              <span className="text-xl">CRS Review - Project #{crs.project_id}</span>
+        <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[95vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-2xl">
+          <DialogHeader className="px-8 py-5 border-b border-gray-100 shrink-0 bg-white">
+            <div className="flex items-center justify-between gap-4">
+              <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                Reviewing: {crs.project_name || `Project #${crs.project_id}`}
+              </DialogTitle>
               <CRSStatusBadge status={crs.status} />
-            </DialogTitle>
-            {/* Ensure accessibility by providing a description if needed, or visually hidden */}
+            </div>
             <DialogDescription className="sr-only">
               Review the Client Requirements Specification document.
             </DialogDescription>
@@ -96,78 +98,94 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
 
           <div className="flex-1 flex overflow-hidden">
             {/* Left Panel: Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 bg-gray-50/30">
               {/* Error Message */}
               {(validationError || error) && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm animate-in fade-in slide-in-from-top-2">
+                <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-800 text-sm font-medium flex items-center gap-3">
+                  <XCircle className="w-4 h-4 shrink-0" />
                   {validationError || error}
                 </div>
               )}
 
-              {/* Metadata */}
-              <div className="grid grid-cols-4 gap-4">
+              {/* Metadata Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Version</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">v{crs.version}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Version</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-black text-gray-900">v{crs.version}.0</p>
+                    <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold">Stable</span>
+                  </div>
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pattern</p>
-                  <p className={`text-sm font-semibold mt-2 px-2 py-1 rounded inline-block ${PATTERN_COLORS[patternKey].bg} ${PATTERN_COLORS[patternKey].text}`}>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Pattern</p>
+                  <p className={cn("text-xs font-bold mt-2 px-2 py-1 rounded-lg inline-block text-center", PATTERN_COLORS[patternKey].bg, PATTERN_COLORS[patternKey].text)}>
                     {PATTERN_LABELS[patternKey]}
                   </p>
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</p>
-                  <p className="text-sm font-medium text-gray-900 mt-2">
-                    {new Date(crs.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Original Issue</p>
+                  <p className="text-sm font-bold text-gray-900 mt-1">
+                    {new Date(crs.created_at).toLocaleDateString(undefined, {
+                      month: "short", day: "numeric", year: "numeric"
+                    })}
                   </p>
                 </div>
                 <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Creator</p>
-                  <p className="text-sm font-medium text-gray-900 mt-2">
-                    User #{crs.created_by}
-                  </p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Submission status</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={cn("w-1.5 h-1.5 rounded-full",
+                      crs.status === 'approved' ? 'bg-green-500' :
+                        crs.status === 'rejected' ? 'bg-red-500' : 'bg-[#341bab]'
+                    )} />
+                    <p className="text-sm font-bold text-gray-900 capitalize">
+                      {crs.status.replace("_", " ")}
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* Summary Points */}
               {crs.summary_points && crs.summary_points.length > 0 && (
-                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 shadow-sm">
-                  <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                    Key Points
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 shadow-sm">
+                  <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Key Specification Insights
                   </h3>
-                  <ul className="grid gap-2">
+                  <div className="grid grid-cols-1 gap-3">
                     {crs.summary_points.map((point, idx) => (
-                      <li key={idx} className="text-sm text-blue-900/80 pl-2 border-l-2 border-blue-200">
-                        {point}
-                      </li>
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-white/60 rounded-xl border border-primary/5">
+                        <div className="mt-1.5 shrink-0 w-1 h-1 rounded-full bg-primary/40" />
+                        <span className="text-sm text-gray-700 font-medium leading-tight">{point}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
 
               {/* CRS Content */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm min-h-[400px]">
+              <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm relative overflow-hidden min-h-[500px]">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <FileText className="w-24 h-24" />
+                </div>
                 <CRSContentDisplay content={crs.content} />
               </div>
             </div>
 
             {/* Right Panel: Comments */}
-            <div className="w-[350px] lg:w-[400px] border-l border-gray-200 bg-white shadow-[rgba(0,0,0,0.05)_0px_0px_20px_-5px_inset]">
+            <div className="w-[350px] lg:w-[400px] border-l border-gray-200 bg-white shadow-[rgba(0,0,0,0.03)_0px_0px_20px_-5px_inset]">
               <CommentsSection crsId={crs.id} className="h-full border-none rounded-none shadow-none" />
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div className="shrink-0 p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3 z-10">
+          <div className="shrink-0 px-8 py-5 border-t border-gray-100 bg-white flex items-center justify-between gap-4 z-10">
             <div className="flex gap-2">
               <CRSExportButton crsId={crs.id} version={crs.version} />
               <CRSAuditButton crsId={crs.id} />
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={onClose} variant="outline" disabled={isUpdating} className="border-gray-300">
+              <Button onClick={onClose} variant="outline" disabled={isUpdating} className="rounded-xl font-bold text-xs h-10 px-6">
                 Close
               </Button>
 
@@ -176,29 +194,29 @@ export function CRSReviewDialog({ crs, open, onClose, onStatusUpdate }: CRSRevie
                   onClick={handleRejectClick}
                   variant="destructive"
                   disabled={isUpdating}
-                  className="bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                  className="rounded-xl font-bold text-xs h-10 px-6 gap-2"
                 >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
+                  <XCircle className="w-4 h-4" />
+                  Reject submission
                 </Button>
               )}
 
               {canApprove && (
                 <Button
                   onClick={handleApprove}
-                  variant="default"
+                  variant="primary"
                   disabled={isUpdating}
-                  className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                  className="rounded-xl font-bold text-xs h-10 px-8 gap-2 shadow-lg shadow-primary/10 transition-all hover:scale-[1.05] active:scale-95"
                 >
                   {isUpdating ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Approving...
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve
+                      <CheckCircle className="w-4 h-4" />
+                      Approve document
                     </>
                   )}
                 </Button>
