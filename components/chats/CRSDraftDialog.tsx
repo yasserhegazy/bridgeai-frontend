@@ -117,7 +117,7 @@ export function CRSDraftDialog({
                   <Button
                     variant={viewMode === 'doc' ? 'primary' : 'ghost'}
                     size="sm"
-                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    className="h-7 px-3 text-[10px] font-bold"
                     onClick={() => setViewMode('doc')}
                   >
                     Document
@@ -125,7 +125,7 @@ export function CRSDraftDialog({
                   <Button
                     variant={viewMode === 'json' ? 'primary' : 'ghost'}
                     size="sm"
-                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    className="h-7 px-3 text-[10px] font-bold"
                     onClick={() => setViewMode('json')}
                   >
                     JSON Source
@@ -187,7 +187,7 @@ export function CRSDraftDialog({
                 {/* Live Preview during editing */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm overflow-y-auto hidden lg:block">
                   <div className="mb-4 pb-2 border-b flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Live Preview</h4>
+                    <h4 className="text-sm font-bold text-gray-400 tracking-tight">Live Preview</h4>
                     <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Reactive Sync Active</span>
                   </div>
                   <CRSContentDisplay crsData={reactiveCrsData} />
