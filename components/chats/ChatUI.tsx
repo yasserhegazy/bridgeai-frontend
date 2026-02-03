@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/hooks/shared/useModalEnhanced";
@@ -42,12 +42,14 @@ interface ChatUIProps {
 export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const router = useRouter();
   const { toast } = useToast();
-  
+
+  // Real-time CRS state is managed by useChatCRS and useCRSStream hooks
+
   // Managed modals with collision prevention
   const draftModal = useModal(false, { id: "crs-draft-dialog", priority: 2 });
   const generateModal = useModal(false, { id: "crs-generate-dialog", priority: 1 });
   const partialConfirmModal = useModal(false, { id: "partial-crs-confirm", priority: 3 });
-  
+
   const [returnTo, setReturnTo] = useState<string | undefined>(undefined);
   const [crsPattern, setCrsPattern] = useState<
     "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"
@@ -96,7 +98,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   // Initialize CRS patch applicator
   const { applyPatchToCRS, getMetrics } = useCRSPatchApplicator();
-  
+
   // Initialize real-time CRS streaming (SSE)
   const {
     status: crsStreamStatus,
@@ -108,9 +110,28 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   } = useCRSStream({
     sessionId: chat.id,
     enabled: true,
+    onUpdate: (partialTemplate) => {
+      // High-frequency update for streaming "Ghost Writing"
+      setLatestCRS((prev: any) => {
+        const nextContent = typeof partialTemplate === 'string'
+          ? partialTemplate
+          : JSON.stringify(partialTemplate);
+
+        return {
+          ...(prev || {}),
+          id: prev?.id || 0,
+          project_id: chat.project_id,
+          chat_session_id: chat.id,
+          status: prev?.status || 'draft',
+          pattern: crsPattern,
+          content: nextContent,
+          updated_at: new Date().toISOString(),
+        };
+      });
+    },
     onProgress: (event) => {
       console.log("[CRS Stream] Progress:", event);
-      
+
       // Update CRS template in real-time
       if (event.crs_template) {
         const updatedCRS = {
@@ -127,10 +148,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           updated_at: event.timestamp || new Date().toISOString(),
           created_by: latestCRS?.created_by || null,
         };
-        
+
         setLatestCRS(updatedCRS);
       }
-      
+
       // Update insights
       if (event.summary_points || event.overall_summary) {
         setRecentInsights({
@@ -138,7 +159,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           quality_summary: event.overall_summary || undefined,
         });
       }
-      
+
       // Show progress toast for major steps
       if (event.step && event.message) {
         toast({
@@ -150,7 +171,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     },
     onComplete: (event) => {
       console.log("[CRS Stream] Complete:", event);
-      
+
       // Reload CRS from database to get the persisted version
       if (event.crs_document_id) {
         loadCRS();
@@ -171,11 +192,11 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             updated_at: event.timestamp || new Date().toISOString(),
             created_by: latestCRS?.created_by || null,
           };
-          
+
           setLatestCRS(finalCRS);
         }
       }
-      
+
       // Show completion notification
       if (event.is_complete) {
         toast({
@@ -194,10 +215,10 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         duration: 5000,
       });
     },
-    onUpdate: (crsTemplate) => {
-      // Real-time template updates handled in onProgress
-    },
   });
+
+  // Real-time synchronization is now handled directly by useCRSStream and setLatestCRS
+
 
   // Initialize messages management
   const { messages, isOwnMessage, addMessage, addPendingMessage, markPendingAsFailed } =
@@ -223,7 +244,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         },
         onCRSUpdate: (crsData: any) => {
           console.log('[ChatUI] CRS Update received:', crsData);
-          
+
           // Hybrid approach: try patch first, fallback to full document
           const { updatedCRS, metrics } = applyPatchToCRS(
             latestCRS,
@@ -249,7 +270,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           if (updatedCRS) {
             console.log('[ChatUI] Setting CRS state:', updatedCRS);
             setLatestCRS(updatedCRS);
-            
+
             // Log performance metrics
             if (crsData._metrics) {
               console.log('[CRS Performance]', {
@@ -260,7 +281,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
                   usedPatch: !metrics.fallbackToFull
                 }
               });
-              
+
               // Emit performance event for monitoring
               const perfEvent = new CustomEvent('crs-performance-metric', {
                 detail: metrics
@@ -270,7 +291,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           } else {
             console.warn('[ChatUI] Failed to create/update CRS from WebSocket data');
           }
-          
+
           // Always update insights when available
           if (crsData.summary_points || crsData.quality_summary) {
             console.log('[ChatUI] Setting insights:', { summary_points: crsData.summary_points, quality_summary: crsData.quality_summary });

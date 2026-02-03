@@ -52,7 +52,7 @@ export interface WebSocketMessageData {
   crs?: {
     // Action type (backward compatible - defaults to full update if not specified)
     action?: "updated";
-    
+
     // JSON Patch operations (RFC 6902) - hybrid approach
     patch?: Array<{
       op: "add" | "remove" | "replace" | "move" | "copy" | "test";
@@ -60,10 +60,10 @@ export interface WebSocketMessageData {
       value?: any;
       from?: string;
     }>;
-    
+
     // Full document (always included for backward compatibility and fallback)
     content?: string;
-    
+
     // CRS metadata
     is_complete?: boolean;
     crs_document_id?: number;
@@ -73,7 +73,7 @@ export interface WebSocketMessageData {
     summary_points?: string[];
     quality_summary?: string;
     updated_at?: string;
-    
+
     // Performance metrics (optional, for monitoring)
     _metrics?: {
       patch_operations?: number;

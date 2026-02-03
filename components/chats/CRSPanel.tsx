@@ -16,6 +16,32 @@ import { ConnectionState, ChatSessionDTO, CurrentUserDTO } from "@/dto";
 import { ExportButton } from "@/components/shared/ExportButton";
 import { toast } from "sonner";
 
+const CRS_TEMPLATE = {
+    project_title: "",
+    project_description: "",
+    project_objectives: [],
+    functional_requirements: [],
+    target_users: [],
+    security_requirements: [],
+    performance_requirements: [],
+    scalability_requirements: [],
+    technology_stack: {
+        frontend: [],
+        backend: [],
+        database: [],
+        other: []
+    },
+    timeline_constraints: "",
+    budget_constraints: "",
+    technical_constraints: [],
+    integrations: [],
+    success_metrics: [],
+    assumptions: [],
+    risks: [],
+    out_of_scope: [],
+    additional_notes: ""
+};
+
 interface CRSPanelProps {
     latestCRS: CRSDTO | null;
     crsLoading: boolean;
@@ -80,13 +106,13 @@ export function CRSPanel({
         if (latestCRS?.edit_version && previousVersionRef.current !== undefined) {
             if (latestCRS.edit_version !== previousVersionRef.current) {
                 setIsUpdating(true);
-                
+
                 // Show prominent toast notification
                 toast.success("📝 Document Updated!", {
                     description: `CRS version ${latestCRS.edit_version} - New information added`,
                     duration: 4000,
                 });
-                
+
                 // Reset updating state after animation
                 const timer = setTimeout(() => setIsUpdating(false), 3000);
                 return () => clearTimeout(timer);
@@ -96,16 +122,29 @@ export function CRSPanel({
     }, [latestCRS?.edit_version]);
 
     const parsedContent = useMemo(() => {
-        if (!latestCRS?.content) return null;
-        try {
-            return typeof latestCRS.content === 'string'
-                ? JSON.parse(latestCRS.content)
-                : latestCRS.content;
-        } catch (e) {
-            console.error("Failed to parse CRS content", e);
-            return null;
+        const rawContent = latestCRS?.content;
+        let contentObj = null;
+
+        if (rawContent) {
+            try {
+                contentObj = typeof rawContent === 'string'
+                    ? JSON.parse(rawContent)
+                    : rawContent;
+            } catch (e) {
+                console.error("Failed to parse CRS content", e);
+            }
         }
-    }, [latestCRS?.content]);
+
+        // If we're generating and have no content, or just want to ensure all fields exist
+        if (isGenerating || !contentObj) {
+            return {
+                ...CRS_TEMPLATE,
+                ...(contentObj || {})
+            };
+        }
+
+        return contentObj;
+    }, [latestCRS?.content, isGenerating]);
 
     const handleSaveContent = async (newContent: string) => {
         if (!latestCRS) return;
@@ -122,7 +161,7 @@ export function CRSPanel({
             setContentError(null);
             // Show optimistic update temporarily
             setIsUpdating(true);
-            
+
             await updateCRSContent(
                 latestCRS.id,
                 newContent,
@@ -130,7 +169,7 @@ export function CRSPanel({
             );
             setIsEditing(false);
             if (onStatusUpdate) onStatusUpdate();
-            
+
             toast.success("Changes saved successfully!");
         } catch (err) {
             // Revert optimistic update on error
@@ -161,7 +200,7 @@ export function CRSPanel({
                     <div>
                         <h2 className="text-lg font-bold text-gray-900 leading-tight tracking-tight">Project Specification</h2>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <motion.span 
+                            <motion.span
                                 className="flex h-1.5 w-1.5 rounded-full bg-green-500"
                                 animate={{
                                     scale: [1, 1.3, 1],
@@ -287,7 +326,7 @@ export function CRSPanel({
                             </div>
                         </motion.div>
                     )}
-                    
+
                     {streamError && !isGenerating && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -316,8 +355,8 @@ export function CRSPanel({
                                 <div className="p-8 max-w-4xl mx-auto space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <motion.div 
-                                                animate={{ 
+                                            <motion.div
+                                                animate={{
                                                     rotate: [0, 10, -10, 10, 0],
                                                     scale: [1, 1.1, 1]
                                                 }}
@@ -340,7 +379,7 @@ export function CRSPanel({
                                     </div>
 
                                     {recentInsights.quality_summary && (
-                                        <motion.p 
+                                        <motion.p
                                             initial={{ x: -20, opacity: 0 }}
                                             animate={{ x: 0, opacity: 1 }}
                                             className="text-sm text-amber-900 font-semibold leading-relaxed italic border-l-4 border-amber-400 pl-4 py-2 bg-white/50 rounded-r-lg"
@@ -433,6 +472,11 @@ export function CRSPanel({
                                             initialContent={latestCRS.content}
                                             onSave={handleSaveContent}
                                             onCancel={() => setIsEditing(false)}
+                                            onUpdate={(newData) => {
+                                                // We could potentially update a local state here for live preview
+                                                // but since we are replacing the view with the editor, 
+                                                // it's less critical unless we add side-by-side view.
+                                            }}
                                         />
                                     </motion.div>
                                 ) : latestCRS ? (
@@ -527,7 +571,7 @@ export function CRSPanel({
                                                     <div className="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-bold tracking-tight rounded-md border border-green-100 uppercase tracking-widest">
                                                         {latestCRS.status}
                                                     </div>
-                                                    <motion.div 
+                                                    <motion.div
                                                         key={latestCRS.edit_version}
                                                         initial={{ scale: 1.2, backgroundColor: "rgb(34, 197, 94)" }}
                                                         animate={{ scale: 1, backgroundColor: "rgb(243, 244, 246)" }}
@@ -563,10 +607,35 @@ export function CRSPanel({
                                         </div>
 
                                         <div className="relative z-10">
-                                            <CRSContentDisplay content={latestCRS.content} />
+                                            <CRSContentDisplay crsData={parsedContent} />
                                         </div>
 
                                         {/* Bottom aesthetic padding */}
+                                        <div className="h-40" />
+                                    </motion.div>
+                                ) : (latestCRS || isGenerating) ? (
+                                    <motion.div
+                                        key="generating-skeleton"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="prose prose-slate prose-sm md:prose-base max-w-none relative"
+                                    >
+                                        <div className="mb-16 relative">
+                                            <div className="absolute -left-16 top-0 bottom-0 w-1 bg-primary/10 rounded-full hidden lg:block" />
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold tracking-tight rounded-md border border-amber-100 uppercase tracking-widest">
+                                                        GENESIS
+                                                    </div>
+                                                </div>
+                                                <h1 className="text-5xl font-black text-gray-900 tracking-tighter !mt-2 !mb-6 leading-[0.95]">
+                                                    {parsedContent?.project_title || "Drafting Specification..."}
+                                                </h1>
+                                            </div>
+                                        </div>
+                                        <div className="relative z-10">
+                                            <CRSContentDisplay crsData={parsedContent} />
+                                        </div>
                                         <div className="h-40" />
                                     </motion.div>
                                 ) : (

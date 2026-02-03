@@ -8,13 +8,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthToken } from "@/services/token.service";
 
 export type CRSStreamEvent = {
-  type: 
-    | "crs_generation_started"
-    | "crs_progress" 
-    | "crs_complete"
-    | "crs_updated"
-    | "crs_error"
-    | "crs_retry";
+  type:
+  | "crs_generation_started"
+  | "crs_progress"
+  | "crs_complete"
+  | "crs_updated"
+  | "crs_error"
+  | "crs_retry"
+  | "crs_partial";
   session_id?: number;
   percentage?: number;
   step?: string;
@@ -34,6 +35,7 @@ export type CRSStreamEvent = {
   wait_time?: number;
   timestamp?: string;
   crs_document_id?: number;
+  content?: string;
 };
 
 export type CRSStreamStatus = "idle" | "connecting" | "connected" | "error" | "closed";
@@ -60,7 +62,7 @@ export function useCRSStream({
   const [currentStep, setCurrentStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
-  
+
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
@@ -69,7 +71,7 @@ export function useCRSStream({
   // Connect/disconnect when sessionId or enabled changes
   useEffect(() => {
     const accessToken = getAuthToken();
-    
+
     if (!sessionId || !enabled || !accessToken) {
       return;
     }
@@ -81,7 +83,7 @@ export function useCRSStream({
     // EventSource doesn't support custom headers, so we pass token as query param
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const url = `${apiUrl}/api/crs/stream/${sessionId}?token=${accessToken}`;
-    
+
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 
@@ -114,12 +116,12 @@ export function useCRSStream({
             if (data.message) {
               setCurrentStep(data.message);
             }
-            
+
             // Update CRS template if provided
             if (data.crs_template && onUpdate) {
               onUpdate(data.crs_template);
             }
-            
+
             // Call progress callback
             if (onProgress) {
               onProgress(data);
@@ -130,12 +132,12 @@ export function useCRSStream({
           case "crs_updated":
             setProgress(100);
             setCurrentStep(data.is_complete ? "Complete" : "Updated");
-            
+
             // Update final CRS template
             if (data.crs_template && onUpdate) {
               onUpdate(data.crs_template);
             }
-            
+
             // Call completion callback
             if (data.is_complete && onComplete) {
               onComplete(data);
@@ -161,6 +163,17 @@ export function useCRSStream({
               onProgress(data);
             }
             break;
+
+          case "crs_partial":
+            if (data.content && onUpdate) {
+              try {
+                const partialTemplate = JSON.parse(data.content);
+                onUpdate(partialTemplate);
+              } catch (e) {
+                console.error("[CRS Stream] Failed to parse partial content:", e);
+              }
+            }
+            break;
         }
       } catch (err) {
         console.error("[CRS Stream] Failed to parse event:", err);
@@ -171,16 +184,16 @@ export function useCRSStream({
       console.error("[CRS Stream] Connection error:", err);
       setStatus("error");
       eventSource.close();
-      
+
       // Attempt reconnection with exponential backoff
       if (reconnectAttemptsRef.current < maxReconnectAttempts) {
         reconnectAttemptsRef.current += 1;
         const backoffTime = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current - 1), 30000);
-        
+
         console.log(
           `[CRS Stream] Reconnecting in ${backoffTime}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
         );
-        
+
         reconnectTimeoutRef.current = setTimeout(() => {
           // Will trigger useEffect to run again
           setStatus("idle");

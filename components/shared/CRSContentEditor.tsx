@@ -26,12 +26,14 @@ interface CRSContentEditorProps {
   initialContent: string;
   onSave: (newContent: string) => Promise<void>;
   onCancel: () => void;
+  onUpdate?: (crsData: any) => void;
 }
 
 export function CRSContentEditor({
   initialContent,
   onSave,
   onCancel,
+  onUpdate,
 }: CRSContentEditorProps) {
   const {
     formData,
@@ -43,7 +45,10 @@ export function CRSContentEditor({
     removeItem,
     addNestedItem,
     removeNestedItem,
-  } = useCRSContentEditor(initialContent);
+  } = useCRSContentEditor({
+    initialContent,
+    onChange: onUpdate,
+  });
 
   const [localSaving, setLocalSaving] = useState(false);
 
