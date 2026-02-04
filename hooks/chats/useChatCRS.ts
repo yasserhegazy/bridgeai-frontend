@@ -19,6 +19,7 @@ interface UseChatCRSOptions {
   sessionId: number;
   projectId: number;
   crsPattern: CRSPattern;
+  projectStatus?: string;
 }
 
 // SessionStorage key for CRS drafts
@@ -28,6 +29,7 @@ export function useChatCRS({
   sessionId,
   projectId,
   crsPattern,
+  projectStatus,
 }: UseChatCRSOptions) {
   const [latestCRS, setLatestCRS] = useState<CRSDTO | null>(null);
   const [crsLoading, setCrsLoading] = useState(false);
@@ -54,7 +56,7 @@ export function useChatCRS({
     try {
       setCrsLoading(true);
       setCrsError(null);
-      
+
       // Try to restore from sessionStorage cache first
       try {
         const cached = sessionStorage.getItem(getCRSCacheKey(sessionId));
@@ -66,16 +68,16 @@ export function useChatCRS({
       } catch (e) {
         console.warn('[useChatCRS] Failed to restore from cache:', e);
       }
-      
+
       // Then load from database (will update if different)
       const crs = await fetchCRSForSession(sessionId);
       setLatestCRS(crs);
-      
+
       // Clear cache if we got the persisted version
       if (crs?.id) {
         sessionStorage.removeItem(getCRSCacheKey(sessionId));
       }
-      
+
       return crs;
     } catch (err: unknown) {
       // Don't show error for 404 (no CRS yet) - keep cached version if we have it
@@ -156,9 +158,11 @@ export function useChatCRS({
     }
   }, [latestCRS]);
 
-  // Determine available actions based on CRS status
-  const canGenerateCRS = !latestCRS || latestCRS.status === "draft" || latestCRS.status === "rejected";
-  const canSubmitCRS = latestCRS?.status === "draft";
+  // Determine available actions based on CRS status and project status
+  const isProjectPending = projectStatus === "pending";
+
+  const canGenerateCRS = !isProjectPending && (!latestCRS || latestCRS.status === "draft" || latestCRS.status === "rejected");
+  const canSubmitCRS = !isProjectPending && latestCRS?.status === "draft";
   const isUnderReview = latestCRS?.status === "under_review";
   const isApproved = latestCRS?.status === "approved";
   const isRejected = latestCRS?.status === "rejected";

@@ -21,6 +21,7 @@ interface ChatInputAreaProps {
   crsPattern: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";
   onPatternChange: (pattern: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories") => void;
   latestCRS: CRSDTO | null;
+  projectStatus?: string;
 }
 
 export function ChatInputArea({
@@ -34,28 +35,49 @@ export function ChatInputArea({
   crsPattern,
   onPatternChange,
   latestCRS,
+  projectStatus,
 }: ChatInputAreaProps) {
   const isUnderReview = latestCRS?.status === "under_review";
   const isRejected = latestCRS?.status === "rejected";
+  const isProjectPending = projectStatus === "pending";
   const isDisabled = isSending || connectionState !== "open";
   const canSend = input.trim() && !isDisabled;
 
   return (
-    <div className="px-8 py-6 bg-white border-t border-gray-100 z-10 transition-all">
+    <div className="px-8 py-8 bg-white border-t border-gray-100 z-10 transition-all">
       <div className="w-full max-w-[1200px] mx-auto relative group">
+        {isProjectPending && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-6 p-5 bg-amber-50/50 border border-amber-100 rounded-2xl text-amber-900 shadow-sm overflow-hidden"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <div className="font-bold text-sm tracking-tight">Project Pending Approval</div>
+                <div className="text-xs text-amber-800/60 mt-1 leading-relaxed font-medium">
+                  CRS submission is currently locked. You can continue detailing your requirements through chat while waiting for the Business Analyst's approval on project.
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {isUnderReview && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="mb-6 p-5 bg-primary/5 border border-primary/10 rounded-2xl text-primary shadow-sm overflow-hidden"
+            className="mb-6 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl text-blue-900 shadow-sm overflow-hidden"
           >
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-primary font-black text-lg italic tracking-tighter">i</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                <span className="text-blue-600 font-black text-lg italic">i</span>
               </div>
               <div>
                 <div className="font-bold text-sm tracking-tight">Active Review Phase</div>
-                <div className="text-xs text-primary/60 mt-1 leading-relaxed font-medium">
+                <div className="text-xs text-blue-800/60 mt-1 leading-relaxed font-medium">
                   The current specification is with the Business Analyst. You can continue detailing your requirements below.
                 </div>
               </div>

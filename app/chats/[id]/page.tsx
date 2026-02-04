@@ -20,6 +20,7 @@ export default function ChatPage({ params }: ChatPageProps) {
   const searchParams = useSearchParams();
   const [chat, setChat] = useState<ChatDetail | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUserDTO | null>(null);
+  const [project, setProject] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,9 +50,10 @@ export default function ChatPage({ params }: ChatPageProps) {
           return;
         }
 
-        const [chatData, userData] = await Promise.all([
+        const [chatData, userData, projectData] = await Promise.all([
           fetchProjectChat(projectId, Number(id)),
           getCurrentUser<CurrentUserDTO>(),
+          fetchProjectById(projectId),
         ]);
 
         // Restrict access: only clients can view chats
@@ -61,18 +63,13 @@ export default function ChatPage({ params }: ChatPageProps) {
         }
 
         // Store team ID from project for sidebar navigation
-        try {
-          const projectData = await fetchProjectById(projectId);
-          if (projectData.team_id) {
-            setCurrentTeamId(projectData.team_id);
-          }
-        } catch (err) {
-          // Non-critical: team context won't be available but chat still works
-          console.warn("Could not load team context:", err);
+        if (projectData.team_id) {
+          setCurrentTeamId(projectData.team_id);
         }
 
         setChat(chatData);
         setCurrentUser(userData);
+        setProject(projectData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load chat");
       } finally {
@@ -93,7 +90,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
   return (
     <div className="w-full h-full">
-      <ChatUI chat={chat} currentUser={currentUser} />
+      <ChatUI chat={chat} currentUser={currentUser} projectStatus={project?.status} />
     </div>
   );
 }

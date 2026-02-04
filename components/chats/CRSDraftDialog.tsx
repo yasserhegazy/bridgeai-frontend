@@ -35,6 +35,8 @@ interface CRSDraftDialogProps {
   onSubmitForReview: () => Promise<void>;
   onRegenerate: () => void;
   onCRSUpdate?: () => void; // Callback to refresh CRS data after edit
+  projectStatus?: string;
+  canSubmitCRS?: boolean;
 }
 
 export function CRSDraftDialog({
@@ -46,6 +48,8 @@ export function CRSDraftDialog({
   onSubmitForReview,
   onRegenerate,
   onCRSUpdate,
+  projectStatus,
+  canSubmitCRS,
 }: CRSDraftDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
@@ -97,7 +101,8 @@ export function CRSDraftDialog({
     setReactiveCrsData(newData);
   };
 
-  const canEdit = currentCrs?.status !== "approved";
+  const isProjectPending = projectStatus === "pending";
+  const canEdit = !isProjectPending && currentCrs?.status !== "approved";
 
   return (
     <Dialog open={open} onOpenChange={(val) => {
@@ -304,12 +309,12 @@ export function CRSDraftDialog({
                   Edit Content
                 </Button>
               )}
-              {currentCrs && currentCrs.status === "draft" && (
+              {currentCrs && (canSubmitCRS !== undefined ? canSubmitCRS : (currentCrs.status === "draft" && !isProjectPending)) && (
                 <Button onClick={onSubmitForReview} variant="primary">
                   Submit for Review
                 </Button>
               )}
-              {currentCrs && currentCrs.status === "rejected" && (
+              {currentCrs && currentCrs.status === "rejected" && !isProjectPending && (
                 <Button
                   onClick={onRegenerate}
                   variant="primary"

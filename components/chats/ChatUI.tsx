@@ -36,9 +36,10 @@ import { useToast } from "@/components/ui/use-toast";
 interface ChatUIProps {
   chat: ChatSessionDTO;
   currentUser: CurrentUserDTO;
+  projectStatus?: string;
 }
 
-export function ChatUI({ chat, currentUser }: ChatUIProps) {
+export function ChatUI({ chat, currentUser, projectStatus }: ChatUIProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -86,6 +87,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     generateCRS,
     submitForReview,
     canGenerateCRS,
+    canSubmitCRS,
     isRejected,
     isApproved,
     setPreviewData,
@@ -93,6 +95,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     sessionId: chat.id,
     projectId: chat.project_id,
     crsPattern,
+    projectStatus,
   });
 
   // Initialize CRS patch applicator
@@ -419,6 +422,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   // Handle CRS generation
   const handleGenerateCRS = useCallback(async () => {
+    if (projectStatus === "pending") {
+      toast({
+        title: "Action Restricted",
+        description: "Your project must be approved by a Business Analyst before you can generate a CRS.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const preview = await fetchPreview();
 
@@ -468,6 +480,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   }, [setPreviewData, partialConfirmModal]);
 
   const handleSubmitForReview = useCallback(async () => {
+    if (projectStatus === "pending") {
+      toast({
+        title: "Action Restricted",
+        description: "Your project must be approved by a Business Analyst before you can submit a CRS.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await submitForReview();
       draftModal.closeModal();
@@ -511,6 +532,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           onStatusUpdate={loadCRS}
           recentInsights={recentInsights}
           canGenerateCRS={canGenerateCRS}
+          canSubmitCRS={canSubmitCRS}
+          projectStatus={projectStatus}
           isRejected={isRejected}
           isApproved={isApproved}
           // Real-time streaming status
@@ -533,6 +556,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           connectionState={connectionState}
           returnTo={returnTo || "/dashboard"}
           canGenerateCRS={canGenerateCRS}
+          canSubmitCRS={canSubmitCRS}
+          projectStatus={projectStatus}
           crsId={latestCRS?.id}
           chatTranscript={generateChatTranscript()}
           onGenerateCRS={() => generateModal.openModal()}
@@ -567,6 +592,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           crsPattern={crsPattern}
           onPatternChange={setCrsPattern}
           latestCRS={latestCRS}
+          projectStatus={projectStatus}
         />
       </div>
     </Panel>
@@ -620,6 +646,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         onSubmitForReview={handleSubmitForReview}
         onRegenerate={handleRegenerate}
         onCRSUpdate={loadCRS}
+        projectStatus={projectStatus}
+        canSubmitCRS={canSubmitCRS}
       />
 
       {previewData && (

@@ -24,6 +24,8 @@ interface ChatHeaderProps {
   connectionState: ConnectionState;
   returnTo: string;
   canGenerateCRS: boolean;
+  canSubmitCRS?: boolean;
+  projectStatus?: string;
   onGenerateCRS: () => void;
   onViewCRS: () => void;
   onToggleDocument: () => void;
@@ -41,6 +43,8 @@ export function ChatHeader({
   connectionState,
   returnTo,
   canGenerateCRS,
+  canSubmitCRS,
+  projectStatus,
   crsId,
   chatTranscript,
   onGenerateCRS,
