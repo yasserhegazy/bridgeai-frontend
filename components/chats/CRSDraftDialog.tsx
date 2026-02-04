@@ -35,6 +35,8 @@ interface CRSDraftDialogProps {
   onSubmitForReview: () => Promise<void>;
   onRegenerate: () => void;
   onCRSUpdate?: () => void; // Callback to refresh CRS data after edit
+  projectStatus?: string;
+  canSubmitCRS?: boolean;
 }
 
 export function CRSDraftDialog({
@@ -46,6 +48,8 @@ export function CRSDraftDialog({
   onSubmitForReview,
   onRegenerate,
   onCRSUpdate,
+  projectStatus,
+  canSubmitCRS,
 }: CRSDraftDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
@@ -97,7 +101,8 @@ export function CRSDraftDialog({
     setReactiveCrsData(newData);
   };
 
-  const canEdit = currentCrs?.status !== "approved";
+  const isProjectPending = projectStatus === "pending";
+  const canEdit = !isProjectPending && currentCrs?.status !== "approved";
 
   return (
     <Dialog open={open} onOpenChange={(val) => {
@@ -117,7 +122,7 @@ export function CRSDraftDialog({
                   <Button
                     variant={viewMode === 'doc' ? 'primary' : 'ghost'}
                     size="sm"
-                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    className="h-7 px-3 text-[10px] font-bold"
                     onClick={() => setViewMode('doc')}
                   >
                     Document
@@ -125,7 +130,7 @@ export function CRSDraftDialog({
                   <Button
                     variant={viewMode === 'json' ? 'primary' : 'ghost'}
                     size="sm"
-                    className="h-7 px-3 text-[10px] uppercase font-bold tracking-wider"
+                    className="h-7 px-3 text-[10px] font-bold"
                     onClick={() => setViewMode('json')}
                   >
                     JSON Source
@@ -187,7 +192,7 @@ export function CRSDraftDialog({
                 {/* Live Preview during editing */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm overflow-y-auto hidden lg:block">
                   <div className="mb-4 pb-2 border-b flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Live Preview</h4>
+                    <h4 className="text-sm font-bold text-gray-400 tracking-tight">Live Preview</h4>
                     <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Reactive Sync Active</span>
                   </div>
                   <CRSContentDisplay crsData={reactiveCrsData} />
@@ -304,12 +309,12 @@ export function CRSDraftDialog({
                   Edit Content
                 </Button>
               )}
-              {currentCrs && currentCrs.status === "draft" && (
+              {currentCrs && (canSubmitCRS !== undefined ? canSubmitCRS : (currentCrs.status === "draft" && !isProjectPending)) && (
                 <Button onClick={onSubmitForReview} variant="primary">
                   Submit for Review
                 </Button>
               )}
-              {currentCrs && currentCrs.status === "rejected" && (
+              {currentCrs && currentCrs.status === "rejected" && !isProjectPending && (
                 <Button
                   onClick={onRegenerate}
                   variant="primary"

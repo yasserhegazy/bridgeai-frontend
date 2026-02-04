@@ -15,9 +15,10 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CardGrid } from "@/components/shared/CardGrid";
 import { CreateTeamModal } from "@/components/teams/CreateTeamModal";
+import { EmptyTeams } from "@/components/teams/EmptyTeams";
 import { TeamsFilters } from "@/components/teams/TeamsFilters";
 import { Pagination } from "@/components/shared/Pagination";
-import { useTeamsList, useModal } from "@/hooks";
+import { useTeamsList, useModal, useCurrentUser } from "@/hooks";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -27,6 +28,7 @@ export default function TeamsList() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
+    teams,
     filteredTeams,
     isLoading,
     error,
@@ -73,12 +75,17 @@ export default function TeamsList() {
     refetchTeams();
   }, [refetchTeams]);
 
+  const { user } = useCurrentUser();
+  const isBA = user?.role === "ba";
+
   return (
     <div className="max-w-6xl mx-auto mt-14 px-6">
       {/* Header */}
       <PageHeader
         title="Teams"
-        description="Manage all teams for your organization in one place."
+        description={isBA
+          ? "Manage and oversee all client organizations and review teams."
+          : "Manage all teams for your organization in one place."}
       />
 
       {/* Search and Filters */}
@@ -108,8 +115,12 @@ export default function TeamsList() {
       {/* Error State */}
       {error && !isLoading && <ErrorState message={error} />}
 
-      {/* Empty State */}
-      {!isLoading && !error && filteredTeams.length === 0 && (
+      {/* Empty States */}
+      {!isLoading && !error && teams.length === 0 && (
+        <EmptyTeams onCreateTeam={openModal} />
+      )}
+
+      {!isLoading && !error && teams.length > 0 && filteredTeams.length === 0 && (
         <EmptyState message="No teams found matching your filters." />
       )}
 

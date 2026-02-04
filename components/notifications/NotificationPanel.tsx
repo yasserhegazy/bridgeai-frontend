@@ -6,6 +6,7 @@ import { notificationAPI, Notification } from '@/lib/api-notifications';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './StatusBadge';
 import { showToast } from './NotificationToast';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 type FilterType = 'all' | 'unread' | 'project' | 'team' | 'crs';
 
@@ -103,8 +104,8 @@ export function NotificationPanel() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#341BAB]"></div>
+      <div className="flex justify-center items-center py-20">
+        <LoadingSpinner size="md" message="Loading notifications..." />
       </div>
     );
   }
@@ -154,9 +155,8 @@ export function NotificationPanel() {
           filteredNotifications.map(notification => (
             <div
               key={notification.id}
-              className={`p-4 rounded-lg border ${
-                !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
-              }`}
+              className={`p-4 rounded-xl border ${!notification.is_read ? 'bg-primary/5 border-primary/10' : 'bg-white border-gray-100'
+                }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
@@ -164,7 +164,7 @@ export function NotificationPanel() {
                     {getStatusIcon(notification)}
                     <h3 className="font-semibold">{notification.title}</h3>
                     {!notification.is_read && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{notification.message}</p>

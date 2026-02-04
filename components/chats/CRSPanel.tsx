@@ -54,6 +54,8 @@ interface CRSPanelProps {
     onRegenerate?: () => void;
     onStatusUpdate?: () => void;
     canGenerateCRS?: boolean;
+    canSubmitCRS?: boolean;
+    projectStatus?: string;
     isRejected?: boolean;
     isApproved?: boolean;
     chatTranscript?: string;
@@ -83,6 +85,8 @@ export function CRSPanel({
     onStatusUpdate,
     recentInsights,
     canGenerateCRS,
+    canSubmitCRS,
+    projectStatus,
     isRejected,
     isApproved,
     chatTranscript,
@@ -103,11 +107,13 @@ export function CRSPanel({
     const [lockedSections, setLockedSections] = useState<Set<string>>(new Set());
     const VERSION_DELTA_THRESHOLD = 2; // Only show animations for changes ≥2 versions
 
+    const isProjectPending = projectStatus === "pending";
+
     // Detect CRS updates and show visual feedback (only for significant changes)
     useEffect(() => {
         if (latestCRS?.edit_version && previousVersionRef.current !== undefined) {
             const versionDelta = latestCRS.edit_version - previousVersionRef.current;
-            
+
             // Only show update notification if not editing and version changed significantly
             if (versionDelta >= VERSION_DELTA_THRESHOLD && !isEditing) {
                 setIsUpdating(true);
@@ -150,7 +156,7 @@ export function CRSPanel({
 
         return contentObj;
     }, [latestCRS?.content, isGenerating]);
-    
+
     // Lock document updates when editing to prevent conflicts
     const handleStartEditing = () => {
         setIsEditing(true);
@@ -158,7 +164,7 @@ export function CRSPanel({
         setLockedSections(new Set(['*'])); // '*' means all sections locked
         console.log('[CRSPanel] Edit mode enabled - updates locked');
     };
-    
+
     const handleCancelEditing = () => {
         setIsEditing(false);
         setLockedSections(new Set());
@@ -186,12 +192,12 @@ export function CRSPanel({
                 newContent,
                 latestCRS.edit_version || 0
             );
-            
+
             // Exit edit mode and unlock sections
             setIsEditing(false);
             setLockedSections(new Set());
             console.log('[CRSPanel] Save complete - updates unlocked');
-            
+
             if (onStatusUpdate) onStatusUpdate();
 
             toast.success("Changes saved successfully!");
@@ -211,10 +217,33 @@ export function CRSPanel({
         }
     };
 
-    const canEdit = latestCRS?.status !== "approved" && latestCRS?.status !== "under_review";
+    const canEdit = !isProjectPending && latestCRS?.status !== "approved" && latestCRS?.status !== "under_review";
 
     return (
         <div className="flex flex-col h-full bg-white border-l border-gray-200 overflow-hidden shadow-2xl relative">
+            {/* Project Pending Alert */}
+            <AnimatePresence>
+                {isProjectPending && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="bg-amber-50/50 text-amber-800/60 overflow-hidden shrink-0 z-50"
+                    >
+                        <div className="px-8 py-3 flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                                <AlertCircle className="w-4 h-4 text-amber-800/60" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="text-[11px] font-black uppercase tracking-widest leading-none mb-1">Project Pending Approval</div>
+                                <div className="text-[10px] opacity-90 font-bold leading-tight tracking-tight">CRS submission is restricted until the Business Analyst approves your project.</div>
+                            </div>
+                            <div className="px-3 py-1 bg-amber-100 rounded-lg text-[10px] font-black tracking-tighter whitespace-nowrap">Pending Approval</div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header */}
             <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 z-20">
                 <div className="flex items-center gap-3">
@@ -225,7 +254,7 @@ export function CRSPanel({
                         <h2 className="text-lg font-bold text-gray-900 leading-tight tracking-tight">Project Specification</h2>
                         <div className="flex items-center gap-2 mt-0.5">
                             <motion.span
-                                className="flex h-1.5 w-1.5 rounded-full bg-green-500"
+                                className={`flex h-1.5 w-1.5 rounded-full ${isProjectPending ? "bg-amber-400" : "bg-green-500"}`}
                                 animate={{
                                     scale: [1, 1.3, 1],
                                     opacity: [1, 0.7, 1]
@@ -237,7 +266,7 @@ export function CRSPanel({
                                 }}
                             />
                             <p className="text-[10px] text-gray-500 font-bold tracking-tight">
-                                {isGenerating ? "Building..." : isUpdating ? "Updating..." : "LIVE"}
+                                {isGenerating ? "Building..." : isUpdating ? "Updating..." : isProjectPending ? "PENDING" : "LIVE"}
                             </p>
                         </div>
                     </div>
@@ -272,18 +301,20 @@ export function CRSPanel({
                                 </Button>
                             )}
 
-                            <Button
-                                onClick={() => setShowComments(!showComments)}
-                                variant="ghost"
-                                size="sm"
-                                className={`h-9 gap-2 rounded-xl px-4 font-bold text-[10px] tracking-tight transition-all ${showComments ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-primary hover:bg-primary/5"
-                                    }`}
-                            >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Comments
-                            </Button>
+                            {latestCRS.status !== "draft" && (
+                                <Button
+                                    onClick={() => setShowComments(!showComments)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-9 gap-2 rounded-xl px-4 font-bold text-[10px] tracking-tight transition-all ${showComments ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                                        }`}
+                                >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    Comments
+                                </Button>
+                            )}
 
-                            {latestCRS.status === "draft" && onSubmitForReview && (
+                            {canSubmitCRS && onSubmitForReview && (
                                 <Button
                                     onClick={onSubmitForReview}
                                     variant="primary"
@@ -294,7 +325,7 @@ export function CRSPanel({
                                 </Button>
                             )}
 
-                            {latestCRS.status === "rejected" && onRegenerate && (
+                            {latestCRS.status === "rejected" && onRegenerate && !isProjectPending && (
                                 <Button
                                     onClick={onRegenerate}
                                     variant="primary"
@@ -316,40 +347,6 @@ export function CRSPanel({
                         className="h-10 gap-3 rounded-xl px-5 border-gray-100 hover:bg-gray-50 text-gray-900 font-bold text-[10px] tracking-tight transition-all shadow-sm active:scale-95"
                     />
 
-                    {isGenerating && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl border border-amber-100/50 shadow-sm transition-all"
-                        >
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                            <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-bold tracking-tight">
-                                    {streamStep || "AI drafting..."}
-                                </span>
-                                {streamProgress > 0 && (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-1 bg-amber-200 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-amber-500"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${streamProgress}%` }}
-                                                transition={{ duration: 0.3 }}
-                                            />
-                                        </div>
-                                        <span className="text-[8px] font-medium text-amber-600">
-                                            {streamProgress}%
-                                        </span>
-                                    </div>
-                                )}
-                                {streamRetryCount > 0 && (
-                                    <span className="text-[8px] text-amber-600">
-                                        Retry attempt {streamRetryCount}
-                                    </span>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
 
                     {streamError && !isGenerating && (
                         <motion.div
@@ -699,7 +696,7 @@ export function CRSPanel({
 
                 {/* Inline Comments Section */}
                 <AnimatePresence>
-                    {showComments && latestCRS && (
+                    {showComments && latestCRS && latestCRS.status !== "draft" && (
                         <motion.div
                             initial={{ x: "100%", opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}

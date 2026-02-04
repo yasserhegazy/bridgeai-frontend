@@ -80,59 +80,63 @@ export default function CRSDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <FileCheck className="w-8 h-8 text-[#341bab]" />
-          <h1 className="text-3xl font-bold text-gray-900">CRS Dashboard</h1>
+    <div className="flex justify-center mt-14 px-6 sm:px-8 pb-12">
+      <div className="w-full max-w-6xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <FileCheck className="h-[26px] w-[26px] text-[#341bab]" />
+            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+              CRS Dashboard
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Review and manage Customer Requirements Specification documents.
+          </p>
         </div>
-        <p className="text-gray-600">
-          Review and manage Customer Requirements Specification documents
-        </p>
-      </div>
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-          {successMessage}
-        </div>
-      )}
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+            {successMessage}
+          </div>
+        )}
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-          {error}
-        </div>
-      )}
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+            {error}
+          </div>
+        )}
 
-      {/* Loading State */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-[#341bab]" />
-          <span className="ml-3 text-gray-600">Loading CRS documents...</span>
-        </div>
-      ) : (
-        <>
-          {/* CRS Table */}
-          <CRSDashboardTable
-            documents={crsDocuments}
-            onViewDetails={handleViewDetails}
-            statusFilter={statusFilter}
-            onFilterChange={handleFilterChange}
-          />
-
-          {/* CRS Review Dialog */}
-          {selectedCRS && (
-            <CRSReviewDialog
-              crs={selectedCRS}
-              open={!!selectedCRS}
-              onClose={() => setSelectedCRS(null)}
-              onStatusUpdate={handleStatusUpdate}
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-[#341bab]" />
+            <span className="ml-3 text-gray-600">Loading CRS documents...</span>
+          </div>
+        ) : (
+          <>
+            {/* CRS Table */}
+            <CRSDashboardTable
+              documents={crsDocuments}
+              onViewDetails={handleViewDetails}
+              statusFilter={statusFilter}
+              onFilterChange={handleFilterChange}
             />
-          )}
-        </>
-      )}
+
+            {/* CRS Review Dialog */}
+            {selectedCRS && (
+              <CRSReviewDialog
+                crs={selectedCRS}
+                open={!!selectedCRS}
+                onClose={() => setSelectedCRS(null)}
+                onStatusUpdate={handleStatusUpdate}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -96,14 +96,14 @@ export function CRSProgressIndicator({
             <span className="text-green-600 font-medium">CRS is ready!</span>
           </div>
         )}
-        
+
         {!isComplete && (
           <>
             {/* Special message for 95% (clarification mode cap) */}
             {percentage === 95 && missingRequiredFields.length === 0 && weakFields.length === 0 && (
               <div className="flex items-start gap-1.5">
-                <Circle className="h-3 w-3 mt-0.5 text-blue-500 flex-shrink-0" />
-                <span className="text-blue-600">
+                <Circle className="h-3 w-3 mt-0.5 text-primary flex-shrink-0" />
+                <span className="text-primary font-medium">
                   Almost there! The AI is still gathering final details.
                 </span>
               </div>

@@ -1,8 +1,21 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { CRSDTO, CRSStatus, CRSPattern } from "@/dto/crs.dto";
 import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
-import { Eye } from "lucide-react";
+import { Eye, FileText, Clock, Filter, MessageSquare, ExternalLink, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { SearchBar } from "@/components/shared/SearchBar";
+import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface CRSDashboardTableProps {
   documents: CRSDTO[];
@@ -11,147 +24,183 @@ interface CRSDashboardTableProps {
   onFilterChange: (status: CRSStatus | "all") => void;
 }
 
-type PatternKey = CRSPattern | "unknown";
-
-const PATTERN_LABELS: Record<PatternKey, string> = {
-  iso_iec_ieee_29148: "ISO/IEC/IEEE 29148",
-  ieee_830: "IEEE 830",
-  babok: "BABOK",
-  agile_user_stories: "Agile User Stories",
-  unknown: "Unknown",
-};
-
-const PATTERN_COLORS: Record<PatternKey, string> = {
-  iso_iec_ieee_29148: "bg-blue-100 text-blue-800",
-  ieee_830: "bg-purple-100 text-purple-800",
-  babok: "bg-green-100 text-green-800",
-  agile_user_stories: "bg-orange-100 text-orange-800",
-  unknown: "bg-gray-100 text-gray-800",
-};
-
 export function CRSDashboardTable({
   documents,
   onViewDetails,
   statusFilter,
   onFilterChange,
 }: CRSDashboardTableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+
   const statusOptions: Array<{ value: CRSStatus | "all"; label: string }> = [
-    { value: "all", label: "All Status" },
-    { value: "under_review", label: "Under Review" },
+    { value: "all", label: "All status" },
+    { value: "under_review", label: "Under review" },
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
   ];
 
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc) => {
+      const searchStr = searchTerm.toLowerCase();
+      const projectIdStr = `project #${doc.project_id}`;
+      const projectNameStr = doc.project_name?.toLowerCase() || "";
+      const versionStr = `v${doc.version}`;
+
+      return (
+        projectIdStr.includes(searchStr) ||
+        projectNameStr.includes(searchStr) ||
+        versionStr.includes(searchStr)
+      );
+    });
+  }, [documents, searchTerm]);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Filters */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            CRS Documents ({documents.length})
-          </h2>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Filter by status:</label>
-            <select
+    <div className="space-y-6">
+      {/* Premium Search & Filters Area */}
+      <div className="flex flex-col gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="w-full md:max-w-xl">
+            <SearchBar
+              placeholder="Search by project name, ID or version..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select
               value={statusFilter}
-              onChange={(e) => onFilterChange(e.target.value as CRSStatus | "all")}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#341bab] focus:border-transparent"
+              onValueChange={(value) => onFilterChange(value as CRSStatus | "all")}
             >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-[180px] h-10 bg-white border-gray-200 rounded-xl shadow-sm font-bold text-gray-700 focus:ring-primary/20">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-400" />
+                  <SelectValue placeholder="Filter Status" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                {statusOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-sm font-medium">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      {documents.length === 0 ? (
-        <div className="p-8 text-center text-gray-500">
-          <p>No CRS documents found.</p>
-          <p className="text-sm mt-1">Try changing the filter or wait for clients to submit documents.</p>
+      {/* Requests List */}
+      {filteredDocuments.length === 0 ? (
+        <div className="bg-white border border-dashed border-gray-200 rounded-3xl p-16 text-center">
+          <div className="mb-6 inline-flex p-6 rounded-full bg-gray-50 text-gray-400">
+            <FileText className="w-12 h-12" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">No documents found</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto">
+            Try adjusting your search or filters to find what you're looking for.
+          </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Project ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pattern
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Version
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Summary
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {documents.map((crs) => {
-                const patternKey: PatternKey = crs.pattern ?? "unknown";
-                const summaryCount = crs.summary_points?.length ?? 0;
-                return (
-                <tr key={crs.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    Project #{crs.project_id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PATTERN_COLORS[patternKey]}`}>
-                      {PATTERN_LABELS[patternKey]}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    v{crs.version}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <CRSStatusBadge status={crs.status} />
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <div className="max-w-xs truncate">
-                      {crs.summary_points?.[0] || "No summary available"}
+        <div className="grid grid-cols-1 gap-6 pb-12">
+          {filteredDocuments.map((crs) => (
+            <div
+              key={crs.id}
+              className="bg-white border border-gray-200 rounded-2xl py-4 px-6 shadow-sm hover:shadow-lg transition-all duration-300 group hover-lift overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-primary/[0.01] opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
+                {/* Column 1: Document Identity (4/12) */}
+                <div className="lg:col-span-4 flex items-center gap-5">
+                  <div className="p-3.5 rounded-2xl bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors shrink-0">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-lg font-bold text-gray-900 truncate">
+                        Spec v{crs.version}.0
+                      </h4>
+                      <CRSStatusBadge status={crs.status} />
                     </div>
-                    {summaryCount > 1 && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        +{summaryCount - 1} more points
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{formatDistanceToNow(new Date(crs.created_at), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2: Details Column (5/12) */}
+                <div className="lg:col-span-5 flex flex-col gap-2 lg:border-l lg:border-gray-100 lg:pl-8 text-left">
+                  <div className="grid grid-cols-1 gap-2">
+                    {/* Client Info */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 font-bold w-12 shrink-0">Client:</span>
+                      <span className="text-gray-600 font-semibold truncate">
+                        {crs.client_name || "Enterprise Client"}
+                      </span>
+                    </div>
+
+                    {/* Project Link */}
+                    <div className="flex items-center gap-2 text-xs group/link">
+                      <span className="text-gray-400 font-bold w-12 shrink-0">Project:</span>
+                      <Link
+                        href={`/projects/${crs.project_id}`}
+                        className="text-gray-600 font-semibold hover:text-primary transition-colors truncate"
+                      >
+                        {crs.project_name || `Project #${crs.project_id}`}
+                      </Link>
+                      <ExternalLink className="w-3 h-3 text-gray-300 group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                    </div>
+
+                    {/* Chat Session */}
+                    {crs.chat_session_id ? (
+                      <Link
+                        href={`/chats/${crs.chat_session_id}?projectId=${crs.project_id}`}
+                        className="flex items-center gap-2 text-xs group/link"
+                      >
+                        <span className="text-gray-400 font-bold w-12 shrink-0">Chat:</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <MessageSquare className="w-3 h-3 text-primary" />
+                          <span className="text-primary font-bold group-hover/link:underline transition-all">
+                            View source session
+                          </span>
+                        </div>
+                        <ExternalLink className="w-3 h-3 text-primary/40 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <span className="font-bold w-12 shrink-0">Chat:</span>
+                        <span>Generated from direct upload</span>
                       </div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(crs.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => onViewDetails(crs)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#341bab] text-white rounded-md hover:bg-[#2a1589] transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Review
-                    </button>
-                  </td>
-                </tr>
-              );
-              })}
-            </tbody>
-          </table>
+
+                    {/* Creator Info */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 font-bold w-12 shrink-0">Creator:</span>
+                      <span className="text-gray-600 font-semibold truncate">
+                        BA User #{crs.created_by}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 3: Actions (3/12) */}
+                <div className="lg:col-span-3 flex justify-end">
+                  <Button
+                    onClick={() => onViewDetails(crs)}
+                    variant="primary"
+                    size="default"
+                    className="w-full lg:w-auto px-6 h-10 gap-2.5 shadow-lg shadow-primary/10 transition-all hover:scale-[1.05] active:scale-95 font-bold text-sm rounded-xl"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Review details</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

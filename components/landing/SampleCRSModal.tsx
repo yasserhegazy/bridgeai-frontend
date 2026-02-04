@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, CheckCircle2, ShieldCheck, Cpu, Database, Network } from "lucide-react";
+import { FileText, CheckCircle2, ShieldCheck, History, Download, X, CheckCircle, Edit, Clock } from "lucide-react";
+import { CRSStatusBadge } from "@/components/shared/CRSStatusBadge";
+import { cn } from "@/lib/utils";
 
 const sampleCRS = {
   project_title: "SmartTask: AI-Enabled Project Management",
@@ -75,8 +77,33 @@ const sampleCRS = {
   ]
 };
 
+const mockHistoryLogs = [
+  {
+    id: 1,
+    action: "approved",
+    changed_by: "Khaled Jamal",
+    formattedDate: "Oct 24, 2024 • 14:30",
+    summary: "Business Requirements validated against stakeholder vision. High-fidelity extraction complete.",
+  },
+  {
+    id: 2,
+    action: "updated",
+    changed_by: "System Agent",
+    formattedDate: "Oct 24, 2024 • 11:15",
+    summary: "Refined Technical Stack based on scalability constraints (10,000 concurrent users).",
+  },
+  {
+    id: 3,
+    action: "created",
+    changed_by: "Sarah Miller",
+    formattedDate: "Oct 23, 2024 • 09:00",
+    summary: "Initial Project Extraction from requirement gathering phase.",
+  }
+];
+
 export function SampleCRSModal() {
   const [open, setOpen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -86,61 +113,73 @@ export function SampleCRSModal() {
           View Sample CRS
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 overflow-hidden border-none shadow-2xl flex flex-col bg-white">
-        {/* Header - No Shrink */}
-        <div className="p-8 border-b bg-gray-50 flex items-center justify-between shrink-0">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-mono text-[10px] uppercase tracking-widest">
-                Sample Output
-              </Badge>
-              <div className="h-[1px] w-8 bg-gray-200" />
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Document ID: ST-2024-X1</span>
-            </div>
-            <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight">
-              {sampleCRS.project_title}
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-2xl">
+        <DialogHeader className="px-8 py-5 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+              Sample Document: {sampleCRS.project_title}
             </DialogTitle>
-            <DialogDescription className="text-sm font-medium">
-              Comprehensive Requirement Specification Workflow
-            </DialogDescription>
+            <CRSStatusBadge status="approved" />
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <ShieldCheck className="w-6 h-6" />
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 bg-gray-50/30">
+          {/* Metadata Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Version</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-black text-gray-900">v1.2.0</p>
+                <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold">Stable</span>
+              </div>
+            </div>
+            <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Issue date</p>
+              <p className="text-sm font-bold text-gray-900 mt-1">Oct 24, 2024</p>
+            </div>
+            <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status class</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <p className="text-sm font-bold text-gray-900 capitalize">Validated</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-          <div className="max-w-4xl mx-auto space-y-12 pb-12">
+          {/* Overview Section */}
+          <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-xs font-black text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Project Archetype & Vision
+            </h3>
+            <p className="text-sm text-gray-700 font-medium leading-relaxed mb-6">
+              {sampleCRS.description}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {sampleCRS.objectives.map((obj, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-white/60 rounded-xl border border-primary/5">
+                  <div className="mt-1.5 shrink-0 w-1 h-1 rounded-full bg-primary/40" />
+                  <span className="text-sm text-gray-700 font-medium leading-tight">{obj}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            {/* Overview Section */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="h-8 w-1 bg-primary rounded-full" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Project Archetype & Vision</h3>
-              </div>
-              <p className="text-gray-600 leading-relaxed text-base font-medium">
-                {sampleCRS.description}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                {sampleCRS.objectives.map((obj, i) => (
-                  <div key={i} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex gap-3 group hover:border-primary/20 transition-colors">
-                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5 opacity-40 group-hover:opacity-100 transition-opacity" />
-                    <span className="text-sm font-semibold text-gray-700 leading-snug">{obj}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
+          {/* Main Content Container */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm relative overflow-hidden space-y-12">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <FileText className="w-24 h-24" />
+            </div>
 
             {/* Technical Context Section */}
-            <section className="space-y-6">
+            <section className="space-y-6 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="h-8 w-1 bg-primary rounded-full" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Engineered Tech Stack</h3>
+                <div className="h-6 w-1 bg-primary rounded-full" />
+                <h3 className="text-base font-bold text-gray-900 tracking-tight">Engineered tech stack</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {sampleCRS.tech_stack.map((item, i) => (
-                  <div key={i} className="p-5 border border-gray-100 rounded-2xl bg-white shadow-sm">
+                  <div key={i} className="p-4 border border-gray-100 rounded-xl bg-gray-50/50">
                     <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">{item.area}</div>
                     <div className="text-sm font-bold text-gray-800">{item.stack}</div>
                   </div>
@@ -149,25 +188,26 @@ export function SampleCRSModal() {
             </section>
 
             {/* Functional Hierarchy Section */}
-            <section className="space-y-6">
+            <section className="space-y-6 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="h-8 w-1 bg-primary rounded-full" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Functional Capability Matrix</h3>
+                <div className="h-6 w-1 bg-primary rounded-full" />
+                <h3 className="text-base font-bold text-gray-900 tracking-tight">Functional capability matrix</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sampleCRS.functional_requirements.map((req, index) => (
-                  <div key={index} className="p-6 border border-gray-100 rounded-2xl flex flex-col gap-4 hover:shadow-lg transition-all bg-white relative group">
+                  <div key={index} className="p-5 border border-gray-100 rounded-xl flex flex-col gap-3 hover:border-primary/20 transition-all bg-white shadow-sm group">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">{req.id}</span>
-                        <h4 className="font-black text-gray-900 tracking-tight">{req.title}</h4>
+                        <h4 className="font-bold text-gray-900 tracking-tight">{req.title}</h4>
                       </div>
-                      <Badge variant="outline" className={`text-[9px] font-black uppercase ${req.priority === 'High' ? 'border-red-100 text-red-500 bg-red-50' : 'border-gray-200'
-                        }`}>
+                      <Badge variant="outline" className={cn("text-[9px] font-black border-none px-2",
+                        req.priority === 'High' ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-100'
+                      )}>
                         {req.priority}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                    <p className="text-xs text-gray-500 font-medium leading-relaxed">
                       {req.description}
                     </p>
                   </div>
@@ -175,18 +215,18 @@ export function SampleCRSModal() {
               </div>
             </section>
 
-            {/* Non-Functional & Constraints Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+            {/* Quality Safeguards & Operational Scope */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4 relative z-10">
               <section className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-6 w-1 bg-primary rounded-full" />
-                  <h3 className="text-base font-black uppercase tracking-tight text-gray-900">Quality Safeguards</h3>
+                  <div className="h-4 w-1 bg-primary rounded-full" />
+                  <h3 className="text-sm font-bold text-gray-900 tracking-tight">Quality safeguards</h3>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {sampleCRS.non_functional_requirements.map((nfr, i) => (
-                    <div key={i} className="flex flex-col gap-1.5 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
-                      <span className="text-[10px] font-black text-primary uppercase tracking-widest">{nfr.label}</span>
-                      <p className="text-sm font-bold text-gray-700">{nfr.value}</p>
+                    <div key={i} className="flex flex-col gap-1 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
+                      <span className="text-[9px] font-black text-primary uppercase tracking-widest">{nfr.label}</span>
+                      <p className="text-xs font-bold text-gray-700">{nfr.value}</p>
                     </div>
                   ))}
                 </div>
@@ -194,41 +234,104 @@ export function SampleCRSModal() {
 
               <section className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-6 w-1 bg-primary rounded-full" />
-                  <h3 className="text-base font-black uppercase tracking-tight text-gray-900">Operational Scope</h3>
+                  <div className="h-4 w-1 bg-primary rounded-full" />
+                  <h3 className="text-sm font-bold text-gray-900 tracking-tight">Operational scope</h3>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-5">
                   <div>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Primary Stakeholders</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">Primary stakeholders</span>
                     <div className="flex flex-wrap gap-2">
                       {sampleCRS.stakeholders.map((s, i) => (
-                        <Badge key={i} variant="secondary" className="bg-white border border-gray-200 text-gray-600 font-bold text-[10px]">
+                        <Badge key={i} variant="secondary" className="bg-white border border-gray-200 text-gray-600 font-bold text-[9px] rounded-lg">
                           {s}
                         </Badge>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Global Constraints</span>
-                    <p className="text-sm font-bold text-gray-700 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">Global constraints</span>
+                    <p className="text-xs font-bold text-gray-700 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-200 leading-relaxed">
                       {sampleCRS.constraints}
                     </p>
                   </div>
                 </div>
               </section>
             </div>
-
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-4 border-t bg-gray-50 flex items-center justify-between text-[10px] font-black text-gray-400 shrink-0">
-          <div className="flex items-center gap-4">
-            <span>BRIDGEAI // CRS_ENGINE_v4.2</span>
-            <div className="h-3 w-[1px] bg-gray-300" />
-            <span>ENCRYPTION: AES-256</span>
+        <div className="px-8 py-5 border-t border-gray-100 bg-white flex items-center justify-between gap-4 shrink-0">
+          <div className="flex gap-2">
+            <Dialog open={showHistory} onOpenChange={setShowHistory}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="rounded-xl font-bold text-xs h-10 px-6 gap-2 transition-all active:scale-95">
+                  <History className="w-4 h-4" />
+                  History
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl max-h-[80vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-2xl">
+                <DialogHeader className="px-8 py-5 border-b border-gray-100 shrink-0 bg-white">
+                  <DialogTitle className="flex items-center gap-2.5 text-xl font-bold text-gray-900 tracking-tight">
+                    <History className="w-5 h-5 text-primary" />
+                    Audit Trail & History
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="flex-1 overflow-y-auto px-8 py-6 bg-gray-50/30">
+                  <div className="space-y-8 relative before:absolute before:inset-0 before:left-[19px] before:w-0.5 before:bg-gray-100">
+                    {mockHistoryLogs.map((log) => (
+                      <div key={log.id} className="relative flex gap-5 group">
+                        <div className="relative z-10 shrink-0 mt-1">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center transition-transform group-hover:scale-110">
+                            {log.action === 'approved' ? <CheckCircle className="w-5 h-5 text-green-500" /> :
+                              log.action === 'updated' ? <Edit className="w-5 h-5 text-orange-500" /> :
+                                <Clock className="w-5 h-5 text-primary" />}
+                          </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="font-bold text-gray-900 tracking-tight capitalize">
+                              {log.action}
+                            </p>
+                            <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                              {log.formattedDate}
+                            </span>
+                          </div>
+
+                          <p className="text-sm text-gray-600 mb-2 leading-relaxed">
+                            <span className="font-bold text-gray-900">{log.changed_by}</span> performed this action.
+                          </p>
+
+                          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-xs text-gray-600 border border-gray-100 italic shadow-xs">
+                            {log.summary}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-          <span>CERTIFIED SPECIFICATION // 2024</span>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setOpen(false)}
+              variant="outline"
+              className="rounded-xl font-bold text-xs h-10 px-6"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => setOpen(false)}
+              variant="primary"
+              className="rounded-xl font-bold text-xs h-10 px-8"
+            >
+              Get started
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

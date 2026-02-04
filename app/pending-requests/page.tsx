@@ -55,41 +55,35 @@ export default function PendingRequestsPage() {
   }
 
   return (
-    <div className="flex justify-center mt-14 px-6 sm:px-8">
-      <div className="w-full max-w-7xl">
+    <div className="flex justify-center mt-14 px-6 sm:px-8 pb-12">
+      <div className="w-full max-w-6xl">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Pending Project Requests
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Review and approve or reject client project requests
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
+              Project Requests
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Review and manage client project requests for your validation.
           </p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">{successMessage}</p>
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+            {successMessage}
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+            {error}
           </div>
         )}
 
-        {/* Projects Count */}
-        <div className="mb-4">
-          <p className="text-sm text-muted-foreground">
-            {projects.length} {projects.length === 1 ? "request" : "requests"}{" "}
-            pending review
-          </p>
-        </div>
-
-        {/* Table */}
+        {/* Projects Table/Cards */}
         <PendingRequestsTable
           projects={projects}
           onApprove={handleApprove}

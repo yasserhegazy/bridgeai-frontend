@@ -19,11 +19,14 @@ import { useTeamDashboard } from "@/hooks/teams/useTeamDashboard";
 import { RefreshCw } from "lucide-react";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
 import { InviteMemberModal } from "@/components/teams/InviteMemberModal";
+import { useCurrentUser } from "@/hooks";
 
 export default function DashboardPage() {
   const params = useParams();
   const teamId = parseInt(params.id as string);
   const { stats, isLoading, error, refresh } = useTeamDashboard(teamId);
+  const { user } = useCurrentUser();
+  const isBA = user?.role === "ba";
 
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
@@ -36,7 +39,9 @@ export default function DashboardPage() {
         <div className="w-full max-w-6xl">
           <PageHeader
             title="Dashboard"
-            description="View your team statistics in one place."
+            description={isBA
+              ? "Audit team lifecycle and overview with real-time analytics."
+              : "View your team statistics in one place."}
           />
           <div className="flex items-center justify-center min-h-[400px]">
             <LoadingSpinner size="lg" message="Loading dashboard..." />
@@ -53,7 +58,9 @@ export default function DashboardPage() {
         <div className="w-full max-w-6xl">
           <PageHeader
             title="Dashboard"
-            description="View your team statistics in one place."
+            description={isBA
+              ? "Audit team lifecycle and overview with real-time analytics."
+              : "View your team statistics in one place."}
           />
           <div className="flex items-center justify-center min-h-[400px]">
             <ErrorState
@@ -73,7 +80,9 @@ export default function DashboardPage() {
         <div className="w-full max-w-6xl">
           <PageHeader
             title="Dashboard"
-            description="Get started by creating your first project."
+            description={isBA
+              ? "Ready to initiate a project audit entry?"
+              : "Get started by creating your first project."}
           />
           <main className="flex-1 mt-8">
             <EmptyDashboard
@@ -103,7 +112,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8">
           <PageHeader
             title="Dashboard"
-            description="View your team statistics in one place."
+            description={isBA
+              ? "Audit team lifecycle and overview with real-time analytics."
+              : "View your team statistics in one place."}
           />
           <button
             onClick={refresh}

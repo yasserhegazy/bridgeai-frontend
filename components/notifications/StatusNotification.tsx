@@ -27,10 +27,10 @@ export function StatusNotification({ status, message, onClose }: StatusNotificat
   if (!visible || status === 'idle') return null;
 
   const config = {
-    loading: { icon: Loader2, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
-    success: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-200' },
-    error: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200' },
-    info: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+    loading: { icon: Loader2, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/10' },
+    success: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+    error: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+    info: { icon: Info, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/10' },
   };
 
   const { icon: Icon, color, bg, border } = config[status];

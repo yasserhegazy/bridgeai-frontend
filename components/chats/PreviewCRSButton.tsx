@@ -136,7 +136,7 @@ export function PreviewCRSButton({
           </span>
         )}
         {!loading && variant !== "ghost" && (
-          <Sparkles className="h-3 w-3 ml-1.5 text-blue-500" />
+          <Sparkles className="h-3 w-3 ml-1.5 text-primary" />
         )}
       </Button>
 

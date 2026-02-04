@@ -52,7 +52,7 @@ export function CRSPreviewModal({
           <div className="flex items-start justify-between">
             <div className="space-y-1.5">
               <DialogTitle className="text-2xl flex items-center gap-2">
-                <FileText className="h-6 w-6 text-blue-600" />
+                <FileText className="h-6 w-6 text-primary" />
                 CRS Preview
               </DialogTitle>
               <DialogDescription>
@@ -65,7 +65,7 @@ export function CRSPreviewModal({
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
               <p className="text-gray-600">Generating preview...</p>
             </div>
           </div>
@@ -93,11 +93,10 @@ export function CRSPreviewModal({
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           {preview && !preview.is_complete && onGenerateDraft && (
-            <Button 
-              onClick={onGenerateDraft} 
+            <Button
+              onClick={onGenerateDraft}
               disabled={generatingDraft}
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700"
+              variant="primary"
             >
               {generatingDraft ? (
                 <>

@@ -21,7 +21,7 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
             case "rejected":
                 return <XCircle className="w-5 h-5 text-red-500" />;
             case "created":
-                return <FileText className="w-5 h-5 text-blue-500" />;
+                return <FileText className="w-5 h-5 text-primary" />;
             case "updated":
             case "version_update":
                 return <Edit className="w-5 h-5 text-orange-500" />;
@@ -43,20 +43,23 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <History className="w-4 h-4" />
+                <Button
+                    variant="outline"
+                    className="h-10 px-6 gap-2.5 rounded-xl font-bold text-xs transition-all active:scale-95"
+                >
+                    <History className="w-3.5 h-3.5" />
                     History
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-xl max-h-[85vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <History className="w-5 h-5" />
-                        Audit Trail & Version History
+            <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-none shadow-2xl">
+                <DialogHeader className="px-8 py-5 border-b border-gray-100 shrink-0 bg-white">
+                    <DialogTitle className="flex items-center gap-2.5 text-xl font-bold text-gray-900 tracking-tight">
+                        <History className="w-5 h-5 text-primary" />
+                        Audit Trail & History
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto pr-2 mt-4">
+                <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 bg-gray-50/30">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 text-gray-500">
                             <Loader2 className="w-8 h-8 animate-spin mb-2" />
@@ -79,51 +82,48 @@ export function CRSAuditButton({ crsId }: CRSAuditButtonProps) {
                             No history found for this document.
                         </div>
                     ) : (
-                        <div className="space-y-6 pl-2">
-                            {logs.map((log, idx) => (
-                                <div key={log.id} className="relative flex gap-4">
-                                    {/* Timeline Line */}
-                                    {idx !== logs.length - 1 && (
-                                        <div className="absolute left-[9px] top-8 -bottom-6 w-0.5 bg-gray-200" />
-                                    )}
-
-                                    {/* Icon */}
-                                    <div className="relative z-10 shrink-0 bg-white p-0.5">
-                                        {getActionIcon(log.action)}
+                        <div className="space-y-8 relative before:absolute before:inset-0 before:left-[19px] before:w-0.5 before:bg-gray-100">
+                            {logs.map((log) => (
+                                <div key={log.id} className="relative flex gap-5 group">
+                                    {/* Icon Container */}
+                                    <div className="relative z-10 shrink-0 mt-1">
+                                        <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center transition-transform group-hover:scale-110">
+                                            {getActionIcon(log.action)}
+                                        </div>
                                     </div>
 
-                                    {/* Content */}
-                                    <div className="flex-1 pb-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <p className="font-semibold text-gray-900">
+                                    {/* Content Area */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <p className="font-bold text-gray-900 tracking-tight">
                                                 {formatActionName(log.action)}
                                             </p>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
                                                 {log.formattedDate}
                                             </span>
                                         </div>
 
-                                        <div className="text-sm text-gray-600">
-                                            <span className="font-medium text-gray-700">
-                                                User #{log.changed_by}
-                                            </span> performed this action.
-                                        </div>
+                                        <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                                            <span className="font-bold text-gray-900">User #{log.changed_by}</span> performed this action.
+                                        </p>
 
-                                        {/* Details/Metadata constructed from flat fields */}
-                                        <div className="mt-2 space-y-2">
-                                            {log.summary && (
-                                                <div className="bg-gray-50 rounded-md p-2 text-xs text-gray-600 border border-gray-100 italic">
-                                                    {log.summary}
-                                                </div>
-                                            )}
+                                        {/* Activity Details */}
+                                        {(log.summary || (log.new_content && log.new_content !== log.old_content)) && (
+                                            <div className="space-y-2">
+                                                {log.summary && (
+                                                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-xs text-gray-600 border border-gray-100 italic shadow-xs">
+                                                        {log.summary}
+                                                    </div>
+                                                )}
 
-                                            {/* Only show content change notice if there is one, but don't dump the whole content */}
-                                            {(log.new_content && log.new_content !== log.old_content) && (
-                                                <div className="bg-gray-50 rounded-md p-2 text-xs text-gray-600 border border-gray-100">
-                                                    <span className="font-semibold text-gray-700">Content updated</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                                {log.new_content && log.new_content !== log.old_content && (
+                                                    <div className="bg-primary/5 rounded-xl p-3 text-xs text-primary font-bold border border-primary/10 shadow-xs flex items-center gap-2">
+                                                        <FileText className="w-3 h-3" />
+                                                        Content specification updated
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

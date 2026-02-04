@@ -17,7 +17,6 @@ import { CRSDraftDialog } from "./CRSDraftDialog";
 import { CRSGenerateDialog } from "./CRSGenerateDialog";
 import { PartialCRSConfirmModal } from "./PartialCRSConfirmModal";
 import { CRSPanel } from "./CRSPanel";
-import { CRSPerformanceMonitor } from "./CRSPerformanceMonitor";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { GripVertical, Plus, MessageSquare, ChevronRight, ChevronLeft, FileText } from "lucide-react";
 import {
@@ -37,9 +36,10 @@ import { useToast } from "@/components/ui/use-toast";
 interface ChatUIProps {
   chat: ChatSessionDTO;
   currentUser: CurrentUserDTO;
+  projectStatus?: string;
 }
 
-export function ChatUI({ chat, currentUser }: ChatUIProps) {
+export function ChatUI({ chat, currentUser, projectStatus }: ChatUIProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -87,6 +87,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     generateCRS,
     submitForReview,
     canGenerateCRS,
+    canSubmitCRS,
     isRejected,
     isApproved,
     setPreviewData,
@@ -94,6 +95,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
     sessionId: chat.id,
     projectId: chat.project_id,
     crsPattern,
+    projectStatus,
   });
 
   // Initialize CRS patch applicator
@@ -103,16 +105,16 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   const pendingCRSUpdateRef = useRef<any>(null);
   const crsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const DEBOUNCE_DELAY = 300; // ms
-  
+
   const debouncedSetCRS = useCallback((updateFn: (prev: any) => any) => {
     // Cancel pending update
     if (crsUpdateTimeoutRef.current) {
       clearTimeout(crsUpdateTimeoutRef.current);
     }
-    
+
     // Store the update function
     pendingCRSUpdateRef.current = updateFn;
-    
+
     // Schedule update
     crsUpdateTimeoutRef.current = setTimeout(() => {
       if (pendingCRSUpdateRef.current) {
@@ -121,7 +123,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       }
     }, DEBOUNCE_DELAY);
   }, [setLatestCRS]);
-  
+
   // Cleanup debounce timeout on unmount
   useEffect(() => {
     return () => {
@@ -306,23 +308,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             console.log('[ChatUI] Setting CRS state:', updatedCRS);
             setLatestCRS(updatedCRS);
 
-            // Log performance metrics
-            if (crsData._metrics) {
-              console.log('[CRS Performance]', {
-                backend: crsData._metrics,
-                frontend: {
-                  applicationTimeMs: metrics.applicationTimeMs,
-                  success: metrics.success,
-                  usedPatch: !metrics.fallbackToFull
-                }
-              });
-
-              // Emit performance event for monitoring
-              const perfEvent = new CustomEvent('crs-performance-metric', {
-                detail: metrics
-              });
-              window.dispatchEvent(perfEvent);
-            }
           } else {
             console.warn('[ChatUI] Failed to create/update CRS from WebSocket data');
           }
@@ -370,7 +355,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
       // This is the optimistic UI update
       addMessage(pendingLocal);
       showAiTyping();
-      
+
       // Resume CRS generation if it was paused
       if (isCRSPaused && resumeGeneration) {
         console.log('[ChatUI] Resuming CRS generation on new message');
@@ -437,6 +422,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
 
   // Handle CRS generation
   const handleGenerateCRS = useCallback(async () => {
+    if (projectStatus === "pending") {
+      toast({
+        title: "Action Restricted",
+        description: "Your project must be approved by a Business Analyst before you can generate a CRS.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const preview = await fetchPreview();
 
@@ -486,6 +480,15 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
   }, [setPreviewData, partialConfirmModal]);
 
   const handleSubmitForReview = useCallback(async () => {
+    if (projectStatus === "pending") {
+      toast({
+        title: "Action Restricted",
+        description: "Your project must be approved by a Business Analyst before you can submit a CRS.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await submitForReview();
       draftModal.closeModal();
@@ -529,6 +532,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           onStatusUpdate={loadCRS}
           recentInsights={recentInsights}
           canGenerateCRS={canGenerateCRS}
+          canSubmitCRS={canSubmitCRS}
+          projectStatus={projectStatus}
           isRejected={isRejected}
           isApproved={isApproved}
           // Real-time streaming status
@@ -551,6 +556,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           connectionState={connectionState}
           returnTo={returnTo || "/dashboard"}
           canGenerateCRS={canGenerateCRS}
+          canSubmitCRS={canSubmitCRS}
+          projectStatus={projectStatus}
           crsId={latestCRS?.id}
           chatTranscript={generateChatTranscript()}
           onGenerateCRS={() => generateModal.openModal()}
@@ -572,22 +579,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
             bottomRef={bottomRef}
           />
 
-          {/* View Specification Floating Button when collapsed */}
-          {!showDocument && (
-            <div className={`absolute top-8 ${isChatOnRight ? 'left-8' : 'right-8'} z-50 pointer-events-none`}>
-              <motion.button
-                initial={{ x: isChatOnRight ? -20 : 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowDocument(true)}
-                className="pointer-events-auto flex items-center gap-2.5 px-4 py-2 bg-white/80 backdrop-blur-md text-gray-900 rounded-full shadow-lg border border-gray-100 hover:bg-white transition-all font-bold text-[10px] tracking-tight"
-              >
-                <FileText className="w-3.5 h-3.5 text-primary" />
-                <span>View specification</span>
-              </motion.button>
-            </div>
-          )}
         </div>
 
         <ChatInputArea
@@ -601,6 +592,7 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           crsPattern={crsPattern}
           onPatternChange={setCrsPattern}
           latestCRS={latestCRS}
+          projectStatus={projectStatus}
         />
       </div>
     </Panel>
@@ -654,6 +646,8 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
         onSubmitForReview={handleSubmitForReview}
         onRegenerate={handleRegenerate}
         onCRSUpdate={loadCRS}
+        projectStatus={projectStatus}
+        canSubmitCRS={canSubmitCRS}
       />
 
       {previewData && (
@@ -668,9 +662,6 @@ export function ChatUI({ chat, currentUser }: ChatUIProps) {
           isGenerating={isGenerating}
         />
       )}
-
-      {/* Performance Monitor (enable in development) */}
-      <CRSPerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
     </div>
   );
 }

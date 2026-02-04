@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
-import { ErrorAlert } from "@/components/auth/ErrorAlert";
+import { AlertCircle, CheckCircle, Loader2, Plus } from "lucide-react";
 
 interface CreateTeamModalProps {
   open: boolean;
@@ -33,96 +33,134 @@ export function CreateTeamModal({
 }: CreateTeamModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { isLoading, error, createNewTeam } = useCreateTeam();
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      setSuccessMessage(null);
 
       if (!name.trim()) {
         return;
       }
 
-      const success = await createNewTeam({
-        name: name.trim(),
-        description: description.trim() || undefined,
-      });
+      try {
+        const success = await createNewTeam({
+          name: name.trim(),
+          description: description.trim() || undefined,
+        });
 
-      if (success) {
-        setName("");
-        setDescription("");
-        onOpenChange(false);
-        onTeamCreated?.();
+        if (success) {
+          setSuccessMessage("Team created successfully!");
+
+          // Reset form after short delay
+          setTimeout(() => {
+            setName("");
+            setDescription("");
+            setSuccessMessage(null);
+            onOpenChange(false);
+            onTeamCreated?.();
+          }, 2000);
+        }
+      } catch (err) {
+        // Error is handled by useCreateTeam hook
       }
     },
     [name, description, createNewTeam, onOpenChange, onTeamCreated]
   );
 
   const handleCancel = useCallback(() => {
+    if (isLoading) return;
     setName("");
     setDescription("");
+    setSuccessMessage(null);
     onOpenChange(false);
-  }, [onOpenChange]);
+  }, [onOpenChange, isLoading]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create New Team</DialogTitle>
-          <DialogDescription>
-            Add a new team to your organization
+      <DialogContent className="sm:max-w-[480px] bg-white border border-gray-100 shadow-2xl rounded-2xl p-8 outline-none">
+        <DialogHeader className="mb-8">
+          <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">Create New Team</DialogTitle>
+          <DialogDescription className="text-gray-500 text-sm mt-1">
+            Add a new team to your organization to start collaborating.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-medium">
-              Team Name <span className="text-destructive">*</span>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-3">
+            <label htmlFor="teamName" className="block text-sm font-semibold text-gray-700 ml-1">
+              Team Name <span className="text-red-500">*</span>
             </label>
             <Input
-              id="name"
-              placeholder="Enter team name"
+              id="teamName"
+              placeholder="e.g. Engineering Team"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
+              className="border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-12 px-4 text-gray-900 rounded-xl shadow-sm placeholder:text-gray-400"
               required
+              maxLength={256}
             />
+            <p className="text-[10px] text-muted-foreground ml-1">
+              {name.length}/256 characters
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="description" className="block text-sm font-medium">
-              Description <span className="text-muted-foreground">(Optional)</span>
+          <div className="space-y-3">
+            <label htmlFor="teamDescription" className="block text-sm font-semibold text-gray-700 ml-1">
+              Description <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <textarea
-              id="description"
-              placeholder="Enter team description"
+              id="teamDescription"
+              placeholder="Describe what this team is about..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isLoading}
-              className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              rows={4}
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400 text-sm shadow-sm resize-none min-h-[120px]"
             />
-
           </div>
 
-          {error && <ErrorAlert message={error} />}
+          {error && (
+            <div className="p-4 rounded-xl bg-red-50/50 border border-red-100 flex items-center gap-2 text-red-600 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <p className="text-xs font-semibold">{error}</p>
+            </div>
+          )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          {successMessage && (
+            <div className="p-4 rounded-xl bg-green-50/50 border border-green-100 flex items-center gap-2 text-green-700 animate-in fade-in slide-in-from-top-1">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <p className="text-xs font-semibold">{successMessage}</p>
+            </div>
+          )}
+
+          <DialogFooter className="mt-10 sm:justify-end gap-3">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
+              size="lg"
               onClick={handleCancel}
               disabled={isLoading}
-              className="hover:cursor-pointer"
+              className="px-6 transition-all hover:scale-105 active:scale-95 font-semibold text-primary border-none hover:bg-primary/5"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
+              size="lg"
               disabled={isLoading}
-              className="hover:cursor-pointer sm:ml-2"
+              className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none font-semibold text-white"
             >
-              {isLoading ? "Creating..." : "Create Team"}
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5 font-bold" />
+              )}
+              <span>{isLoading ? "Creating..." : "Create Team"}</span>
             </Button>
           </DialogFooter>
         </form>
