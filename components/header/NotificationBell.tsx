@@ -128,6 +128,7 @@ export function NotificationBell() {
 
     setActiveInviteToken(token);
     setActiveInviteNotificationId(notification.id);
+    setIsOpen(false); // Close dropdown before opening modal
     setInviteModalOpen(true);
   };
 

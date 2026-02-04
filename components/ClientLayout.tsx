@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/header/Header";
 import { Sidebar } from "@/components/sidebar/Sidebar";
+import { cn } from "@/lib/utils";
 import { NotificationToastContainer } from "@/components/notifications/NotificationToast";
 import { NotificationProvider } from "@/components/notifications/NotificationProvider";
 import { getCurrentTeamId, setCurrentTeamId } from "@/lib/team-context";
@@ -29,6 +30,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
     const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications" || pathname === "/profile";
 
+    const isChatRoute = pathname.startsWith("/chats/");
+
     return (
         <NotificationProvider>
             {/* Fixed Header */}
@@ -38,7 +41,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             <NotificationToastContainer />
 
             {/* Content area with sidebar + main */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className={`flex flex-1 overflow-hidden ${isChatRoute ? "h-screen pt-12" : ""}`}>
                 {!hideSidebar && (
                     <Sidebar
                         currentTeamId={currentTeamId}
@@ -48,8 +51,14 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                 )}
 
                 {/* Main scrollable content */}
-                <main className="flex-1 overflow-y-auto p-6 flex justify-center">
-                    <div className="w-full max-w-7xl">{children}</div>
+                <main className={cn(
+                    "flex-1 overflow-y-auto flex justify-center transition-all duration-300",
+                    isChatRoute ? "pt-0 pr-0 pb-0 bg-white" : "p-6",
+                    !hideSidebar && (isCollapsed ? "pl-16" : "pl-64")
+                )}>
+                    <div className={cn("w-full h-full", !isChatRoute && "max-w-7xl")}>
+                        {children}
+                    </div>
                 </main>
             </div>
         </NotificationProvider>

@@ -14,7 +14,8 @@ export interface ChatSessionDTO {
   status: "active" | "closed" | "completed";
   started_at: string;
   ended_at?: string | null;
-  crs_pattern?: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories";  messages?: ChatMessageDTO[];}
+  crs_pattern?: "iso_iec_ieee_29148" | "ieee_830" | "babok" | "agile_user_stories"; messages?: ChatMessageDTO[];
+}
 
 export interface ChatMessageDTO {
   id: number;
@@ -38,6 +39,7 @@ export interface SendMessagePayload {
 }
 
 export interface WebSocketMessageData {
+  type?: "message" | "status" | "error";
   id?: number;
   session_id?: number;
   sender_type?: SenderType;
@@ -45,8 +47,40 @@ export interface WebSocketMessageData {
   content?: string;
   timestamp?: string;
   error?: string;
+  status?: string; // e.g. "thinking", "drafting", "idle"
+  is_generating?: boolean;
   crs?: {
+    // Action type (backward compatible - defaults to full update if not specified)
+    action?: "updated";
+
+    // JSON Patch operations (RFC 6902) - hybrid approach
+    patch?: Array<{
+      op: "add" | "remove" | "replace" | "move" | "copy" | "test";
+      path: string;
+      value?: any;
+      from?: string;
+    }>;
+
+    // Full document (always included for backward compatibility and fallback)
+    content?: string;
+
+    // CRS metadata
     is_complete?: boolean;
+    crs_document_id?: number;
+    version?: number;
+    edit_version?: number;
+    status?: string;
+    summary_points?: string[];
+    quality_summary?: string;
+    updated_at?: string;
+
+    // Performance metrics (optional, for monitoring)
+    _metrics?: {
+      patch_operations?: number;
+      patch_size_bytes?: number;
+      full_size_bytes?: number;
+      size_reduction_percent?: number;
+    };
   };
 }
 

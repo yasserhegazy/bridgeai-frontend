@@ -55,22 +55,23 @@
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.05 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.05 260);
-  --primary: #341BAB;
-  --primary-foreground: #FFFFFF;
-  --secondary: #8080F2;
-  --secondary-foreground: #FFFFFF;
-  --muted: oklch(0.95 0.02 260);
-  --muted-foreground: oklch(0.5 0.05 260);
-  --accent: oklch(0.95 0.04 260);
-  --accent-foreground: #341BAB;
-  --destructive: oklch(0.6 0.2 25);
-  --border: oklch(0.9 0.02 260);
-  --input: oklch(0.9 0.02 260);
-  --ring: #341BAB;
-  --chart-1: #341BAB;
-  --chart-2: #8080F2;
-  --chart-3: oklch(0.5 0.2 320);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.45 0.24 277);
+  /* Vibrant Purple #341BAB */
+  --primary-foreground: oklch(0.98 0.01 277);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.98 0.01 260);
@@ -84,6 +85,7 @@
   --chat-bg: oklch(0.98 0.01 260);
   --chat-input: oklch(0.95 0.02 260);
   --chat-user: oklch(0.93 0.032 265.755);
+  /* Light variant of primary */
 }
 
 .dark {
@@ -293,10 +295,20 @@ body.app-layout {
 
   .glow-secondary {
     filter: drop-shadow(0 0 20px rgba(128, 128, 242, 0.3));
+  /* Custom Scrollbar */
+  .t-custom-scrollbar {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent !important;
   }
 
-  .glow-pulse {
-    animation: glow-pulse 3s ease-in-out infinite;
+  .t-custom-scrollbar::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent !important;
   }
 
   /* Gradient Border Animation */
@@ -321,9 +333,17 @@ body.app-layout {
     z-index: -1;
   }
 
-  /* Animated Underline */
-  .animated-underline {
-    position: relative;
+  .t-custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-radius: 10px !important;
+  }
+
+  .t-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .dark .t-custom-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent !important;
   }
 
   .animated-underline::after {
@@ -510,4 +530,9 @@ body.app-layout {
 /* Logo Animation */
 .logo-animate {
   animation: logo-float 6s ease-in-out infinite, glow-pulse 4s ease-in-out infinite;
+  .dark .t-custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
 }

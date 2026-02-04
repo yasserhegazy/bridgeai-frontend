@@ -34,12 +34,18 @@ export interface UseCRSContentEditorReturn {
   clearError: () => void;
 }
 
+export interface UseCRSContentEditorOptions {
+  initialContent: string;
+  onChange?: (formData: Record<string, any>) => void;
+}
+
 /**
  * Hook for managing CRS content editing
  */
-export function useCRSContentEditor(
-  initialContent: string
-): UseCRSContentEditorReturn {
+export function useCRSContentEditor({
+  initialContent,
+  onChange,
+}: UseCRSContentEditorOptions): UseCRSContentEditorReturn {
   const [formData, setFormData] = useState<Record<string, any>>(() => {
     try {
       return JSON.parse(initialContent);
@@ -51,16 +57,25 @@ export function useCRSContentEditor(
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper to update state and trigger onChange
+  const updateFormData = useCallback((updater: (prev: Record<string, any>) => Record<string, any>) => {
+    setFormData((prev) => {
+      const next = updater(prev);
+      if (onChange) onChange(next);
+      return next;
+    });
+  }, [onChange]);
+
   const handleChange = useCallback((field: string, value: any) => {
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-  }, []);
+  }, [updateFormData]);
 
   const handleArrayChange = useCallback(
     (field: string, index: number, value: any) => {
-      setFormData((prev) => {
+      updateFormData((prev) => {
         const array = Array.isArray(prev[field]) ? [...prev[field]] : [];
         array[index] = value;
         return {
@@ -69,12 +84,12 @@ export function useCRSContentEditor(
         };
       });
     },
-    []
+    [updateFormData]
   );
 
   const handleNestedArrayChange = useCallback(
     (field: string, nestedField: string, index: number, value: string) => {
-      setFormData((prev) => {
+      updateFormData((prev) => {
         const nested = { ...(prev[field] || {}) };
         const array = Array.isArray(nested[nestedField])
           ? [...nested[nestedField]]
@@ -87,11 +102,11 @@ export function useCRSContentEditor(
         };
       });
     },
-    []
+    [updateFormData]
   );
 
   const addItem = useCallback((field: string, defaultValue: any = "") => {
-    setFormData((prev) => {
+    updateFormData((prev) => {
       const array = Array.isArray(prev[field]) ? [...prev[field]] : [];
       array.push(defaultValue);
       return {
@@ -99,10 +114,10 @@ export function useCRSContentEditor(
         [field]: array,
       };
     });
-  }, []);
+  }, [updateFormData]);
 
   const removeItem = useCallback((field: string, index: number) => {
-    setFormData((prev) => {
+    updateFormData((prev) => {
       const array = Array.isArray(prev[field]) ? [...prev[field]] : [];
       array.splice(index, 1);
       return {
@@ -110,11 +125,11 @@ export function useCRSContentEditor(
         [field]: array,
       };
     });
-  }, []);
+  }, [updateFormData]);
 
   const addNestedItem = useCallback(
     (field: string, nestedField: string) => {
-      setFormData((prev) => {
+      updateFormData((prev) => {
         const nested = { ...(prev[field] || {}) };
         const array = Array.isArray(nested[nestedField])
           ? [...nested[nestedField]]
@@ -127,12 +142,12 @@ export function useCRSContentEditor(
         };
       });
     },
-    []
+    [updateFormData]
   );
 
   const removeNestedItem = useCallback(
     (field: string, nestedField: string, index: number) => {
-      setFormData((prev) => {
+      updateFormData((prev) => {
         const nested = { ...(prev[field] || {}) };
         const array = Array.isArray(nested[nestedField])
           ? [...nested[nestedField]]
@@ -145,7 +160,7 @@ export function useCRSContentEditor(
         };
       });
     },
-    []
+    [updateFormData]
   );
 
   const saveContent = useCallback(

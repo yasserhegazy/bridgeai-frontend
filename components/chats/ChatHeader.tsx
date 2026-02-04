@@ -5,25 +5,34 @@
 
 "use client";
 
-import { ArrowLeft, WifiOff, Loader2 } from "lucide-react";
+import { ArrowLeft, WifiOff, Loader2, MoreVertical, Eye, Sparkles, FileText, CheckCircle2, Download, Layout, PanelRightClose, Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ConnectionState, ChatSessionDTO, CurrentUserDTO } from "@/dto";
-import { ExportButton } from "@/components/shared/ExportButton";
-import { PreviewCRSButton } from "@/components/chats/PreviewCRSButton";
+import { ExportButton } from "@/components/shared/ExportButton"; // We'll keep it for the functionality but wrap it or use its logic
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface ChatHeaderProps {
   chat: ChatSessionDTO;
   currentUser: CurrentUserDTO;
   connectionState: ConnectionState;
-  returnTo?: string;
+  returnTo: string;
   canGenerateCRS: boolean;
-  crsId?: number;
-  chatTranscript: string;
   onGenerateCRS: () => void;
   onViewCRS: () => void;
+  onToggleDocument: () => void;
+  onSwapSide: () => void;
   isRejected: boolean;
   isApproved: boolean;
+  showDocument: boolean;
+  crsId?: number;
+  chatTranscript: string;
 }
 
 export function ChatHeader({
@@ -36,8 +45,11 @@ export function ChatHeader({
   chatTranscript,
   onGenerateCRS,
   onViewCRS,
+  onToggleDocument,
+  onSwapSide,
   isRejected,
   isApproved,
+  showDocument,
 }: ChatHeaderProps) {
   const router = useRouter();
 
@@ -55,68 +67,81 @@ export function ChatHeader({
   };
 
   return (
-    <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <button
-          aria-label="Back to project"
-          onClick={handleBackClick}
-          className="p-2 rounded hover:bg-gray-100"
+    <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 z-60">
+      {/* Session Info */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push(returnTo)}
+          className="rounded-xl hover:bg-primary/5 hover:text-primary transition-all group"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </button>
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        </Button>
 
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">{chat.name}</h2>
-          <p className="text-sm text-gray-500">
-            {currentUser.full_name ? `${currentUser.full_name} - ` : ""}Project chat #{chat.id}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center border border-primary/20 shadow-lg shadow-primary/10">
+            <Bot className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-gray-900 leading-tight">
+              {chat.name}
+            </h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className={`flex h-1.5 w-1.5 rounded-full ${connectionState === "open"
+                  ? "bg-green-500 animate-pulse"
+                  : "bg-red-500"
+                  }`}
+              />
+              <p className="text-[10px] text-gray-500 font-bold tracking-tight">
+                {connectionState === "open"
+                  ? "Active session"
+                  : "Disconnected"}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Actions Dropdown */}
       <div className="flex items-center gap-3">
-        <div
-          className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
-            connectionState === "open"
-              ? "bg-green-50 text-green-700"
-              : connectionState === "connecting"
-              ? "bg-yellow-50 text-yellow-700"
-              : "bg-red-50 text-red-700"
-          }`}
-        >
-          {connectionState === "connecting" && <Loader2 className="h-3 w-3 animate-spin" />}
-          {connectionState !== "open" && <WifiOff className="h-3 w-3" />}
-          <span>
-            {connectionState === "open"
-              ? "Connected"
-              : connectionState === "connecting"
-              ? "Connecting..."
-              : "Disconnected"}
-          </span>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-all border border-transparent hover:border-gray-200"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-gray-100 backdrop-blur-xl bg-white/95">
+            <div className="px-3 py-2 text-[10px] font-bold text-gray-400 tracking-tight border-b border-gray-50 mb-1">
+              Session controls
+            </div>
 
-        <ExportButton
-          projectId={chat.project_id}
-          content={chatTranscript}
-          filename={`chat-${chat.id}-${chat.name.replace(/\s+/g, "-").toLowerCase()}`}
-          crsId={crsId}
-        />
+            <div className="flex flex-col gap-0.5 mt-1">
+              <DropdownMenuItem
+                onClick={onToggleDocument}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 focus:bg-gray-50 transition-all cursor-pointer"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  {showDocument ? <PanelRightClose className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </div>
+                {showDocument ? "Collapse document" : "Show document"}
+              </DropdownMenuItem>
 
-        <PreviewCRSButton
-          sessionId={chat.id}
-          sessionStatus={chat.status}
-          variant="outline"
-          size="default"
-        />
-
-        {canGenerateCRS && (
-          <Button onClick={onGenerateCRS} variant="primary">
-            {isRejected ? "Regenerate CRS" : "Generate CRS document"}
-          </Button>
-        )}
-
-        <Button onClick={onViewCRS} variant="secondary">
-          View CRS {isApproved && "(Approved)"}
-        </Button>
+              <DropdownMenuItem
+                onClick={onSwapSide}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 focus:bg-gray-50 transition-all cursor-pointer group"
+              >
+                <Layout className="w-4 h-4 text-gray-400 group-focus:text-gray-900 transition-colors" />
+                Swap panel side
+              </DropdownMenuItem>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
