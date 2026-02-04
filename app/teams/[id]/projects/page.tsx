@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { CardGrid } from "@/components/shared/CardGrid";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
 import { Pagination } from "@/components/shared/Pagination";
-import { useProjects, useModal } from "@/hooks";
+import { useProjects, useModal, useCurrentUser } from "@/hooks";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -93,13 +93,18 @@ export default function ProjectsList() {
     [setSearchTerm]
   );
 
+  const { user } = useCurrentUser();
+  const isBA = user?.role === "ba";
+
   return (
     <div className="flex justify-center mt-14 px-6 sm:px-8">
       <div className="w-full max-w-6xl">
         {/* Header */}
         <PageHeader
           title="Projects"
-          description="Manage all projects for your team in one place."
+          description={isBA
+            ? "Audit project lifecycle, validate requirements scope, and oversee development progress."
+            : "Manage all projects for your team in one place."}
         />
 
         {/* Search and Filters */}
@@ -114,7 +119,7 @@ export default function ProjectsList() {
           }
           actions={
             <Button variant="primary" onClick={openModal}>
-              Add Project
+              {isBA ? "New Project Entry" : "Add Project"}
             </Button>
           }
         />
@@ -135,12 +140,14 @@ export default function ProjectsList() {
             message={
               searchTerm
                 ? "No projects found matching your search"
-                : "No projects yet"
+                : isBA
+                  ? "No active project entries registered in this team workspace"
+                  : "No projects yet"
             }
             action={
               !searchTerm && (
                 <Button variant="primary" onClick={openModal}>
-                  Create Your First Project
+                  {isBA ? "Initialize Team Project" : "Create Your First Project"}
                 </Button>
               )
             }
