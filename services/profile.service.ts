@@ -51,7 +51,7 @@ function parseApiError(data: any, statusCode: number): string {
 
     if (Array.isArray(data.detail)) {
         return data.detail
-            .map((err) => {
+            .map((err: { loc?: string[]; msg: string }) => {
                 const field = err.loc?.[err.loc.length - 1] || "field";
                 return `${field}: ${err.msg}`;
             })
