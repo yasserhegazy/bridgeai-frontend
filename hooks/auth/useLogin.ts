@@ -84,6 +84,26 @@ export function useLogin(): UseLoginReturn {
         const redirectPath = getRoleBasedRedirectPath(response.role);
         router.push(redirectPath);
       } catch (err) {
+        // Check if this is a Gmail-only restriction error
+        if (err instanceof AuthenticationError &&
+          err.message.includes("Only @gmail.com accounts")) {
+
+          // Decode the JWT token to get the email
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const email = payload.email;
+
+            // Redirect to registration page with email pre-filled
+            if (email) {
+              router.push(`/auth/register?email=${encodeURIComponent(email)}`);
+              return;
+            }
+          } catch (decodeError) {
+            console.error("Failed to decode token:", decodeError);
+          }
+        }
+
+        // Show error for other cases
         if (err instanceof AuthenticationError) {
           setError(err.message);
         } else {
