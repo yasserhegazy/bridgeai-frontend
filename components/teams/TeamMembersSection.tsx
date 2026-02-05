@@ -131,7 +131,7 @@ export function TeamMembersSection({
               Team Members
             </h2>
             <p className="text-sm text-muted-foreground">
-              Manage members and pending invitations.
+              Manage team members (maximum 2: 1 Client + 1 BA). Roles are automatically assigned.
             </p>
           </div>
           <InviteMemberModal
@@ -141,6 +141,7 @@ export function TeamMembersSection({
             triggerSize="default"
             triggerVariant="primary"
             triggerClassName="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 px-6 border-none h-10 font-semibold text-sm"
+            currentMemberCount={members?.length || 0}
           />
         </div>
 

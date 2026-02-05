@@ -11,7 +11,7 @@ export type InvitationStatus = "pending" | "accepted" | "expired" | "canceled";
 /**
  * Team member role enum
  */
-export type InvitationRole = "owner" | "admin" | "member" | "viewer";
+export type InvitationRole = "client" | "ba";
 
 /**
  * Send invitation request DTO
