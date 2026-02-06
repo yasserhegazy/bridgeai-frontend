@@ -52,9 +52,9 @@ export function useLogin(): UseLoginReturn {
         // Notify system of auth state change
         notifyAuthStateChange();
 
-        // Redirect based on role
+        // Redirect based on role with hard navigation to ensure middleware runs
         const redirectPath = getRoleBasedRedirectPath(response.role);
-        router.push(redirectPath);
+        window.location.href = redirectPath;
       } catch (err) {
         if (err instanceof AuthenticationError) {
           setError(err.message);
@@ -89,8 +89,9 @@ export function useLogin(): UseLoginReturn {
 
         notifyAuthStateChange();
 
+        // Redirect based on role with hard navigation to ensure middleware runs
         const redirectPath = getRoleBasedRedirectPath(response.role);
-        router.push(redirectPath);
+        window.location.href = redirectPath;
       } catch (err) {
         // Check if this is a Gmail-only restriction error
         if (err instanceof AuthenticationError &&

@@ -34,8 +34,8 @@ export function useRegister(): UseRegisterReturn {
       try {
         await registerUser(userData);
 
-        // Redirect to login page after successful registration
-        router.push("/auth/login");
+        // Redirect to login page after successful registration with hard navigation
+        window.location.href = "/auth/login";
       } catch (err) {
         if (err instanceof AuthenticationError) {
           setError(err.message);
