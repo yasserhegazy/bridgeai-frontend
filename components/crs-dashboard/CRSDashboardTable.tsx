@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { formatDistanceToNow } from "date-fns";
+import { parseUTCDate } from "@/lib/utils";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -125,7 +126,7 @@ export function CRSDashboardTable({
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
                         <Clock className="w-3.5 h-3.5" />
-                        <span>{formatDistanceToNow(new Date(crs.created_at), { addSuffix: true })}</span>
+                        <span>{formatDistanceToNow(parseUTCDate(crs.created_at), { addSuffix: true })}</span>
                       </div>
                     </div>
                   </div>

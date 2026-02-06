@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { showToast } from '@/components/notifications/NotificationToast';
 import { TeamInvitationModal } from '@/components/notifications/TeamInvitationModal';
+import { parseUTCDate } from '@/lib/utils';
 
 export function NotificationBell() {
   const router = useRouter();
@@ -120,8 +121,8 @@ export function NotificationBell() {
     if (!token) {
       showToast({
         type: 'error',
-        title: 'Error',
-        message: 'Missing invitation token'
+        title: 'Invitation Unavailable',
+        message: 'This invitation is no longer available. It may have been accepted, rejected, or expired.'
       });
       return;
     }
@@ -134,8 +135,21 @@ export function NotificationBell() {
 
   const handleNotificationClick = (notification: Notification) => {
     // Team invitation notifications should open a modal (no redirect)
-    if (notification.metadata?.action_type === 'invitation_received' && notification.metadata?.invitation_token) {
-      openInvitationModal(notification);
+    if (notification.metadata?.action_type === 'invitation_received') {
+      if (notification.metadata?.invitation_token) {
+        openInvitationModal(notification);
+      } else {
+        // Invitation no longer available
+        showToast({
+          type: 'info',
+          title: 'Invitation Status',
+          message: 'This invitation has already been processed or has expired.'
+        });
+        // Mark as read since it's no longer actionable
+        if (!notification.is_read) {
+          handleMarkAsRead(notification.id);
+        }
+      }
       return;
     }
 
@@ -164,7 +178,7 @@ export function NotificationBell() {
   };
 
   const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseUTCDate(dateString);
     const now = new Date();
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

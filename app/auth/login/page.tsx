@@ -91,25 +91,35 @@ export default function LoginPage() {
           {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
             process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID_HERE" &&
             process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_CLIENT_ID" ? (
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                if (credentialResponse.credential) {
-                  loginWithGoogle(credentialResponse.credential);
-                }
-              }}
-              onError={() => {
-                console.error('Google Login Failed');
-              }}
-              useOneTap={false}
-              auto_select={false}
-              context="signin"
-            />
+            <>
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    loginWithGoogle(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  console.error('Google Login Failed');
+                }}
+                useOneTap={false}
+                auto_select={false}
+                context="signin"
+              />
+            </>
           ) : (
             <div className="text-xs text-muted-foreground text-center p-2 border rounded bg-muted/50">
               Google Login disabled (Client ID not configured)
             </div>
           )}
         </div>
+
+        {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
+          process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID_HERE" &&
+          process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_CLIENT_ID" && (
+            <div className="text-xs text-center text-muted-foreground mt-2">
+              Note: Only @gmail.com accounts are supported for Google Sign-In
+            </div>
+          )}
 
         <div className="mt-4 text-center text-sm">
           <span className="text-muted-foreground">Don&apos;t have an account? </span>
@@ -123,6 +133,6 @@ export default function LoginPage() {
           </Button>
         </div>
       </form>
-    </AuthFormContainer>
+    </AuthFormContainer >
   );
 }

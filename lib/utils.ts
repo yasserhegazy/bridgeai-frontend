@@ -20,6 +20,15 @@ export function getRoleBasedRedirectPath(role: string): string {
  * @param name - Cookie name
  * @returns Cookie value or null if not found
  */
+/**
+ * Parse a date string from the backend as UTC.
+ * Backend returns naive datetimes (no timezone suffix) that are actually UTC.
+ */
+export function parseUTCDate(dateString: string): Date {
+  if (!dateString) return new Date();
+  return new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
+}
+
 export function getCookie(name: string): string | null {
   // Check if running in browser (not SSR)
   if (typeof document === 'undefined') {

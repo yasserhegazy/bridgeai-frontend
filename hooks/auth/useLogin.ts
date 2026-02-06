@@ -14,6 +14,7 @@ import {
   storeAuthToken,
   storeUserRole,
   notifyAuthStateChange,
+  waitForCookiePersistence,
 } from "../../services/token.service";
 import { getRoleBasedRedirectPath } from "../../lib/utils";
 
@@ -45,12 +46,15 @@ export function useLogin(): UseLoginReturn {
         storeAuthToken(response.access_token);
         storeUserRole(response.role as "client" | "ba");
 
+        // Wait for cookies to be readable before navigation
+        await waitForCookiePersistence("token", response.access_token);
+
         // Notify system of auth state change
         notifyAuthStateChange();
 
-        // Redirect based on role
+        // Redirect based on role with hard navigation to ensure middleware runs
         const redirectPath = getRoleBasedRedirectPath(response.role);
-        router.push(redirectPath);
+        window.location.href = redirectPath;
       } catch (err) {
         if (err instanceof AuthenticationError) {
           setError(err.message);
@@ -79,11 +83,36 @@ export function useLogin(): UseLoginReturn {
 
         storeAuthToken(response.access_token);
         storeUserRole(response.role as "client" | "ba");
+
+        // Wait for cookies to be readable before navigation
+        await waitForCookiePersistence("token", response.access_token);
+
         notifyAuthStateChange();
 
+        // Redirect based on role with hard navigation to ensure middleware runs
         const redirectPath = getRoleBasedRedirectPath(response.role);
-        router.push(redirectPath);
+        window.location.href = redirectPath;
       } catch (err) {
+        // Check if this is a Gmail-only restriction error
+        if (err instanceof AuthenticationError &&
+          err.message.includes("Only @gmail.com accounts")) {
+
+          // Decode the JWT token to get the email
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const email = payload.email;
+
+            // Redirect to registration page with email pre-filled
+            if (email) {
+              router.push(`/auth/register?email=${encodeURIComponent(email)}`);
+              return;
+            }
+          } catch (decodeError) {
+            console.error("Failed to decode token:", decodeError);
+          }
+        }
+
+        // Show error for other cases
         if (err instanceof AuthenticationError) {
           setError(err.message);
         } else {

@@ -6,7 +6,8 @@
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
@@ -21,11 +22,21 @@ const ROLE_OPTIONS: SelectOption[] = [
   { value: "ba", label: "Business Analyst" },
 ];
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const emailFromUrl = searchParams.get("email") || "";
+
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailFromUrl);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+
+  // Update email if URL parameter changes
+  useEffect(() => {
+    if (emailFromUrl) {
+      setEmail(emailFromUrl);
+    }
+  }, [emailFromUrl]);
 
   const { isLoading, error, register } = useRegister();
 
@@ -116,7 +127,7 @@ export default function RegisterPage() {
             error={errors.email}
             placeholder="Enter your email"
             required
-            disabled={isLoading}
+            disabled={isLoading || !!emailFromUrl}
           />
 
           <FormField
@@ -162,5 +173,22 @@ export default function RegisterPage() {
         </p>
       </form>
     </AuthFormContainer>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <AuthFormContainer
+        title="Create an account"
+        subtitle="Join us to get started"
+      >
+        <div className="mt-8 space-y-6">
+          <div className="text-center text-muted-foreground">Loading...</div>
+        </div>
+      </AuthFormContainer>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

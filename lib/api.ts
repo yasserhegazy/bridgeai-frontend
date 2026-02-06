@@ -76,6 +76,10 @@ export async function apiCall<T = any>(
     if (!response.ok) {
       if (response.status === 401) {
         clearAccessToken();
+        // Redirect to login page if not already there
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+          window.location.href = "/auth/login";
+        }
         throw new Error("Unauthorized. Please log in again.");
       }
 

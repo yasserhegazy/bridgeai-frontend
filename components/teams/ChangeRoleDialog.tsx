@@ -2,6 +2,7 @@
  * Change Role Dialog Component
  * Modal for changing team member role
  * Single Responsibility: Role change UI
+ * Note: Roles are now Client and BA only (2-person teams)
  */
 
 "use client";
@@ -15,17 +16,24 @@ interface ChangeRoleDialogProps {
   onCancel: () => void;
 }
 
-const AVAILABLE_ROLES = ["owner", "admin", "member", "viewer"];
+const AVAILABLE_ROLES = ["client", "ba"];
 
 function getRoleBadgeColor(role: string): string {
   const roleColors: Record<string, string> = {
-    owner: "bg-red-100 text-red-800",
-    admin: "bg-purple-100 text-purple-800",
-    member: "bg-blue-100 text-blue-800",
-    viewer: "bg-gray-100 text-gray-800",
+    client: "bg-blue-100 text-blue-800",
+    ba: "bg-purple-100 text-purple-800",
   };
 
   return roleColors[role.toLowerCase()] || "bg-gray-100 text-gray-800";
+}
+
+function getRoleLabel(role: string): string {
+  const roleLabels: Record<string, string> = {
+    client: "Client",
+    ba: "Business Analyst",
+  };
+
+  return roleLabels[role.toLowerCase()] || role;
 }
 
 export function ChangeRoleDialog({
@@ -59,7 +67,7 @@ export function ChangeRoleDialog({
                   role
                 )}`}
               >
-                {role}
+                {getRoleLabel(role)}
               </span>
             </label>
           ))}

@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'bridge-ai.dev',
+        pathname: '/api/public/avatars/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.googleusercontent.com',
         pathname: '/**',
       },

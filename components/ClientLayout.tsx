@@ -28,7 +28,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         }
     }, [teamIdFromUrl]);
 
-    const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications" || pathname === "/profile";
+    // Show sidebar only on known team/project/chat routes
+    const showSidebar = pathname.startsWith("/teams/") || pathname.startsWith("/projects/") || pathname.startsWith("/chats/");
 
     const isChatRoute = pathname.startsWith("/chats/");
 
@@ -42,7 +43,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
             {/* Content area with sidebar + main */}
             <div className={`flex flex-1 overflow-hidden ${isChatRoute ? "h-screen pt-12" : ""}`}>
-                {!hideSidebar && (
+                {showSidebar && (
                     <Sidebar
                         currentTeamId={currentTeamId}
                         isCollapsed={isCollapsed}
@@ -54,7 +55,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                 <main className={cn(
                     "flex-1 overflow-y-auto flex justify-center transition-all duration-300",
                     isChatRoute ? "pt-0 pr-0 pb-0 bg-white" : "p-6",
-                    !hideSidebar && (isCollapsed ? "pl-16" : "pl-64")
+                    showSidebar && (isCollapsed ? "pl-16" : "pl-64")
                 )}>
                     <div className={cn("w-full h-full", !isChatRoute && "max-w-7xl")}>
                         {children}

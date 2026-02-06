@@ -8,7 +8,7 @@ import { RejectDialog } from "./RejectDialog";
 import { Badge } from "@/components/ui/badge";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, parseUTCDate } from "@/lib/utils";
 
 interface PendingRequestsTableProps {
   projects: ProjectDTO[];
@@ -112,7 +112,7 @@ export function PendingRequestsTable({
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>{formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}</span>
+                          <span>{formatDistanceToNow(parseUTCDate(project.created_at), { addSuffix: true })}</span>
                         </div>
                       </div>
                     </div>

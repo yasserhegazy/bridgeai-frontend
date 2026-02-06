@@ -100,7 +100,7 @@ export function Footer() {
               <Link href="/" className="mb-4 flex items-center gap-3 group">
                 <div className="relative">
                   <Image
-                    src="/logo-icon-modern.png"
+                    src="/logo_with_background.png"
                     alt="BridgeAI"
                     width={40}
                     height={40}

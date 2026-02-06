@@ -29,6 +29,7 @@ const statusColors: Record<string, string> = {
   archived: "bg-gray-100 text-gray-700",
   inactive: "bg-gray-100 text-gray-700",
   cancelled: "bg-red-100 text-red-700",
+  canceled: "bg-red-100 text-red-700", // American spelling (used by invitations)
 };
 
 /**

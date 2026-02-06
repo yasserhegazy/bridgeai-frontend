@@ -45,7 +45,8 @@ export function CreateChatModal({
   const [isSaving, setIsSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const trimmed = chatName.trim();
     if (!trimmed) {
       setValidationError("Chat name is required");
@@ -80,7 +81,7 @@ export function CreateChatModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 ml-1 mb-3">
               Chat Name
@@ -127,32 +128,33 @@ export function CreateChatModal({
               <span>{validationError || error}</span>
             </div>
           )}
-        </div>
 
-        <DialogFooter className="mt-10 sm:justify-end gap-3">
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={handleClose}
-            className="px-6 transition-all hover:scale-105 active:scale-95 font-semibold text-primary border-none hover:bg-primary/5"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none font-semibold text-white"
-          >
-            {isSaving ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Plus className="w-5 h-5 font-bold" />
-            )}
-            <span>{isSaving ? "Creating..." : "Create Chat"}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="mt-10 sm:justify-end gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              onClick={handleClose}
+              className="px-6 transition-all hover:scale-105 active:scale-95 font-semibold text-primary border-none hover:bg-primary/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={isSaving}
+              className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 px-8 border-none font-semibold text-white"
+            >
+              {isSaving ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5 font-bold" />
+              )}
+              <span>{isSaving ? "Creating..." : "Create Chat"}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

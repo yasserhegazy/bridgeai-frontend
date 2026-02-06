@@ -10,7 +10,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, Clock, Mail, Shield, Users } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Mail, Shield, Users, XCircle } from "lucide-react";
 import { useInvitationDetails, useInvitationActions } from "@/hooks";
 import Link from "next/link";
 import { getAuthToken } from "@/services/token.service";
@@ -29,9 +29,11 @@ function AcceptInviteClientPage() {
 
   const {
     isAccepting: accepting,
+    isRejecting: rejecting,
     success,
     error: actionError,
     handleAccept,
+    handleReject,
   } = useInvitationActions();
 
   const error = loadError || actionError;
@@ -46,6 +48,12 @@ function AcceptInviteClientPage() {
       handleAccept(token, invitation?.team_id);
     }
   }, [token, invitation?.team_id, handleAccept]);
+
+  const handleRejectInvitation = useCallback(() => {
+    if (token) {
+      handleReject(token);
+    }
+  }, [token, handleReject]);
 
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -135,9 +143,9 @@ function AcceptInviteClientPage() {
             <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
               <Users className="w-8 h-8 text-blue-600" />
               <div>
-                <h3 className="font-semibold text-gray-900">{invitation.team_name}</h3>
+                <h3 className="font-semibold text-gray-900">{invitation.team_name || 'Unknown Team'}</h3>
                 <p className="text-sm text-gray-600">
-                  Invited by: {invitation.invited_by_name}
+                  Invited by: {invitation.invited_by_name || invitation.invited_by_email || 'Unknown'}
                 </p>
               </div>
             </div>
@@ -147,10 +155,9 @@ function AcceptInviteClientPage() {
               <div>
                 <h4 className="font-semibold text-gray-900">Role: {invitation.role}</h4>
                 <p className="text-sm text-gray-600">
-                  {invitation.role === 'owner' && 'Full control over the team'}
-                  {invitation.role === 'admin' && 'Can manage team settings and members'}
-                  {invitation.role === 'member' && 'Can contribute to team projects'}
-                  {invitation.role === 'viewer' && 'Can view team content'}
+                  {invitation.role === 'ba' && 'Business Analyst - Can create and manage projects'}
+                  {invitation.role === 'client' && 'Client - Can view and collaborate on projects'}
+                  {!['ba', 'client'].includes(invitation.role) && 'Team member'}
                 </p>
               </div>
             </div>
@@ -229,11 +236,17 @@ function AcceptInviteClientPage() {
               </>
             )}
             
-            <Link href="/teams">
-              <Button variant="outline" className="w-full">
-                Browse Teams
+            {!isExpired && isAuthenticated && (
+              <Button
+                variant="outline"
+                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                onClick={handleRejectInvitation}
+                disabled={rejecting || accepting}
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                {rejecting ? "Rejecting..." : "Reject Invitation"}
               </Button>
-            </Link>
+            )}
           </div>
         </CardContent>
       </Card>

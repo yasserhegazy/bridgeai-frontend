@@ -11,6 +11,8 @@ import { InviteMemberModal } from "@/components/teams/InviteMemberModal";
 import { TeamMemberItem } from "@/components/teams/TeamMemberItem";
 import { PendingInvitationItem } from "@/components/teams/PendingInvitationItem";
 import { ChangeRoleDialog } from "@/components/teams/ChangeRoleDialog";
+import { CancelInvitationModal } from "@/components/teams/CancelInvitationModal";
+import { RemoveMemberModal } from "@/components/teams/RemoveMemberModal";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useTeamMembers } from "@/hooks/teams/useTeamMembers";
@@ -30,6 +32,17 @@ interface RoleChangeState {
   currentRole: string;
 }
 
+interface CancelInvitationState {
+  invitationId: string;
+  email: string;
+}
+
+interface RemoveMemberState {
+  memberId: number;
+  memberName: string;
+  memberRole: string;
+}
+
 export function TeamMembersSection({
   teamId,
   onUpdate,
@@ -37,6 +50,8 @@ export function TeamMembersSection({
   onError,
 }: TeamMembersSectionProps) {
   const [roleChangeState, setRoleChangeState] = useState<RoleChangeState | null>(null);
+  const [cancelInvitationState, setCancelInvitationState] = useState<CancelInvitationState | null>(null);
+  const [removeMemberState, setRemoveMemberState] = useState<RemoveMemberState | null>(null);
 
   const {
     members,
@@ -84,42 +99,63 @@ export function TeamMembersSection({
   }, []);
 
   const handleRemoveMember = useCallback(
-    async (memberId: number, memberName: string) => {
-      const confirmed = window.confirm(
-        `Are you sure you want to remove ${memberName} from the team?`
-      );
-
-      if (!confirmed) return;
-
-      const success = await removeMemberById(memberId);
-
-      if (success) {
-        onSuccess?.("Member removed successfully!");
-      } else {
-        onError?.("Failed to remove member");
+    (memberId: number, memberName: string) => {
+      const member = members.find((m) => m.id === memberId);
+      if (member) {
+        setRemoveMemberState({
+          memberId,
+          memberName,
+          memberRole: member.role,
+        });
       }
     },
-    [removeMemberById, onSuccess, onError]
+    [members]
   );
+
+  const handleConfirmRemoveMember = useCallback(async () => {
+    if (!removeMemberState) return;
+
+    const success = await removeMemberById(removeMemberState.memberId);
+
+    if (success) {
+      onSuccess?.("Member removed successfully!");
+    } else {
+      onError?.("Failed to remove member");
+    }
+  }, [removeMemberState, removeMemberById, onSuccess, onError]);
+
+  const handleRemoveMemberModalClose = useCallback(() => {
+    setRemoveMemberState(null);
+  }, []);
 
   const handleCancelInvitation = useCallback(
-    async (invitationId: string) => {
-      const confirmed = window.confirm(
-        "Are you sure you want to cancel this invitation?"
-      );
-
-      if (!confirmed) return;
-
-      const success = await cancelInvitation(invitationId);
-
-      if (success) {
-        onSuccess?.("Invitation canceled successfully");
-      } else {
-        onError?.("Failed to cancel invitation");
+    (invitationId: string) => {
+      const invitation = pendingInvitations.find((inv) => inv.id === invitationId);
+      if (invitation) {
+        setCancelInvitationState({
+          invitationId,
+          email: invitation.email,
+        });
       }
     },
-    [cancelInvitation, onSuccess, onError]
+    [pendingInvitations]
   );
+
+  const handleConfirmCancelInvitation = useCallback(async () => {
+    if (!cancelInvitationState) return;
+
+    const success = await cancelInvitation(cancelInvitationState.invitationId);
+
+    if (success) {
+      onSuccess?.("Invitation canceled successfully");
+    } else {
+      onError?.("Failed to cancel invitation");
+    }
+  }, [cancelInvitationState, cancelInvitation, onSuccess, onError]);
+
+  const handleCancelInvitationModalClose = useCallback(() => {
+    setCancelInvitationState(null);
+  }, []);
 
   return (
     <>
@@ -131,7 +167,7 @@ export function TeamMembersSection({
               Team Members
             </h2>
             <p className="text-sm text-muted-foreground">
-              Manage members and pending invitations.
+              Manage team members (maximum 2: 1 Client + 1 BA). Roles are automatically assigned.
             </p>
           </div>
           <InviteMemberModal
@@ -141,6 +177,7 @@ export function TeamMembersSection({
             triggerSize="default"
             triggerVariant="primary"
             triggerClassName="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 px-6 border-none h-10 font-semibold text-sm"
+            currentMemberCount={members?.length || 0}
           />
         </div>
 
@@ -206,6 +243,27 @@ export function TeamMembersSection({
           currentRole={roleChangeState.currentRole}
           onConfirm={handleConfirmRoleChange}
           onCancel={handleCancelRoleChange}
+        />
+      )}
+
+      {/* Cancel Invitation Modal */}
+      {cancelInvitationState && (
+        <CancelInvitationModal
+          open={true}
+          onOpenChange={handleCancelInvitationModalClose}
+          email={cancelInvitationState.email}
+          onConfirm={handleConfirmCancelInvitation}
+        />
+      )}
+
+      {/* Remove Member Modal */}
+      {removeMemberState && (
+        <RemoveMemberModal
+          open={true}
+          onOpenChange={handleRemoveMemberModalClose}
+          memberName={removeMemberState.memberName}
+          memberRole={removeMemberState.memberRole}
+          onConfirm={handleConfirmRemoveMember}
         />
       )}
     </>

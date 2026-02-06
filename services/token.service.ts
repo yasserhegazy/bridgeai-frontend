@@ -77,3 +77,29 @@ export function notifyAuthStateChange(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("auth-state-changed"));
 }
+
+/**
+ * Wait for cookie to be readable with the expected value
+ * Prevents race condition in navigation after login
+ */
+export async function waitForCookiePersistence(
+  cookieName: string,
+  expectedValue: string,
+  maxAttempts: number = 10,
+  delayMs: number = 50
+): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === cookieName && value === expectedValue) {
+        return; // Cookie is readable
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  console.warn(`Cookie ${cookieName} not readable after ${maxAttempts * delayMs}ms`);
+}
