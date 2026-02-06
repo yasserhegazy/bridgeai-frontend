@@ -47,8 +47,8 @@ export function InviteMemberModal({
 
   const { isLoading, error, success, inviteMember, resetSuccess } = useInviteMember();
 
-  // Check if team is at max capacity (2 members)
-  const isAtMaxCapacity = currentMemberCount >= 2;
+  // Check if team is at max capacity - REMOVED LIMIT
+  const isAtMaxCapacity = false; // currentMemberCount >= 2;
 
   const validationRules = useMemo(
     () => ({

@@ -82,13 +82,6 @@ export function PendingInvitationItem({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <span
-          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getRoleBadgeColor(
-            invitation.role
-          )}`}
-        >
-          {getRoleLabel(invitation.role)}
-        </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-xl hover:bg-gray-100">
