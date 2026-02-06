@@ -14,6 +14,7 @@ import {
   storeAuthToken,
   storeUserRole,
   notifyAuthStateChange,
+  waitForCookiePersistence,
 } from "../../services/token.service";
 import { getRoleBasedRedirectPath } from "../../lib/utils";
 
@@ -44,6 +45,9 @@ export function useLogin(): UseLoginReturn {
         // Store authentication data
         storeAuthToken(response.access_token);
         storeUserRole(response.role as "client" | "ba");
+
+        // Wait for cookies to be readable before navigation
+        await waitForCookiePersistence("token", response.access_token);
 
         // Notify system of auth state change
         notifyAuthStateChange();
@@ -79,6 +83,10 @@ export function useLogin(): UseLoginReturn {
 
         storeAuthToken(response.access_token);
         storeUserRole(response.role as "client" | "ba");
+
+        // Wait for cookies to be readable before navigation
+        await waitForCookiePersistence("token", response.access_token);
+
         notifyAuthStateChange();
 
         const redirectPath = getRoleBasedRedirectPath(response.role);
