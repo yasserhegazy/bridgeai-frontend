@@ -19,6 +19,7 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { CRSStatus } from "@/dto/crs.dto";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { parseUTCDate } from "@/lib/utils";
 
 interface DashboardTabProps {
   userRole: "BA" | "Client";
@@ -160,7 +161,7 @@ export function DashboardTab({
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Pattern: <span className="font-bold text-gray-700">{stats.crs.latest.pattern.toUpperCase()}</span> •
-                      Updated {formatDistanceToNow(new Date(stats.crs.latest.created_at), { addSuffix: true })}
+                      Updated {formatDistanceToNow(parseUTCDate(stats.crs.latest.created_at), { addSuffix: true })}
                     </p>
                   </div>
                 </div>

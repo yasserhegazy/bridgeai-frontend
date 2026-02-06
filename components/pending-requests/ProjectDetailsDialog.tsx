@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProjectDTO } from "@/dto/projects.dto";
 import { X, FileText, Clock, User, Shield, Calendar, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, parseUTCDate } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
 interface ProjectDetailsDialogProps {
@@ -120,7 +120,7 @@ export function ProjectDetailsDialog({
                 </div>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Activity</p>
               </div>
-              <p className="text-sm font-bold text-gray-900">{formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}</p>
+              <p className="text-sm font-bold text-gray-900">{formatDistanceToNow(parseUTCDate(project.updated_at), { addSuffix: true })}</p>
             </div>
           </div>
         </div>

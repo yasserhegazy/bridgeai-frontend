@@ -28,7 +28,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         }
     }, [teamIdFromUrl]);
 
-    const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications" || pathname === "/profile";
+    const hideSidebar = pathname === "/teams" || pathname.startsWith("/auth") || pathname === "/notifications" || pathname === "/profile" || pathname.startsWith("/invite");
 
     const isChatRoute = pathname.startsWith("/chats/");
 

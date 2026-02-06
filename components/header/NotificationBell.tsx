@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { showToast } from '@/components/notifications/NotificationToast';
 import { TeamInvitationModal } from '@/components/notifications/TeamInvitationModal';
+import { parseUTCDate } from '@/lib/utils';
 
 export function NotificationBell() {
   const router = useRouter();
@@ -177,7 +178,7 @@ export function NotificationBell() {
   };
 
   const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseUTCDate(dateString);
     const now = new Date();
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

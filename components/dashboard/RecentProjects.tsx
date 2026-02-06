@@ -12,6 +12,7 @@ import { ProjectSimpleDTO } from "@/dto/teams.dto";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Calendar, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { parseUTCDate } from "@/lib/utils";
 
 interface RecentProjectsProps {
   projects: ProjectSimpleDTO[];
@@ -59,7 +60,7 @@ export const RecentProjects = memo(function RecentProjects({
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    {formatDistanceToNow(new Date(project.created_at), {
+                    {formatDistanceToNow(parseUTCDate(project.created_at), {
                       addSuffix: true,
                     })}
                   </span>
