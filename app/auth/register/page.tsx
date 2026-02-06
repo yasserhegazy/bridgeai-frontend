@@ -6,7 +6,8 @@
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
@@ -22,10 +23,20 @@ const ROLE_OPTIONS: SelectOption[] = [
 ];
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const emailFromUrl = searchParams.get("email") || "";
+
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailFromUrl);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+
+  // Update email if URL parameter changes
+  useEffect(() => {
+    if (emailFromUrl) {
+      setEmail(emailFromUrl);
+    }
+  }, [emailFromUrl]);
 
   const { isLoading, error, register } = useRegister();
 
@@ -116,7 +127,7 @@ export default function RegisterPage() {
             error={errors.email}
             placeholder="Enter your email"
             required
-            disabled={isLoading}
+            disabled={isLoading || !!emailFromUrl}
           />
 
           <FormField

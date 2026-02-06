@@ -35,21 +35,33 @@ export function TeamInvitationModal({
   const [acting, setActing] = useState<"accept" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const token = useMemo(() => invitationToken ?? "", [invitationToken]);
+  const token = useMemo(() => invitationToken, [invitationToken]);
   
   // Use the invitation details hook
   const {
     invitation: details,
     isLoading: loading,
     error: loadError,
-  } = useInvitationDetails(open ? token : null);
+  } = useInvitationDetails(open && token ? token : null);
 
-  // Update error when load error changes
+  // Manage error state based on token and loading state
   useEffect(() => {
-    if (loadError) {
-      setError(loadError);
+    if (!open) {
+      // Don't update error when modal is closed
+      return;
     }
-  }, [loadError]);
+
+    if (loadError) {
+      // Show load error if present
+      setError(loadError);
+    } else if (!token && !loading) {
+      // Show "no token" error only after loading completes and no token
+      setError("This invitation is no longer available. It may have been accepted, rejected, or expired.");
+    } else if (token && !loading && !loadError) {
+      // Clear error when we have a valid token and loading is done
+      setError(null);
+    }
+  }, [open, loadError, token, loading]);
 
   // Reset state when modal closes
   useEffect(() => {

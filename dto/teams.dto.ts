@@ -39,7 +39,7 @@ export interface TeamListItemDTO {
 
 export interface InviteMemberRequestDTO {
   email: string;
-  role: "owner" | "admin" | "member" | "viewer";
+  role: "client" | "ba";
 }
 
 export interface InviteMemberResponseDTO {
@@ -63,7 +63,7 @@ export interface TeamMemberDTO {
 }
 
 export type TeamStatus = "active" | "inactive" | "archived";
-export type MemberRole = "owner" | "admin" | "member" | "viewer";
+export type MemberRole = "client" | "ba";
 
 // Dashboard Statistics DTOs
 export interface StatusBreakdownDTO {

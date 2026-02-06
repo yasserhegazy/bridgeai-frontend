@@ -25,13 +25,20 @@ interface TeamMemberItemProps {
 
 function getRoleBadgeColor(role: string): string {
   const roleColors: Record<string, string> = {
-    owner: "bg-red-100 text-red-800",
-    admin: "bg-purple-100 text-purple-800",
-    member: "bg-blue-100 text-blue-800",
-    viewer: "bg-gray-100 text-gray-800",
+    client: "bg-blue-100 text-blue-800",
+    ba: "bg-purple-100 text-purple-800",
   };
 
   return roleColors[role.toLowerCase()] || "bg-gray-100 text-gray-800";
+}
+
+function getRoleLabel(role: string): string {
+  const roleLabels: Record<string, string> = {
+    client: "Client",
+    ba: "Business Analyst",
+  };
+
+  return roleLabels[role.toLowerCase()] || role;
 }
 
 export function TeamMemberItem({
@@ -76,7 +83,7 @@ export function TeamMemberItem({
             member.role
           )}`}
         >
-          {member.role}
+          {getRoleLabel(member.role)}
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

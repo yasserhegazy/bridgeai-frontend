@@ -27,6 +27,16 @@ export function Sidebar({ currentTeamId, isCollapsed, onToggle }: SidebarProps) 
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        // Import getAccessToken to check if user is authenticated
+        const { getAccessToken } = await import("@/lib/api");
+        const token = getAccessToken();
+
+        // If no token, don't try to fetch user data
+        if (!token) {
+          setUserRole("client"); // Default role for unauthenticated users
+          return;
+        }
+
         const user = await getCurrentUser<User>();
         setUserRole(user.role);
       } catch (error) {
@@ -42,10 +52,9 @@ export function Sidebar({ currentTeamId, isCollapsed, onToggle }: SidebarProps) 
   // Don't render sidebar items until role is loaded
   if (userRole === null) {
     return (
-      <aside 
-        className={`fixed top-12 left-0 h-[calc(100vh-3rem)] flex flex-col py-5 text-white transition-all duration-300 ease-in-out z-40 ${
-          isCollapsed ? 'w-16' : 'w-64'
-        }`} 
+      <aside
+        className={`fixed top-12 left-0 h-[calc(100vh-3rem)] flex flex-col py-5 text-white transition-all duration-300 ease-in-out z-40 ${isCollapsed ? 'w-16' : 'w-64'
+          }`}
         style={{ backgroundColor: "#341BAB" }}
       >
         {/* Empty sidebar while loading */}
@@ -83,23 +92,22 @@ export function Sidebar({ currentTeamId, isCollapsed, onToggle }: SidebarProps) 
   navItems.push({ href: `/teams/${currentTeamId}/settings`, label: "Team Settings", icon: Settings });
 
   return (
-    <aside 
-      className={`fixed top-12 left-0 h-[calc(100vh-3rem)] flex flex-col py-5 text-white transition-all duration-300 ease-in-out z-40 ${
-        isCollapsed ? 'w-16' : 'w-64'
-      }`} 
+    <aside
+      className={`fixed top-12 left-0 h-[calc(100vh-3rem)] flex flex-col py-5 text-white transition-all duration-300 ease-in-out z-40 ${isCollapsed ? 'w-16' : 'w-64'
+        }`}
       style={{ backgroundColor: "#341BAB" }}
     >
       <div className="flex-1 flex flex-col space-y-2 px-2">
         {navItems.map(item => (
-          <NavItem 
-            key={item.href} 
-            {...item} 
-            isActive={pathname.startsWith(item.href)} 
+          <NavItem
+            key={item.href}
+            {...item}
+            isActive={pathname.startsWith(item.href)}
             isCollapsed={isCollapsed}
           />
         ))}
       </div>
-      
+
       {/* Toggle button */}
       <button
         onClick={onToggle}
