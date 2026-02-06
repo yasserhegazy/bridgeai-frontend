@@ -43,10 +43,10 @@ export interface InvitationPublicDetailsDTO {
   email: string;
   role: string;
   team_id: number;
-  team_name: string;
-  team_description?: string;
-  invited_by_name: string;
-  invited_by_email: string;
+  team_name: string | null;
+  team_description?: string | null;
+  invited_by_name: string | null;
+  invited_by_email: string | null;
   created_at: string;
   expires_at: string;
   status: string;

@@ -135,9 +135,9 @@ function AcceptInviteClientPage() {
             <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
               <Users className="w-8 h-8 text-blue-600" />
               <div>
-                <h3 className="font-semibold text-gray-900">{invitation.team_name}</h3>
+                <h3 className="font-semibold text-gray-900">{invitation.team_name || 'Unknown Team'}</h3>
                 <p className="text-sm text-gray-600">
-                  Invited by: {invitation.invited_by_name}
+                  Invited by: {invitation.invited_by_name || invitation.invited_by_email || 'Unknown'}
                 </p>
               </div>
             </div>
@@ -147,10 +147,9 @@ function AcceptInviteClientPage() {
               <div>
                 <h4 className="font-semibold text-gray-900">Role: {invitation.role}</h4>
                 <p className="text-sm text-gray-600">
-                  {invitation.role === 'owner' && 'Full control over the team'}
-                  {invitation.role === 'admin' && 'Can manage team settings and members'}
-                  {invitation.role === 'member' && 'Can contribute to team projects'}
-                  {invitation.role === 'viewer' && 'Can view team content'}
+                  {invitation.role === 'ba' && 'Business Analyst - Can create and manage projects'}
+                  {invitation.role === 'client' && 'Client - Can view and collaborate on projects'}
+                  {!['ba', 'client'].includes(invitation.role) && 'Team member'}
                 </p>
               </div>
             </div>
