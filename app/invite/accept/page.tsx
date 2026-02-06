@@ -10,7 +10,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, Clock, Mail, Shield, Users } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Mail, Shield, Users, XCircle } from "lucide-react";
 import { useInvitationDetails, useInvitationActions } from "@/hooks";
 import Link from "next/link";
 import { getAuthToken } from "@/services/token.service";
@@ -29,9 +29,11 @@ function AcceptInviteClientPage() {
 
   const {
     isAccepting: accepting,
+    isRejecting: rejecting,
     success,
     error: actionError,
     handleAccept,
+    handleReject,
   } = useInvitationActions();
 
   const error = loadError || actionError;
@@ -46,6 +48,12 @@ function AcceptInviteClientPage() {
       handleAccept(token, invitation?.team_id);
     }
   }, [token, invitation?.team_id, handleAccept]);
+
+  const handleRejectInvitation = useCallback(() => {
+    if (token) {
+      handleReject(token);
+    }
+  }, [token, handleReject]);
 
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -228,11 +236,17 @@ function AcceptInviteClientPage() {
               </>
             )}
             
-            <Link href="/teams">
-              <Button variant="outline" className="w-full">
-                Browse Teams
+            {!isExpired && isAuthenticated && (
+              <Button
+                variant="outline"
+                className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                onClick={handleRejectInvitation}
+                disabled={rejecting || accepting}
+              >
+                <XCircle className="w-4 h-4 mr-2" />
+                {rejecting ? "Rejecting..." : "Reject Invitation"}
               </Button>
-            </Link>
+            )}
           </div>
         </CardContent>
       </Card>
