@@ -12,7 +12,7 @@ export function LandingHeader() {
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative">
             <Image
-              src="/logo-icon-modern.png"
+              src="/logo_with_background.png"
               alt="BridgeAI Logo"
               width={40}
               height={40}
