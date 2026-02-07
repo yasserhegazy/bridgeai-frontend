@@ -26,9 +26,13 @@ export function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      // Check if user is authenticated before fetching
-      const token = typeof window !== 'undefined' ? document.cookie.split(';').find(c => c.trim().startsWith('token=')) : null;
-      if (!token) {
+      // Check if user is authenticated and has a role before fetching
+      const cookies = typeof window !== 'undefined' ? document.cookie.split(';') : [];
+      const hasToken = cookies.some(c => c.trim().startsWith('token='));
+      const roleValue = cookies.find(c => c.trim().startsWith('role='))?.split('=')[1];
+      
+      // Don't fetch if no token or no role (user hasn't completed role selection)
+      if (!hasToken || !roleValue || roleValue === 'undefined' || roleValue === 'null') {
         setNotifications([]);
         setUnreadCount(0);
         return;
