@@ -21,9 +21,14 @@ export function storeAuthToken(token: string): void {
 /**
  * Store user role in cookie
  */
-export function storeUserRole(role: UserRole): void {
+export function storeUserRole(role: UserRole | null): void {
   if (typeof window === "undefined") return;
-  document.cookie = `${ROLE_COOKIE_NAME}=${role}; path=/; max-age=${MAX_AGE_SECONDS}`;
+  if (role === null) {
+    // Clear role cookie if null
+    document.cookie = `${ROLE_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  } else {
+    document.cookie = `${ROLE_COOKIE_NAME}=${role}; path=/; max-age=${MAX_AGE_SECONDS}`;
+  }
 }
 
 /**
@@ -76,6 +81,14 @@ export function clearAuthData(): void {
 export function notifyAuthStateChange(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event("auth-state-changed"));
+}
+
+/**
+ * Check if user has a valid role selected
+ */
+export function hasRole(): boolean {
+  const role = getUserRole();
+  return role !== null && (role === "client" || role === "ba");
 }
 
 /**

@@ -12,15 +12,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuthFormContainer } from "@/components/auth/AuthFormContainer";
 import { FormField } from "@/components/auth/FormField";
-import { FormSelect, SelectOption } from "@/components/auth/FormSelect";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { useRegister } from "@/hooks/auth/useRegister";
 import { useFormValidation } from "@/hooks/shared/useFormValidation";
 
-const ROLE_OPTIONS: SelectOption[] = [
-  { value: "client", label: "Client" },
-  { value: "ba", label: "Business Analyst" },
-];
+// Role options removed - role selection happens post-registration via modal
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -29,7 +25,7 @@ function RegisterForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(emailFromUrl);
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Update email if URL parameter changes
   useEffect(() => {
@@ -69,15 +65,16 @@ function RegisterForm() {
           return null;
         },
       },
-      role: {
+      confirmPassword: {
         required: true,
         custom: (value: string) => {
-          if (!value) return "Please select a role";
+          if (!value.trim()) return "Please confirm your password";
+          if (value !== password) return "Passwords do not match";
           return null;
         },
       },
     }),
-    []
+    [password]
   );
 
   const { errors, validateAll } = useFormValidation(validationRules);
@@ -86,17 +83,16 @@ function RegisterForm() {
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      const isValid = validateAll({ fullName, email, password, role });
+      const isValid = validateAll({ fullName, email, password, confirmPassword });
       if (!isValid) return;
 
       await register({
         full_name: fullName,
         email,
         password,
-        role,
       });
     },
-    [fullName, email, password, role, validateAll, register]
+    [fullName, email, password, confirmPassword, validateAll, register]
   );
 
   return (
@@ -142,14 +138,15 @@ function RegisterForm() {
             disabled={isLoading}
           />
 
-          <FormSelect
-            id="role"
-            label="Role"
-            value={role}
-            onChange={setRole}
-            options={ROLE_OPTIONS}
-            error={errors.role}
-            placeholder="Select your role"
+          <FormField
+            id="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            error={errors.confirmPassword}
+            placeholder="Confirm your password"
+            required
             disabled={isLoading}
           />
         </div>

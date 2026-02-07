@@ -44,7 +44,7 @@ export function useLogin(): UseLoginReturn {
 
         // Store authentication data
         storeAuthToken(response.access_token);
-        storeUserRole(response.role as "client" | "ba");
+        storeUserRole(response.role as "client" | "ba" | null);
 
         // Wait for cookies to be readable before navigation
         await waitForCookiePersistence("token", response.access_token);
@@ -52,9 +52,13 @@ export function useLogin(): UseLoginReturn {
         // Notify system of auth state change
         notifyAuthStateChange();
 
-        // Redirect based on role with hard navigation to ensure middleware runs
-        const redirectPath = getRoleBasedRedirectPath(response.role);
-        window.location.href = redirectPath;
+        // Redirect based on role - if no role, go to role selection
+        if (!response.role) {
+          window.location.href = "/auth/select-role";
+        } else {
+          const redirectPath = getRoleBasedRedirectPath(response.role);
+          window.location.href = redirectPath;
+        }
       } catch (err) {
         if (err instanceof AuthenticationError) {
           setError(err.message);
@@ -82,16 +86,20 @@ export function useLogin(): UseLoginReturn {
         );
 
         storeAuthToken(response.access_token);
-        storeUserRole(response.role as "client" | "ba");
+        storeUserRole(response.role as "client" | "ba" | null);
 
         // Wait for cookies to be readable before navigation
         await waitForCookiePersistence("token", response.access_token);
 
         notifyAuthStateChange();
 
-        // Redirect based on role with hard navigation to ensure middleware runs
-        const redirectPath = getRoleBasedRedirectPath(response.role);
-        window.location.href = redirectPath;
+        // Redirect based on role - if no role, go to role selection
+        if (!response.role) {
+          window.location.href = "/auth/select-role";
+        } else {
+          const redirectPath = getRoleBasedRedirectPath(response.role);
+          window.location.href = redirectPath;
+        }
       } catch (err) {
         // Check if this is a Gmail-only restriction error
         if (err instanceof AuthenticationError &&

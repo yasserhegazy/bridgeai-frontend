@@ -7,11 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Get the redirect path based on user role
- * @param role - User role ('ba' or 'client')
+ * @param role - User role ('ba' or 'client') or null if not yet selected
  * @returns The path to redirect to
  */
-export function getRoleBasedRedirectPath(role: string): string {
+export function getRoleBasedRedirectPath(role: string | null | undefined): string {
   // Both BA and Client redirect to teams
+  // If role is null/undefined, still redirect to teams (middleware will handle)
   return "/teams"
 }
 

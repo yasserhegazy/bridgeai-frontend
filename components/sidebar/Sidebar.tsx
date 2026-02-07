@@ -38,7 +38,8 @@ export function Sidebar({ currentTeamId, isCollapsed, onToggle }: SidebarProps) 
         }
 
         const user = await getCurrentUser<User>();
-        setUserRole(user.role);
+        // Handle null role (user hasn't selected role yet)
+        setUserRole(user.role || "client");
       } catch (error) {
         console.error("Error fetching user:", error);
         // Set to client as fallback to show sidebar
