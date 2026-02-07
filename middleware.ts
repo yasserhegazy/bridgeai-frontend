@@ -20,14 +20,35 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/teams') ||
     request.nextUrl.pathname.startsWith('/projects') ||
     request.nextUrl.pathname.startsWith('/chats')
+  
+  // Check if accessing role selection page
+  const isRoleSelectionPage = request.nextUrl.pathname.startsWith('/auth/select-role')
 
   // If accessing a protected route and not authenticated, redirect to login
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
-  // If accessing login page and already authenticated, redirect based on role
-  if (request.nextUrl.pathname.startsWith('/auth/login') && token) {
+  // If authenticated but no role selected, redirect to role selection page
+  if (isProtectedRoute && token && !role) {
+    return NextResponse.redirect(new URL("/auth/select-role", request.url))
+  }
+
+  // If accessing role selection page
+  if (isRoleSelectionPage) {
+    // Not authenticated -> redirect to login
+    if (!token) {
+      return NextResponse.redirect(new URL("/auth/login", request.url))
+    }
+    // Already has role -> redirect to teams
+    if (role && (role === 'ba' || role === 'client')) {
+      return NextResponse.redirect(new URL("/teams", request.url))
+    }
+    // Has token but no role -> allow access to role selection
+  }
+
+  // If accessing login page and already authenticated with role, redirect to teams
+  if (request.nextUrl.pathname.startsWith('/auth/login') && token && role) {
     const redirectPath = getRoleBasedRedirectPath(role)
     return NextResponse.redirect(new URL(redirectPath, request.url))
   }
@@ -44,5 +65,6 @@ export const config = {
     '/chats/:path*',
     // Auth routes
     '/auth/login',
+    '/auth/select-role',
   ],
 }
