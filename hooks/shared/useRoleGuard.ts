@@ -33,6 +33,14 @@ export function useRoleGuard({ roles, redirectTo }: UseRoleGuardOptions): UseRol
           return;
         }
         const user = await getCurrentUser(token);
+        
+        // If user hasn't selected a role yet, redirect to role selection
+        if (!user.role) {
+          router.push("/auth/select-role");
+          return;
+        }
+        
+        // Check if user's role is in the allowed roles
         if (!roles.includes(user.role)) {
           router.push(redirectTo);
           return;

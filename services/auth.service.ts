@@ -11,6 +11,8 @@ import {
   RegisterResponseDTO,
   CurrentUserDTO,
   ApiErrorDTO,
+  RoleSelectionRequestDTO,
+  RoleSelectionResponseDTO,
 } from "@/dto/auth.dto";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -74,7 +76,7 @@ export async function loginUser(
     const data: LoginResponseDTO = await response.json();
 
     // Validate response structure
-    if (!data.access_token || !data.role) {
+    if (!data.access_token) {
       throw new AuthenticationError(
         "Invalid response from server: missing required fields"
       );
@@ -180,6 +182,41 @@ export async function getCurrentUser(
     }
 
     const data: CurrentUserDTO = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    throw new AuthenticationError(
+      error instanceof Error ? error.message : "Network error occurred"
+    );
+  }
+}
+
+/**
+ * Select user role after registration/OAuth
+ */
+export async function selectRole(
+  role: RoleSelectionRequestDTO,
+  token: string
+): Promise<RoleSelectionResponseDTO> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/role`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(role),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = parseApiError(errorData, response.status);
+      throw new AuthenticationError(errorMessage, response.status, errorData);
+    }
+
+    const data: RoleSelectionResponseDTO = await response.json();
     return data;
   } catch (error) {
     if (error instanceof AuthenticationError) {
