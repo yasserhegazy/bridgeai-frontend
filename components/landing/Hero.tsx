@@ -1,20 +1,27 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Users, Shield, ArrowRight, Zap, CheckCircle2 } from "lucide-react";
 
 export const Hero = () => {
-  // Generate stable random positions for particles to avoid hydration errors
-  const particles = useMemo(() => {
-    return [...Array(20)].map((_, i) => ({
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    left: number;
+    top: number;
+    duration: number;
+    delay: number;
+  }>>([]);
+
+  useEffect(() => {
+    setParticles([...Array(20)].map((_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
       duration: 3 + Math.random() * 4,
       delay: Math.random() * 5,
-    }));
+    })));
   }, []);
 
   return (
